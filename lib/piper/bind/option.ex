@@ -1,11 +1,11 @@
-defimpl Piper.Executable, for: Piper.Ast.Option do
+defimpl Piper.Bindable, for: Piper.Ast.Option do
 
   alias Piper.Ast
 
-  def prepare(%Ast.Option{flag: flag, value: value}=option, scope) do
-    case prepare_value(flag, scope) do
+  def bind(%Ast.Option{flag: flag, value: value}=option, scope) do
+    case bind_value(flag, scope) do
       {:ok, flag, scope} ->
-        case prepare_value(value, scope) do
+        case bind_value(value, scope) do
           {:ok, value, scope} ->
             {:ok, %{option | flag: flag, value: value}, scope}
           error ->
@@ -37,17 +37,17 @@ defimpl Piper.Executable, for: Piper.Ast.Option do
     {:ok, scope}
   end
   defp resolve_value(value, scope) do
-    Piper.Executable.resolve(value, scope)
+    Piper.Bindable.resolve(value, scope)
   end
 
-  defp prepare_value(nil, scope) do
+  defp bind_value(nil, scope) do
     {:ok, nil, scope}
   end
-  defp prepare_value(v, scope) when is_binary(v) do
+  defp bind_value(v, scope) when is_binary(v) do
     {:ok, v, scope}
   end
-  defp prepare_value(value, scope) do
-    Piper.Executable.prepare(value, scope)
+  defp bind_value(value, scope) do
+    Piper.Bindable.bind(value, scope)
   end
 
 end

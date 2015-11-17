@@ -1,9 +1,9 @@
-defimpl Piper.Executable, for: Piper.Ast.Variable do
+defimpl Piper.Bindable, for: Piper.Ast.Variable do
 
   alias Piper.Scoped
   alias Piper.Ast
 
-  def prepare(var, scope) do
+  def bind(var, scope) do
     case Scoped.lookup_variable(scope, var) do
       {:ok, value} ->
         {:ok, build_type(var, value), scope}
@@ -51,7 +51,7 @@ defimpl Piper.Executable, for: Piper.Ast.Variable do
     read_at_index(value, index)
   end
   defp fetch_index(value, %Ast.Variable{}=index_var, scope) when is_list(value) do
-    case Piper.Executable.resolve(index_var, scope) do
+    case Piper.Bindable.resolve(index_var, scope) do
       {:ok, idx} when is_integer(idx) ->
         read_at_index(value, idx)
       {:ok, idx} ->

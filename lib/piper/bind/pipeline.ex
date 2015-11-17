@@ -1,4 +1,4 @@
-defimpl Piper.Executable, for: Piper.Ast.Pipeline do
+defimpl Piper.Bindable, for: Piper.Ast.Pipeline do
 
   alias Piper.Ast
 
@@ -6,8 +6,8 @@ defimpl Piper.Executable, for: Piper.Ast.Pipeline do
     resolve_invocations(invocations, scope)
   end
 
-  def prepare(%Ast.Pipeline{invocations: invocations}=pipeline, scope) do
-    case prepare_invocations(invocations, [], scope) do
+  def bind(%Ast.Pipeline{invocations: invocations}=pipeline, scope) do
+    case bind_invocations(invocations, [], scope) do
       {:ok, invocations, scope} ->
         {:ok, %{pipeline | invocations: invocations}, scope}
       error ->
@@ -19,7 +19,7 @@ defimpl Piper.Executable, for: Piper.Ast.Pipeline do
     {:ok, scope}
   end
   defp resolve_invocations([h|t], scope) do
-    case Piper.Executable.resolve(h, scope) do
+    case Piper.Bindable.resolve(h, scope) do
       {:ok, scope} ->
         resolve_invocations(t, scope)
       error ->
@@ -27,13 +27,13 @@ defimpl Piper.Executable, for: Piper.Ast.Pipeline do
     end
   end
 
-  defp prepare_invocations([], accum, scope) do
+  defp bind_invocations([], accum, scope) do
     {:ok, Enum.reverse(accum), scope}
   end
-  defp prepare_invocations([h|t], accum, scope) do
-    case Piper.Executable.prepare(h, scope) do
+  defp bind_invocations([h|t], accum, scope) do
+    case Piper.Bindable.bind(h, scope) do
       {:ok, new_h, scope} ->
-        prepare_invocations(t, [new_h|accum], scope)
+        bind_invocations(t, [new_h|accum], scope)
       error ->
         error
     end

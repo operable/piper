@@ -1,11 +1,11 @@
-defimpl Piper.Executable, for: Piper.Ast.Invocation do
+defimpl Piper.Bindable, for: Piper.Ast.Invocation do
 
   alias Piper.Ast.Invocation
 
-  def prepare(%Invocation{command: command, args: args}=invoke, scope) do
-    case prepare_command(command, scope) do
+  def bind(%Invocation{command: command, args: args}=invoke, scope) do
+    case bind_command(command, scope) do
       {:ok, command, scope} ->
-        case prepare_args(args, scope, []) do
+        case bind_args(args, scope, []) do
           {:ok, args, scope} ->
             {:ok, %{invoke | command: command, args: args}, scope}
           error ->
@@ -29,7 +29,7 @@ defimpl Piper.Executable, for: Piper.Ast.Invocation do
     {:ok, scope}
   end
   defp resolve_args([h|t], scope) do
-    case Piper.Executable.resolve(h, scope) do
+    case Piper.Bindable.resolve(h, scope) do
       {:ok, scope} ->
         resolve_args(t, scope)
       error ->
@@ -37,30 +37,30 @@ defimpl Piper.Executable, for: Piper.Ast.Invocation do
     end
   end
 
-  defp prepare_args([], scope, accum) do
+  defp bind_args([], scope, accum) do
     {:ok, Enum.reverse(accum), scope}
   end
-  defp prepare_args([h|t], scope, accum) do
-    case Piper.Executable.prepare(h, scope) do
+  defp bind_args([h|t], scope, accum) do
+    case Piper.Bindable.bind(h, scope) do
       {:ok, arg, scope} ->
-        prepare_args(t, scope, [arg|accum])
+        bind_args(t, scope, [arg|accum])
       error ->
         error
     end
   end
 
-  defp prepare_command(command, scope) when is_binary(command) do
+  defp bind_command(command, scope) when is_binary(command) do
     {:ok, command, scope}
   end
-  defp prepare_command(command, scope) do
-    Piper.Executable.prepare(command, scope)
+  defp bind_command(command, scope) do
+    Piper.Bindable.bind(command, scope)
   end
 
   defp resolve_command(command, scope) when is_binary(command) do
     {:ok, scope}
   end
   defp resolve_command(command, scope) do
-    Piper.Executable.resolve(command, scope)
+    Piper.Bindable.resolve(command, scope)
   end
 
 end

@@ -1,4 +1,4 @@
-defmodule Piper.Exec.Scope do
+defmodule Piper.Bind.Scope do
   defstruct [values: %{}, bindings: %{}, parent: nil]
 
   def from_map(values) do
@@ -11,9 +11,9 @@ defmodule Piper.Exec.Scope do
 
 end
 
-defimpl Piper.Scoped, for: Piper.Exec.Scope do
+defimpl Piper.Scoped, for: Piper.Bind.Scope do
 
-  alias Piper.Exec.Scope
+  alias Piper.Bind.Scope
 
   def set_parent(%Scope{parent: nil}=scope, parent) do
     {:ok, %{scope | parent: parent}}

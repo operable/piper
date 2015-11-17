@@ -1,4 +1,4 @@
-defimpl Piper.Executable, for: [Piper.Ast.Integer,
+defimpl Piper.Bindable, for: [Piper.Ast.Integer,
                                  Piper.Ast.Float,
                                  Piper.Ast.String] do
 
@@ -6,7 +6,7 @@ defimpl Piper.Executable, for: [Piper.Ast.Integer,
     {:ok, scope}
   end
 
-  def prepare(literal, scope) do
+  def bind(literal, scope) do
     {:ok, Map.merge(%{}, literal), scope}
   end
 
