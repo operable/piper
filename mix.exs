@@ -1,4 +1,4 @@
-defmodule PipeVM.Mixfile do
+defmodule Piper.Mixfile do
   use Mix.Project
 
   def project do
