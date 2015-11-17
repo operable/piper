@@ -5,6 +5,10 @@ defmodule Piper.Exec.Scope do
     %__MODULE__{values: values}
   end
 
+  def empty_scope() do
+    %__MODULE__{}
+  end
+
 end
 
 defimpl Piper.Scoped, for: Piper.Exec.Scope do
@@ -14,7 +18,7 @@ defimpl Piper.Scoped, for: Piper.Exec.Scope do
   def set_parent(%Scope{parent: nil}=scope, parent) do
     {:ok, %{scope | parent: parent}}
   end
-  def set_parent(%Scope{}) do
+  def set_parent(%Scope{}, _parent) do
     {:error, :have_parent}
   end
 
@@ -48,7 +52,8 @@ defimpl Piper.Scoped, for: Piper.Exec.Scope do
     key = "#{var}"
     case Map.has_key?(bindings, key) do
       true ->
-        {:error, :already_bound}
+        raise RuntimeError, "#{key} is already bound!"
+#        {:error, {:already_bound, key}}
       false ->
         bindings = Map.put(bindings, key, value)
         {:ok, %{scope | bindings: bindings}}

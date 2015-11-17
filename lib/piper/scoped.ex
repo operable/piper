@@ -1,7 +1,7 @@
 defprotocol Piper.Scoped do
 
-  @spec set_parent(Piper.Scoped) :: {:ok, Piper.Scoped} | {:error, :have_parent}
-  def set_parent(parent_scope)
+  @spec set_parent(Piper.Scoped, Piper.Scoped) :: {:ok, Piper.Scoped} | {:error, :have_parent}
+  def set_parent(scope, parent_scope)
 
   @spec lookup(Piper.Scoped, String.t) :: {:ok, term()} | {:error, :not_found}
   def lookup(scope, name)
