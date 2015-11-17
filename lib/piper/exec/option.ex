@@ -2,12 +2,12 @@ defimpl Piper.Executable, for: Piper.Ast.Option do
 
   alias Piper.Ast
 
-  def resolve(%Ast.Option{flag: flag, value: value}, scope) do
-    case resolve_value(flag, scope) do
-      {:ok, scope} ->
-        case resolve_value(value, scope) do
-          {:ok, scope} ->
-            {:ok, scope}
+  def prepare(%Ast.Option{flag: flag, value: value}=option, scope) do
+    case prepare_value(flag, scope) do
+      {:ok, flag, scope} ->
+        case prepare_value(value, scope) do
+          {:ok, value, scope} ->
+            {:ok, %{option | flag: flag, value: value}, scope}
           error ->
             error
         end
@@ -15,12 +15,13 @@ defimpl Piper.Executable, for: Piper.Ast.Option do
         error
     end
   end
-  def execute(%Ast.Option{flag: flag, value: value}=option, scope) do
-    case execute_value(flag, scope) do
-      {:ok, flag} ->
-        case execute_value(value, scope) do
-          {:ok, value} ->
-            {:ok, %{option | flag: flag, value: value}}
+
+  def resolve(%Ast.Option{flag: flag, value: value}, scope) do
+    case resolve_value(flag, scope) do
+      {:ok, scope} ->
+        case resolve_value(value, scope) do
+          {:ok, scope} ->
+            {:ok, scope}
           error ->
             error
         end
@@ -39,14 +40,14 @@ defimpl Piper.Executable, for: Piper.Ast.Option do
     Piper.Executable.resolve(value, scope)
   end
 
-  defp execute_value(nil, _scope) do
-    {:ok, nil}
+  defp prepare_value(nil, scope) do
+    {:ok, nil, scope}
   end
-  defp execute_value(v, _scope) when is_binary(v) do
-    {:ok, v}
+  defp prepare_value(v, scope) when is_binary(v) do
+    {:ok, v, scope}
   end
-  defp execute_value(value, scope) do
-    Piper.Executable.execute(value, scope)
+  defp prepare_value(value, scope) do
+    Piper.Executable.prepare(value, scope)
   end
 
 end

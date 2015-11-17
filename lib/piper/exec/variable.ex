@@ -3,6 +3,15 @@ defimpl Piper.Executable, for: Piper.Ast.Variable do
   alias Piper.Scoped
   alias Piper.Ast
 
+  def prepare(var, scope) do
+    case Scoped.lookup_variable(scope, var) do
+      {:ok, value} ->
+        {:ok, build_type(var, value), scope}
+      error ->
+        error
+    end
+  end
+
   def resolve(%Ast.Variable{name: name, index: nil}=var, scope) do
     case Scoped.lookup(scope, name) do
       {:ok, value} ->
@@ -25,13 +34,14 @@ defimpl Piper.Executable, for: Piper.Ast.Variable do
     end
   end
 
-  def execute(%Ast.Variable{}=var, scope) do
-    case Scoped.lookup_variable(scope, var) do
-      {:ok, value} ->
-        {:ok, %{var | value: value}}
-      error ->
-        error
-    end
+  defp build_type(var, value) when is_integer(value) do
+    Ast.Integer.new(var.line, var.col, value)
+  end
+  defp build_type(var, value) when is_float(value) do
+    Ast.Float.new(var.line, var.col, value)
+  end
+  defp build_type(var, value) when is_binary(value) do
+    Ast.String.new(var.line, var.col, value)
   end
 
   defp fetch_index(_value, %Ast.Integer{value: index}, _scope) when index < 0 do

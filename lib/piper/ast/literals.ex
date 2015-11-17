@@ -4,6 +4,10 @@ defmodule Piper.Ast.Integer do
 
   defwrapper [value: :value, converter: :convert, token_type: :integer]
 
+  def new(line, col, value) do
+    %__MODULE__{line: line, col: col, value: value}
+  end
+
   def convert(%__MODULE__{value: value}=literal) when is_binary(value) do
     try do
       %{literal | value: String.to_integer(value)}
@@ -20,6 +24,10 @@ defmodule Piper.Ast.Float do
   use Piper.Util.TokenWrapper
 
   defwrapper [value: :value, converter: :convert, token_type: :float]
+
+  def new(line, col, value) do
+    %__MODULE__{line: line, col: col, value: value}
+  end
 
   def convert(%__MODULE__{value: value}=literal) when is_binary(value) do
     try do
@@ -42,4 +50,7 @@ defmodule Piper.Ast.String do
     %__MODULE__{line: line, col: col, value: text, raw: raw}
   end
 
+  def new(line, col, text) do
+    %__MODULE__{line: line, col: col, value: text, raw: text}
+  end
 end

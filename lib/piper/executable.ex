@@ -1,9 +1,9 @@
 defprotocol Piper.Executable do
 
-  @spec resolve(Piper.Executable, Piper.Scoped) :: :ok | {:error, atom()}
+  @spec resolve(Piper.Executable, Piper.Scoped) :: {:ok, Piper.Scoped} | {:error, atom()}
   def resolve(executable, scope)
 
-  @spec execute(Piper.Executable, Piper.Scoped) :: {:ok, term()} | {:error, atom()}
-  def execute(executable, scope)
+  @spec prepare(Piper.Executable, Piper.Scoped) :: {:ok, Piper.Executable, Piper.Scoped} | {:error, atom()}
+  def prepare(executable, scope)
 
 end
