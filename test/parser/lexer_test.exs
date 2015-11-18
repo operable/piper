@@ -79,4 +79,27 @@ defmodule Parser.LexerTest do
     assert matches Lexer.tokenize("'$abc_def'"), [types([:string]), text("$abc_def")]
     assert matches Lexer.tokenize("'$ab3_Def'"), [types([:string]), text("$ab3_Def")]
   end
+
+  test "single-quoted terms remain separate" do
+    assert matches Lexer.tokenize("'abc' 'def' '1231'"), [types([:string, :string, :string]),
+                                                          text(["abc", "def", "1231"])]
+    assert matches Lexer.tokenize("'abc''def''1231'"), [types([:string, :string, :string]),
+                                                        text(["abc", "def", "1231"])]
+  end
+
+  test "double-quoted terms remain separate" do
+    assert matches Lexer.tokenize("\"abc\" \"def\" \"1231\""), [types([:string, :string, :string]),
+                                                                text(["abc", "def", "1231"])]
+    assert matches Lexer.tokenize("\"abc\"\"def\"\"1231\""), [types([:string, :string, :string]),
+                                                              text(["abc", "def", "1231"])]
+  end
+
+  test "embedded newlines are lexed" do
+    assert matches Lexer.tokenize("123\n456\n\nabc"), [types([:integer, :integer, :name])]
+  end
+
+  test "unterminated string causes error" do
+    {:error, {:unexpected_input, 10, _}} = Lexer.tokenize("ec2-find \"test-db")
+  end
+
 end
