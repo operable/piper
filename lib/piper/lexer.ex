@@ -20,10 +20,10 @@ defmodule Piper.Lexer do
   token :equals, pattern: ~r/\A=/
   token :lbracket, pattern: ~r/\A\[/
   token :rbracket, pattern: ~r/\A\]/
+  token :colon, pattern: ~r/\A\:/
   # Non-indexed variables eg: $hostname
   token :variable, pattern: ~r/\A(\$)([a-zA-Z0-9_])+/, post: :clean_variable
   # Command name
-  token :name, pattern: ~r/\A(([a-z])+([a-zA-Z0-9_\-\*])+):([a-zA-Z0-9_\-\*])+(?:\s)*/, post: :strip_space
   token :name, pattern: ~r/\A([a-z])+([a-zA-Z0-9_\-\*])+(?:\s)*/, post: :strip_space
   # Option name
   token :option, pattern: ~r/\A\-\-[a-zA-Z0-9_]([a-zA-Z0-9_-])+/, post: :clean_option

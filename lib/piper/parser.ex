@@ -77,9 +77,22 @@ defmodule Piper.Parser do
   end
 
   defp parse_invocation({parser, %Token{type: :name}=token}) do
-    parser
-    |> push_node(Ast.Invocation.new(token))
-    |> parse_args
+    case pop_token(parser) do
+      {parser, %Token{type: :colon}} ->
+        case pop_token(parser) do
+          {parser, %Token{type: :name}=token1} ->
+            combined = %Token{line: token.line, col: token.col, type: :name,
+                              text: token.text <> ":" <> token1.text}
+            push_node(parser, Ast.Invocation.new(combined))
+            |> parse_args
+          {_parser, errtoken} ->
+            SyntaxError.new(:invocation, :name, errtoken)
+        end
+      {parser, tok} ->
+        push_token(parser, tok)
+        |> push_node(Ast.Invocation.new(token))
+        |> parse_args
+    end
   end
   defp parse_invocation({parser, %Token{type: :variable}=token}) do
     case parse_variable({parser, token}) do
