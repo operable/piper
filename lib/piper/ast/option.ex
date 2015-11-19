@@ -1,6 +1,6 @@
 defmodule Piper.Ast.Option do
 
-  defstruct [:line, :col, :flag, :value]
+  defstruct [:line, :col, :finalized, :flag, :value]
 
   alias Piper.Ast
   alias Piper.Util.Token

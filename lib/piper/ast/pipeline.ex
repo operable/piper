@@ -3,7 +3,7 @@ defmodule Piper.Ast.Pipeline do
   alias Piper.Ast
   alias Piper.Util.Token
 
-  defstruct [:line, :col, :text, :type, :invocations, :output_to_input, :abort_on_error]
+  defstruct [:line, :col, :finalized, :text, :type, :invocations, :output_to_input, :abort_on_error]
 
   def new(%Token{type: type}=token) when type in [:iff, :pipe] do
     %__MODULE__{line: token.line, col: token.col,

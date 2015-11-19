@@ -6,7 +6,7 @@ defimpl Piper.Bindable, for: Piper.Ast.Variable do
   def bind(var, scope) do
     case Scoped.lookup_variable(scope, var) do
       {:ok, value} ->
-        {:ok, build_type(var, value), scope}
+        {:ok, value, scope}
       error ->
         error
     end
