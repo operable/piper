@@ -201,6 +201,15 @@ defmodule Parser.LexerTest do
                                                 text(["f", "=", "bar"])]
   end
 
+  test "lexing correct json" do
+    assert matches Lexer.tokenize("{{\"abc\": [1,2,1.05,\"foo\"]}}"), [types(:json),
+                                                                       text("{\"abc\":[1,2,1.05,\"foo\"]}")]
+  end
+
+  test "lexing incorrect json" do
+    {:error, _} = Lexer.tokenize("{{\"abc}}")
+  end
+
   test "lexing single-quoted strings" do
     assert matches Lexer.tokenize("'this is a test'"), [types(:string), text("this is a test")]
   end

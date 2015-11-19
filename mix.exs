@@ -8,7 +8,7 @@ defmodule Piper.Mixfile do
      elixirc_paths: elixirc_paths(Mix.env),
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: []]
+     deps: deps]
   end
 
   def application do
@@ -17,5 +17,9 @@ defmodule Piper.Mixfile do
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
+
+  defp deps do
+    [{:poison, "1.5.0"}]
+  end
 
 end

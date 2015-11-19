@@ -22,3 +22,22 @@ defimpl String.Chars, for: [Piper.Ast.String] do
   end
 
 end
+
+defimpl String.Chars, for: [Piper.Ast.Json] do
+
+  alias Piper.Ast
+
+  def to_string(%Ast.Json{raw: raw}) do
+    raw
+  end
+
+end
+
+defimpl String.Chars, for: [Elixir.Map] do
+
+  def to_string(data) do
+    json = Poison.encode!(data)
+    "{{" <> json <> "}}"
+  end
+
+end

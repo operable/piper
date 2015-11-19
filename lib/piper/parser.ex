@@ -182,6 +182,9 @@ defmodule Piper.Parser do
   defp parse_value({parser, %Token{type: :bool}=token}) do
     {push_node(parser, Ast.Bool.new(token)), true}
   end
+  defp parse_value({parser, %Token{type: :json}=token}) do
+    {push_node(parser, Ast.Json.new(token)), true}
+  end
   defp parse_value({parser, %Token{type: token_type}=token}) when token_type in [:name, :string] do
     case pop_token(parser) do
       {parser, %Token{type: :colon}=ctok} ->

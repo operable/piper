@@ -88,6 +88,8 @@ defmodule Piper.Util.LexerGenerator do
       defp scan_table(text, [{type, body}|t], line, col) do
         result = run_entry(text, type, body)
         case result do
+          :stop ->
+            :nomatch
           false ->
             scan_table(text, t, line, col)
           {token_text, cleaned_text, token_size, text} ->
@@ -112,6 +114,8 @@ defmodule Piper.Util.LexerGenerator do
         case result do
           nil ->
             run_entry(text, type, t)
+          :stop ->
+            :stop
           result ->
             result
         end
@@ -125,6 +129,8 @@ defmodule Piper.Util.LexerGenerator do
             {token_text, text} = String.split_at(text, index)
             token_text = String.strip(token_text)
             case cleaner.(token_text) do
+              :stop ->
+                :stop
               :error ->
                 nil
               result ->

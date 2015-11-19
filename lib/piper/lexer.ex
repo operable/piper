@@ -11,6 +11,8 @@ defmodule Piper.Lexer do
   # Skip line
   token :skip_line, pattern: ~r/\A\r\n/
   token :skip_line, pattern: ~r/\A\n/
+  # JSON literal
+  token :json, pattern: ~r/\A{{([[:graph:]]| )+}}/, post: :clean_json
   # Output-to-input linked pipeline
   token :pipe, pattern: ~r/\A(\|)/
   # Continue only if first command was successful
@@ -63,6 +65,26 @@ defmodule Piper.Lexer do
     text
     |> clean_option
     |> clean_variable
+  end
+
+  def clean_json(text) do
+    json = String.slice(text, 2, String.length(text) - 4)
+    case Poison.decode(json) do
+      {:ok, json} ->
+        Poison.encode!(json)
+      {:error, _} ->
+        # Maybe the user forgot to add additional braces
+        # for maps contained within the double braces we required.
+        # We'll add them back and see if that allows the JSON to
+        # successfully parse.
+        json = "{" <> json <> "}"
+        case Poison.decode(json) do
+          {:ok, json} ->
+            Poison.encode!(json)
+          {:error, _} ->
+            :stop
+        end
+    end
   end
 
   def clean_arg(text) do

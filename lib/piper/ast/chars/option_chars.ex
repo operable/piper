@@ -1,5 +1,6 @@
 defimpl String.Chars, for: Piper.Ast.Option do
 
+  use Piper.Ast.Chars.Util
   alias Piper.Ast.Option
 
   def to_string(%Option{flag: flag, value: nil}) do
@@ -16,9 +17,9 @@ defimpl String.Chars, for: Piper.Ast.Option do
     flag = "#{flag}"
     case String.length(flag) == 1 do
       true ->
-        "-#{flag}=#{value}"
+        "-#{flag}=#{escape(value)}"
       false ->
-        "--#{flag}=#{value}"
+        "--#{flag}=#{escape(value)}"
     end
   end
 

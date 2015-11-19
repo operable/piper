@@ -27,3 +27,20 @@ defimpl Piper.Bindable, for: [Piper.Ast.String] do
   end
 
 end
+
+defimpl Piper.Bindable, for: [Piper.Ast.Json] do
+
+  alias Piper.Ast
+
+  def resolve(_literal, scope) do
+    {:ok, scope}
+  end
+
+  def bind(%Ast.Json{value: value}, scope) when is_binary(value) do
+    {:ok, Poison.decode!(value), scope}
+  end
+  def bind(%Ast.Json{value: value}, scope) do
+    {:ok, value, scope}
+  end
+
+end

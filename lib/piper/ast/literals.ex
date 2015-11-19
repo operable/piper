@@ -81,3 +81,28 @@ defmodule Piper.Ast.String do
     %__MODULE__{line: line, col: col, value: text, raw: text}
   end
 end
+
+defmodule Piper.Ast.Json do
+
+  defstruct [:line, :col, :raw, :value]
+
+  alias Piper.Util.Token
+
+  def new(%Token{line: line, col: col, text: text, raw: raw}) do
+    %__MODULE__{line: line, col: col, value: text, raw: raw}
+  end
+
+  def new(line, col, value) do
+    convert(%__MODULE__{line: line, col: col, value: value})
+  end
+
+  def convert(%__MODULE__{value: value}=node) when is_binary(value) do
+    raw = "{{" <> value <> "}}"
+    %{node | value: Poison.decode!(value), raw: raw}
+  end
+  def convert(%__MODULE__{value: value}=node) do
+    json = Posion.encode!(value)
+    %{node | value: json, raw: "{{" <> json <> "}}"}
+  end
+
+end
