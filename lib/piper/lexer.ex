@@ -24,7 +24,7 @@ defmodule Piper.Lexer do
   token :rbracket, pattern: ~r/\A\]/
   token :colon, pattern: ~r/\A\:/
   # Non-indexed variables eg: $hostname
-  token :variable, pattern: ~r/\A(\$)([a-zA-Z0-9_])+/, post: :clean_variable
+  token :variable, pattern: ~r/\A(\$)([a-zA-Z0-9_\$])+/, post: :clean_variable
   # Boolean values
   token :bool, pattern: ~r/\A(true|TRUE|\#t|false|FALSE|\#f)/
   # Command name
