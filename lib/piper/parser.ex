@@ -179,11 +179,26 @@ defmodule Piper.Parser do
   defp parse_value({parser, %Token{type: :float}=token}) do
     {push_node(parser, Ast.Float.new(token)), true}
   end
-  defp parse_value({parser, %Token{type: :string}=token}) do
-    {push_node(parser, Ast.String.new(token)), true}
+  defp parse_value({parser, %Token{type: :bool}=token}) do
+    {push_node(parser, Ast.Bool.new(token)), true}
   end
-  defp parse_value({parser, %Token{type: :name}=token}) do
-    {push_node(parser, Ast.String.new(%{token | type: :string})), true}
+  defp parse_value({parser, %Token{type: token_type}=token}) when token_type in [:name, :string] do
+    case pop_token(parser) do
+      {parser, %Token{type: :colon}=ctok} ->
+        {parser, tok1} = pop_token(parser)
+        if tok1 == nil do
+          {push_token(parser, ctok), false}
+        else
+          # Synthesize a new token combining the text of all three
+          # and treat it as a string
+          new_token = %Token{line: token.line, col: token.col,
+                             text: token.text <> ":" <> tok1.text}
+          {push_node(parser, Ast.String.new(new_token)), true}
+        end
+      {parser, tok} ->
+        parser = push_token(parser, tok)
+        {push_node(parser, Ast.String.new(%{token | type: :string})), true}
+    end
   end
   defp parse_value({parser, %Token{type: :variable}=token}) do
     parse_variable({parser, token})

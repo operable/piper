@@ -34,6 +34,9 @@ defimpl Piper.Bindable, for: Piper.Ast.Variable do
     end
   end
 
+  defp build_type(var, value) when is_atom(value) do
+    Ast.Bool.new(var.line, var.col, value)
+  end
   defp build_type(var, value) when is_integer(value) do
     Ast.Integer.new(var.line, var.col, value)
   end

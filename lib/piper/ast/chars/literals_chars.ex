@@ -1,5 +1,6 @@
 defimpl String.Chars, for: [Piper.Ast.Integer,
-                            Piper.Ast.Float] do
+                            Piper.Ast.Float,
+                            Piper.Ast.Bool] do
 
   def to_string(literal) do
     value = Map.fetch!(literal, :value)

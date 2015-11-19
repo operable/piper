@@ -123,6 +123,7 @@ defmodule Piper.Util.LexerGenerator do
             nil
           [{_, index}] ->
             {token_text, text} = String.split_at(text, index)
+            token_text = String.strip(token_text)
             case cleaner.(token_text) do
               :error ->
                 nil

@@ -1,6 +1,7 @@
 defimpl Piper.Bindable, for: [Piper.Ast.Integer,
-                                 Piper.Ast.Float,
-                                 Piper.Ast.String] do
+                              Piper.Ast.Float,
+                              Piper.Ast.String,
+                              Piper.Ast.Bool] do
 
   def resolve(_literal, scope) do
     {:ok, scope}

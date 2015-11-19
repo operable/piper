@@ -26,14 +26,14 @@ defmodule Piper.Lexer do
   # Boolean values
   token :bool, pattern: ~r/\A(true|TRUE|\#t|false|FALSE|\#f)/
   # Command name
-  token :name, pattern: ~r/\A([a-z])+([a-zA-Z0-9_\-\*])+(?:\s)*/, post: :strip_space
+  token :name, pattern: ~r/\A([a-z])+([a-zA-Z0-9_\-\*])+(?:\s)*/
   # Option name
   token :option, pattern: ~r/\A\-\-[a-zA-Z0-9_]([a-zA-Z0-9_-])+/, post: :clean_option
   token :option, pattern: ~r/\A\-[a-zA-Z0-9_]([a-zA-Z0-9-_])*/, post: :clean_option
   # Variable as option name
   token :optvar, pattern: ~r/\A--\$([a-zA-Z0-9_])+/, post: :clean_optvar
   token :optvar, pattern: ~r/\A-\$([a-zA-Z0-9_])+/, post: :clean_optvar
-  token :float, pattern: ~r/\A([0-9])+\.([0-9])+(?:\s)*/, post: :strip_space
+  token :float, pattern: ~r/\A([0-9])+\.([0-9])+(?:\s)*/
   token :integer, pattern: ~r/\A([0-9])+/
   # Tokenize quoted strings as whole strings
   token :string, pattern: ~r/\A'(\\\\A.|\\.|[^'])*'/, post: :clean_string
@@ -77,7 +77,4 @@ defmodule Piper.Lexer do
     end
   end
 
-  def strip_space(text) do
-    String.strip(text)
-  end
 end

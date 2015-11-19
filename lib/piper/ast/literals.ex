@@ -40,6 +40,33 @@ defmodule Piper.Ast.Float do
 
 end
 
+defmodule Piper.Ast.Bool do
+
+  use Piper.Util.TokenWrapper
+
+  defwrapper [value: :value, converter: :convert, token_type: :bool]
+
+  def new(line, col, value) when value in [:true, :false] do
+    %__MODULE__{line: line, col: col, value: value}
+  end
+
+  def convert(%__MODULE__{value: value}=literal) do
+    %{literal | value: convert(String.downcase(value))}
+  end
+  def convert("true") do
+    true
+  end
+  def convert("#t") do
+    true
+  end
+  def convert("false") do
+    false
+  end
+  def convert("#f") do
+    false
+  end
+end
+
 defmodule Piper.Ast.String do
 
   defstruct [:line, :col, :value, :raw]
