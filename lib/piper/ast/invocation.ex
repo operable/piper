@@ -5,7 +5,7 @@ defmodule Piper.Ast.Invocation do
 
   defstruct [line: nil, col: nil, command: nil, args: [], options: []]
 
-  def new(%Token{type: :name}=token) do
+  def new(%Token{type: :string}=token) do
     %__MODULE__{line: token.line, col: token.col,
                 command: token.text}
   end

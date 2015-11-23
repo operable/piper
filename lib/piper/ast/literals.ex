@@ -69,16 +69,16 @@ end
 
 defmodule Piper.Ast.String do
 
-  defstruct [:line, :col, :value, :raw]
+  defstruct [:line, :col, :value]
 
   alias Piper.Util.Token
 
-  def new(%Token{line: line, col: col, text: text, raw: raw}) do
-    %__MODULE__{line: line, col: col, value: text, raw: raw}
+  def new(%Token{line: line, col: col, text: text}) do
+    %__MODULE__{line: line, col: col, value: text}
   end
 
   def new(line, col, text) do
-    %__MODULE__{line: line, col: col, value: text, raw: text}
+    %__MODULE__{line: line, col: col, value: text}
   end
 end
 

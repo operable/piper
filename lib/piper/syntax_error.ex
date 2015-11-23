@@ -26,7 +26,7 @@ defmodule Piper.SyntaxError do
       fn(key, wrong_type) ->
         v1 = Map.get(wrong_type, key)
         v2 = Keyword.fetch!(new_opts, key)
-        Map.set(wrong_type, key, update_wrong_type(key, v1, v2))
+        Map.put(wrong_type, key, update_wrong_type(key, v1, v2))
       end)
   end
 

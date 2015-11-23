@@ -41,7 +41,14 @@ defmodule Parser.ParsingCase do
   end
 
   def ast_string(ast_str) do
-    fn(ent) -> "#{ent}" == ast_str end
+    fn(ent) ->
+      if "#{ent}" != ast_str do
+        Logger.error("#{ent} didn't match expected #{ast_str}")
+        false
+      else
+        true
+      end
+    end
   end
 
   def matches({:ok, ents}, matchers) when is_list(matchers) do

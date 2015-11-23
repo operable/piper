@@ -13,12 +13,8 @@ defimpl String.Chars, for: [Piper.Ast.String] do
 
   alias Piper.Ast
 
-  def to_string(%Ast.String{raw: raw, value: value}) do
-    if raw == nil do
-      value
-    else
-      raw
-    end
+  def to_string(%Ast.String{value: value}) do
+    value
   end
 
 end
