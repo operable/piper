@@ -11,8 +11,6 @@ defmodule Piper.Lexer do
   # Skip line
   token :skip_line, pattern: ~r/\A\r\n/
   token :skip_line, pattern: ~r/\A\n/
-  # JSON literal
-  token :json, pattern: ~r/\A{{([[:graph:]]| )+}}/, post: :clean_json
   # Output-to-input linked pipeline
   token :pipe, pattern: ~r/\A(\|)/
   # Continue only if first command was successful
@@ -23,29 +21,25 @@ defmodule Piper.Lexer do
   token :lbracket, pattern: ~r/\A\[/
   token :rbracket, pattern: ~r/\A\]/
   token :colon, pattern: ~r/\A\:/
+  # Variable as option name
+  token :option, pattern: ~r/\A\-\-/
+  token :option, pattern: ~r/\A\-/
+  # JSON literal
+  token :json, pattern: ~r/\A{{([[:graph:]]| )+}}/, post: :clean_json
+  # Tokenize quoted strings as whole strings
+  token :quoted_string, pattern: ~r/\A'(\\\\A.|\\.|[^'])*'(?:\s|\z)*/, post: :clean_quoted_string
+  # Tokenize double-quoted strings as whole strings
+  token :quoted_string, pattern: ~r/\A"(\\\\A.|\\.|[^"])*"(?:\s|\z)*/, post: :clean_quoted_string
   # Non-indexed variables eg: $hostname
   token :variable, pattern: ~r/\A(\$)([a-zA-Z0-9_\$])+/, post: :clean_variable
   # Boolean values
   token :bool, pattern: ~r/\A(true|TRUE|\#t|false|FALSE|\#f)/
-  # Command name
-  token :name, pattern: ~r/\A([a-z])+([a-zA-Z0-9_\-\*])+(?:\s)*/
-  # Option name
-  token :option, pattern: ~r/\A\-\-[a-zA-Z0-9_]([a-zA-Z0-9_-])+/, post: :clean_option
-  token :option, pattern: ~r/\A\-[a-zA-Z0-9_]([a-zA-Z0-9-_])*/, post: :clean_option
-  # Variable as option name
-  token :optvar, pattern: ~r/\A--\$([a-zA-Z0-9_])+/, post: :clean_optvar
-  token :optvar, pattern: ~r/\A-\$([a-zA-Z0-9_])+/, post: :clean_optvar
-  token :float, pattern: ~r/\A([0-9])+\.([0-9])+(?:\s)*/
+  token :float, pattern: ~r/\A([0-9])+\.([0-9])+/
   token :integer, pattern: ~r/\A([0-9])+/
-  # Tokenize quoted strings as whole strings
-  token :string, pattern: ~r/\A'(\\\\A.|\\.|[^'])*'/, post: :clean_string
-  # Tokenize double-quoted strings as whole strings
-  token :string, pattern: ~r/\A"(\\\\A.|\\.|[^"])*"/, post: :clean_string
-  # Tokenize anything else not starting with one or two dashes as a
-  # command argument
-  token :string, pattern: ~r/\A([[:graph:]])+/, post: :clean_arg
+  token :string, pattern: ~r/\A([a-zA-Z0-9_\-])+/
+  token :string, pattern: ~r/\A([[:graph:]])+(?:\s|\z)*/, post: :clean_string
 
-  def clean_string(text) do
+  def clean_quoted_string(text) do
     text = Regex.replace(~r/\A(\"|\')/, text, "")
     text = Regex.replace(~r/(\"|\')\z/, text, "")
     text = Regex.replace(~r/(\\\")/, text, "\"")
@@ -53,8 +47,12 @@ defmodule Piper.Lexer do
     text
   end
 
-  def clean_option(text) do
-    Regex.replace(~r/\A(--|-)/, text, "")
+  def clean_string(text) do
+    if String.starts_with?(text, "\"") or String.starts_with?(text, "'") do
+      :stop
+    else
+      text
+    end
   end
 
   def clean_variable(text) do
@@ -62,8 +60,7 @@ defmodule Piper.Lexer do
   end
 
   def clean_optvar(text) do
-    text
-    |> clean_option
+    Regex.replace(~r/\A(--|-)/, text, "")
     |> clean_variable
   end
 
@@ -77,12 +74,20 @@ defmodule Piper.Lexer do
         # for maps contained within the double braces we required.
         # We'll add them back and see if that allows the JSON to
         # successfully parse.
-        json = "{" <> json <> "}"
-        case Poison.decode(json) do
-          {:ok, json} ->
-            Poison.encode!(json)
+        json1 = "{" <> json <> "}"
+        case Poison.decode(json1) do
+          {:ok, json1} ->
+            Poison.encode!(json1)
           {:error, _} ->
-            :stop
+            # Adding braces didn't work so maybe the user typed a list
+            # We'll add brackets and see if that allows the JSON to parse.
+            json2 = "[" <> json <> "]"
+            case Poison.decode(json2) do
+              {:ok, json2} ->
+                Poison.encode!(json2)
+              {:error, _} ->
+                :stop
+            end
         end
     end
   end

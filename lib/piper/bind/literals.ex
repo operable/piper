@@ -19,11 +19,7 @@ defimpl Piper.Bindable, for: [Piper.Ast.String] do
   end
 
   def bind(literal, scope) do
-    if literal.raw != nil do
-      {:ok, literal.raw, scope}
-    else
-      {:ok, literal.value, scope}
-    end
+    {:ok, literal.value, scope}
   end
 
 end

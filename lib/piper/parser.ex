@@ -76,17 +76,17 @@ defmodule Piper.Parser do
     push_node(parser, next)
   end
 
-  defp parse_invocation({parser, %Token{type: :name}=token}) do
+  defp parse_invocation({parser, %Token{type: :string}=token}) do
     case pop_token(parser) do
       {parser, %Token{type: :colon}} ->
         case pop_token(parser) do
-          {parser, %Token{type: :name}=token1} ->
-            combined = %Token{line: token.line, col: token.col, type: :name,
+          {parser, %Token{type: :string}=token1} ->
+            combined = %Token{line: token.line, col: token.col, type: :string,
                               text: token.text <> ":" <> token1.text}
             push_node(parser, Ast.Invocation.new(combined))
             |> parse_args
           {_parser, errtoken} ->
-            SyntaxError.new(:invocation, :name, errtoken)
+            SyntaxError.new(:invocation, :command_name, errtoken)
         end
       {parser, tok} ->
         push_token(parser, tok)
@@ -105,7 +105,7 @@ defmodule Piper.Parser do
     end
   end
   defp parse_invocation({_parser, token}) do
-    SyntaxError.new(:invocation, :name, token)
+    SyntaxError.new(:invocation, :command_name, token)
   end
   defp parse_invocation(%__MODULE__{}=parser) do
     case parse_invocation(pop_token(parser)) do
@@ -116,29 +116,32 @@ defmodule Piper.Parser do
     end
   end
 
-
   defp parse_args({parser, %Token{type: :option}=token}) do
-    {parser, invocation} = pop_node(parser)
-    option = Ast.Option.new(token)
-    case parse_option_value(parser, option) do
-      {parser, %Ast.Option{}=option} ->
-        invocation = Ast.Invocation.add_arg(invocation, option)
-        parser = push_node(parser, invocation)
-        parse_args(pop_token(parser))
-      %SyntaxError{}=error ->
-        error
-    end
-  end
-  defp parse_args({parser, %Token{type: :optvar}=token}) do
-    {parser, invocation} = pop_node(parser)
-    option = Ast.Option.new(token)
-    case parse_option_value(parser, option) do
-      {parser, %Ast.Option{}=option} ->
-        invocation = Ast.Invocation.add_arg(invocation, option)
-        parser = push_node(parser, invocation)
-        parse_args(pop_token(parser))
-      %SyntaxError{}=error ->
-        error
+    case pop_token(parser) do
+      {parser, %Token{type: :variable}=tok} ->
+        option = Ast.Option.new(Ast.Variable.new(tok))
+        case parse_option_value(parser, option) do
+          {parser, %Ast.Option{}=option} ->
+            {parser, invocation} = pop_node(parser)
+            invocation = Ast.Invocation.add_arg(invocation, option)
+            parser = push_node(parser, invocation)
+            parse_args(pop_token(parser))
+          %SyntaxError{}=error ->
+            error
+        end
+      {parser, %Token{type: type}=tok} when type in [:string, :integer] ->
+        option = Ast.Option.new(tok)
+        case parse_option_value(parser, option) do
+          {parser, %Ast.Option{}=option} ->
+            {parser, invocation} = pop_node(parser)
+            invocation = Ast.Invocation.add_arg(invocation, option)
+            parser = push_node(parser, invocation)
+            parse_args(pop_token(parser))
+          %SyntaxError{}=error ->
+            error
+        end
+      {_parser, _token} ->
+        SyntaxError.new(:option, [:variable, :string, :integer], token)
     end
   end
   defp parse_args({parser, token}) do
@@ -185,7 +188,7 @@ defmodule Piper.Parser do
   defp parse_value({parser, %Token{type: :json}=token}) do
     {push_node(parser, Ast.Json.new(token)), true}
   end
-  defp parse_value({parser, %Token{type: token_type}=token}) when token_type in [:name, :string] do
+  defp parse_value({parser, %Token{type: token_type}=token}) when token_type in [:quoted_string, :string] do
     case pop_token(parser) do
       {parser, %Token{type: :colon}=ctok} ->
         {parser, tok1} = pop_token(parser)
