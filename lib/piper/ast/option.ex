@@ -13,7 +13,7 @@ defmodule Piper.Ast.Option do
   end
 
   def set_value(%__MODULE__{}=opt, value) do
-    opt = %{opt | value: value}
+    %{opt | value: value}
   end
 
 end
