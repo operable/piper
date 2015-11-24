@@ -112,7 +112,6 @@ defmodule Bind.BindTest do
   test "list binding" do
     scope = Bind.Scope.from_map(%{"regions" => ["us-west-1", "us-west-2", "us-east-1"]})
     {:ok, ast} = parse_and_bind2("ec2:list_vms $regions", scope)
-    IO.puts "#{inspect ast}"
     assert "#{ast}" == "ec2:list_vms {{[\"us-west-1\",\"us-west-2\",\"us-east-1\"]}}"
   end
 
