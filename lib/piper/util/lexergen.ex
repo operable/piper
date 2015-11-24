@@ -133,6 +133,8 @@ defmodule Piper.Util.LexerGenerator do
                 :stop
               :error ->
                 nil
+              {result, push_back} ->
+                {token_text, result, index, push_back <> text}
               result ->
                 {token_text, result, index, text}
             end
