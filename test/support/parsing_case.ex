@@ -5,9 +5,9 @@ defmodule Parser.ParsingCase do
 
   defmacro __using__(_) do
     quote do
-      alias Piper.Parser
-      alias Piper.Lexer
-      alias Piper.Ast
+      alias Piper.Command.Parser
+      alias Piper.Command.Lexer
+      alias Piper.Command.Ast
       use ExUnit.Case
 
       import unquote(__MODULE__), only: [types: 1,
