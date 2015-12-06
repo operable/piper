@@ -1,6 +1,8 @@
 defmodule Piper.Permissions.Ast.Var do
 
-  defstruct [:name]
+  @derive [Poison.Encoder]
+
+  defstruct [{:'$ast$', "var"}, :name]
 
   def new(name) do
     %__MODULE__{name: name}

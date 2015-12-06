@@ -1,6 +1,8 @@
 defmodule Piper.Permissions.Ast.ContainExpr do
 
-  defstruct [:line, :col, :lhs_agg, :left, :right, :parens]
+  @derive [Poison.Encoder]
+
+  defstruct [{:'$ast$', "contain_expr"}, :line, :col, :lhs_agg, :left, :right, :parens]
 
   alias Piper.Permissions.Ast
 

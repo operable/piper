@@ -1,6 +1,8 @@
 defmodule Piper.Permissions.Ast.BinaryExpr do
 
-  defstruct [line: nil, col: nil, op: nil, left: nil, right: nil,
+  @derive [Poison.Encoder]
+
+  defstruct ['$ast$': "binary_expr", line: nil, col: nil, op: nil, left: nil, right: nil,
              parens: false]
 
   alias Piper.Permissions.Ast

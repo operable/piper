@@ -1,6 +1,8 @@
 defmodule Piper.Permissions.Ast.String do
 
-  defstruct [:line, :col, :value, :quotes]
+  @derive [Poison.Encoder]
+
+  defstruct [{:'$ast$', "string"}, :line, :col, :value, :quotes]
 
   def new({:string, {line, col}, text}) do
     text = String.Chars.to_string(text)
@@ -31,7 +33,9 @@ end
 
 defmodule Piper.Permissions.Ast.Integer do
 
-  defstruct [:line, :col, :value]
+  @derive [Poison.Encoder]
+
+  defstruct [{:'$ast$', "integer"}, :line, :col, :value]
 
   def new({:integer, {line, col}, value}) do
     %__MODULE__{line: line, col: col, value: value}
@@ -41,7 +45,9 @@ end
 
 defmodule Piper.Permissions.Ast.Float do
 
-  defstruct [:line, :col, :value]
+  @derive [Poison.Encoder]
+
+  defstruct [{:'$ast$', "float"}, :line, :col, :value]
 
   def new({:float, {line, col}, value}) do
     %__MODULE__{line: line, col: col, value: value}
@@ -51,7 +57,9 @@ end
 
 defmodule Piper.Permissions.Ast.Bool do
 
-  defstruct [:line, :col, :value]
+  @derive [Poison.Encoder]
+
+  defstruct [{:'$ast$', "bool"}, :line, :col, :value]
 
   def new({:boolean, {line, col}, value}) do
     %__MODULE__{line: line, col: col, value: value}
@@ -60,7 +68,10 @@ defmodule Piper.Permissions.Ast.Bool do
 end
 
 defmodule Piper.Permissions.Ast.List do
-  defstruct [:line, :col, :values]
+
+  @derive [Poison.Encoder]
+
+  defstruct [{:'$ast$', "array"}, :line, :col, :values]
 
   def new({:lbracket, {line, col}, _}, values) do
     %__MODULE__{line: line, col: col, values: values}
@@ -70,7 +81,9 @@ end
 
 defmodule Piper.Permissions.Ast.Regex do
 
-  defstruct [:line, :col, :value]
+  @derive [Poison.Encoder]
+
+  defstruct [{:'$ast$', "regex"}, :line, :col, :value]
 
   def new({:regex, {line, col}, value}) do
     value = String.Chars.to_string(value)
@@ -80,7 +93,10 @@ defmodule Piper.Permissions.Ast.Regex do
 end
 
 defmodule Piper.Permissions.Ast.Arg do
-  defstruct [:line, :col, :index]
+
+  @derive [Poison.Encoder]
+
+  defstruct [{:'$ast$', "arg"}, :line, :col, :index]
 
   def new({:arg, {line, col}, nil}, type) when type in [:any, :all] do
     %__MODULE__{line: line, col: col, index: type}
@@ -93,7 +109,9 @@ end
 
 defmodule Piper.Permissions.Ast.Option do
 
-  defstruct [:line, :col, :name]
+  @derive [Poison.Encoder]
+
+  defstruct [{:'$ast$', "option"}, :line, :col, :name]
 
   def new({:option, {line, col}, _}, type) when type in [:any, :all] do
     %__MODULE__{line: line, col: col, name: type}

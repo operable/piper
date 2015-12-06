@@ -1,6 +1,8 @@
 defmodule Piper.Permissions.Ast.ConditionalExpr do
 
-  defstruct [line: nil, col: nil, op: nil, left: nil, right: nil,
+  @derive [Poison.Encoder]
+
+  defstruct ['$ast$': "cond_expr", line: nil, col: nil, op: nil, left: nil, right: nil,
              parens: false]
 
   def new({type, {line, col}, _}, opts \\ []) when type in [:and, :or] do
