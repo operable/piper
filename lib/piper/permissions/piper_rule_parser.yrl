@@ -73,8 +73,6 @@ permission_criteria ->
 
 command_criteria ->
   is string_expr : ?AST("BinaryExpr"):new('$1', [{right, verify_command_name('$2')}]).
-command_criteria ->
-  is regular_expr : ?AST("BinaryExpr"):new('$1', [{right, '$2'}]).
 
 input_criterion ->
   input_criteria : '$1'.
