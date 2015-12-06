@@ -66,12 +66,12 @@ permission_criterion ->
                                                                                    {right, '$3'}]).
 
 permission_criteria ->
-  any in ns_name_list : ?AST("PermissionExpr"):new('$1', '$3').
+  any in ns_name_list : ?AST("PermissionExpr"):new('$1', track_permissions('$3')).
 permission_criteria ->
-  all in ns_name_list : ?AST("PermissionExpr"):new('$1', '$3').
+  all in ns_name_list : ?AST("PermissionExpr"):new('$1', track_permissions('$3')).
 permission_criteria ->
   string_expr : verify_name('$1'),
-                ?AST("PermissionExpr"):new('$1').
+                ?AST("PermissionExpr"):new(add_permission('$1')).
 
 command_criteria ->
   is string_expr : ?AST("BinaryExpr"):new('$1', [{right, verify_name('$2')}]).
@@ -185,11 +185,16 @@ string_expr ->
 
 Erlang code.
 
--export([parse_rule/1]).
+-export([parse_rule/1, parse_rule/2]).
 
 -define(AST(E), (list_to_atom("Elixir.Piper.Permissions.Ast." ++ E))).
 
 parse_rule(Text) ->
+  Tracker = fun(_) -> ok end,
+  parse_rule(Text, Tracker).
+
+parse_rule(Text, Tracker) ->
+  store_tracker(Tracker),
   case piper_rule_lexer:tokenize(Text) of
     {ok, Tokens} ->
       parse(Tokens);
@@ -214,6 +219,25 @@ build_arg(Arg, Type) ->
       throw({error, bad_arg_ref})
   end.
 
+store_tracker(Tracker) ->
+  erlang:put(permission_tracker_ref, Tracker).
+
+track_permissions(#{'__struct__' := 'Elixir.Piper.Permissions.Ast.List'}=Expr) ->
+  track_permissions(maps:get(values, Expr)),
+  Expr;
+track_permissions([]) ->
+  ok;
+track_permissions([#{'__struct__' := 'Elixir.Piper.Permissions.Ast.String'}=Expr|T]) ->
+  add_permission(Expr),
+  track_permissions(T);
+track_permissions([_|T]) ->
+  track_permissions(T).
+
+add_permission(Perm) ->
+  Name = maps:get(value, Perm),
+  Tracker = erlang:get(permission_tracker_ref),
+  Tracker(Name),
+  Perm.
 
 verify_arg({arg, _, Index}, indexed) when Index > -1 ->
   true;
