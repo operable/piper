@@ -3,12 +3,15 @@ defmodule Piper.Permissions.Ast.String do
   defstruct [:line, :col, :value, :quotes]
 
   def new({:string, {line, col}, text}) do
+    text = String.Chars.to_string(text)
     %__MODULE__{line: line, col: col, value: text}
   end
   def new({:dqstring, {line, col}, text}) do
+    text = String.Chars.to_string(text)
     %__MODULE__{line: line, col: col, value: text, quotes: "\""}
   end
   def new({:sqstring, {line, col}, text}) do
+    text = String.Chars.to_string(text)
     %__MODULE__{line: line, col: col, value: text, quotes: "'"}
   end
   def new(%__MODULE__{line: line, col: col, value: value1,
@@ -70,6 +73,7 @@ defmodule Piper.Permissions.Ast.Regex do
   defstruct [:line, :col, :value]
 
   def new({:regex, {line, col}, value}) do
+    value = String.Chars.to_string(value)
     %__MODULE__{line: line, col: col, value: Regex.compile!(value)}
   end
 
@@ -95,6 +99,7 @@ defmodule Piper.Permissions.Ast.Option do
     %__MODULE__{line: line, col: col, name: type}
   end
   def new({:option, {line, col}, _}, {:string, _, value}) do
+    value = String.Chars.to_string(value)
     %__MODULE__{line: line, col: col, name: value}
   end
 end

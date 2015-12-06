@@ -64,31 +64,31 @@ defmodule Piper.Permissions.LexerTest do
   end
 
   test "tokenizing strings" do
-    matches "this_is_a_test", [string: "this_is_a_test"]
-    matches "testing 123", [string: "testing", integer: 123]
-    matches "\"this is a test\"", [dqstring: "this is a test"]
-    matches "'this is a test'", [sqstring: "this is a test"]
+    matches "this_is_a_test", [string: 'this_is_a_test']
+    matches "testing 123", [string: 'testing', integer: 123]
+    matches "\"this is a test\"", [dqstring: 'this is a test']
+    matches "'this is a test'", [sqstring: 'this is a test']
   end
 
   test "quoting other types" do
-    matches "\"true\"", [dqstring: "true"]
-    matches "'false'", [sqstring: "false"]
-    matches "\"10005\"", [dqstring: "10005"]
-    matches "'0.55'", [sqstring: "0.55"]
-    matches "\".55\"", [dqstring: ".55"]
+    matches "\"true\"", [dqstring: 'true']
+    matches "'false'", [sqstring: 'false']
+    matches "\"10005\"", [dqstring: '10005']
+    matches "'0.55'", [sqstring: '0.55']
+    matches "\".55\"", [dqstring: '.55']
   end
 
   test "quoting namespaced names" do
-    matches "\"foo:bar\"", [dqstring: "foo:bar"]
-    matches "'foo:bar'", [sqstring: "foo:bar"]
+    matches "\"foo:bar\"", [dqstring: 'foo:bar']
+    matches "'foo:bar'", [sqstring: 'foo:bar']
   end
 
   test "quoting quoted strings" do
-    matches "\"\\\"this is a test\\\"\"", [dqstring: "\\\"this is a test\\\""]
-    matches "\"'this is a test'\"", [dqstring: "'this is a test'"]
-    matches "'\"this is a test\"'", [sqstring: "\"this is a test\""]
-    matches "'this is a test''so is this'", [sqstring: "this is a test", sqstring: "so is this"]
-    matches "\"this is a test\"\"so is this\"", [dqstring: "this is a test", dqstring: "so is this"]
+    matches "\"\\\"this is a test\\\"\"", [dqstring: '\\\"this is a test\\\"']
+    matches "\"'this is a test'\"", [dqstring: '\'this is a test\'']
+    matches "'\"this is a test\"'", [sqstring: '\"this is a test\"']
+    matches "'this is a test''so is this'", [sqstring: 'this is a test', sqstring: 'so is this']
+    matches "\"this is a test\"\"so is this\"", [dqstring: 'this is a test', dqstring: 'so is this']
   end
 
   test "tokenizing operators" do
@@ -98,7 +98,7 @@ defmodule Piper.Permissions.LexerTest do
   end
 
   test "tokenizing regexes" do
-    matches "/foo:ba[0-9]/", [regex: "foo:ba[0-9]"]
+    matches "/foo:ba[0-9]/", [regex: 'foo:ba[0-9]']
     fails "/foo:ba[0-9]"
   end
 
@@ -108,7 +108,7 @@ defmodule Piper.Permissions.LexerTest do
   end
 
   test "tokenizing namespaced names" do
-    matches "foo:bar", [{:string, "foo"}, :colon, {:string, "bar"}]
+    matches "foo:bar", [{:string, 'foo'}, :colon, {:string, 'bar'}]
   end
 
 end

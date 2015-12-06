@@ -4,7 +4,7 @@ Terminals
 all any arg command have is must option when with
 
 %% Operators
-and or not in equiv not_equiv lt gt lte gte
+and or in equiv not_equiv lt gt lte gte
 
 %% Data types
 boolean float integer dqstring sqstring string regex
@@ -47,8 +47,6 @@ permission_selector ->
 permission_criterion ->
   permission_criteria : '$1'.
 permission_criterion ->
-  not permission_criterion : ?AST("UnaryExpr"):new('$1', '$2').
-permission_criterion ->
   lparen permission_criterion rparen : update('$2', [{parens, true}]).
 permission_criterion ->
   lparen permission_criterion rparen and permission_criterion : Lhs = update('$2', [{parens, true}]),
@@ -70,18 +68,16 @@ permission_criteria ->
 permission_criteria ->
   all in ns_name_list : ?AST("PermissionExpr"):new('$1', track_permissions('$3')).
 permission_criteria ->
-  string_expr : verify_name('$1'),
+  string_expr : verify_permission_name('$1'),
                 ?AST("PermissionExpr"):new(add_permission('$1')).
 
 command_criteria ->
-  is string_expr : ?AST("BinaryExpr"):new('$1', [{right, verify_name('$2')}]).
+  is string_expr : ?AST("BinaryExpr"):new('$1', [{right, verify_command_name('$2')}]).
 command_criteria ->
   is regular_expr : ?AST("BinaryExpr"):new('$1', [{right, '$2'}]).
 
 input_criterion ->
   input_criteria : '$1'.
-input_criterion ->
-  not input_criterion : ?AST("UnaryExpr"):new('$1', '$2').
 input_criterion ->
   lparen input_criterion rparen : update('$2', [{parens, true}]).
 input_criterion ->
@@ -138,11 +134,11 @@ ns_name_list ->
   lbracket ns_name_list_body rbracket : ?AST("List"):new('$1', '$2').
 
 ns_name_list_body ->
-  string_expr comma ns_name_list_body : [verify_name('$1')] ++ '$3'.
+  string_expr comma ns_name_list_body : [verify_permission_name('$1')] ++ '$3'.
 ns_name_list_body ->
   regular_expr comma ns_name_list_body : ['$1'] ++ '$3'.
 ns_name_list_body ->
-  string_expr : [verify_name('$1')].
+  string_expr : [verify_permission_name('$1')].
 ns_name_list_body ->
   regular_expr : ['$1'].
 
@@ -185,7 +181,8 @@ string_expr ->
 
 Erlang code.
 
--export([parse_rule/1, parse_rule/2]).
+-export([parse_rule/1,
+         parse_rule/2]).
 
 -define(AST(E), (list_to_atom("Elixir.Piper.Permissions.Ast." ++ E))).
 
@@ -197,18 +194,47 @@ parse_rule(Text, Tracker) ->
   store_tracker(Tracker),
   case piper_rule_lexer:tokenize(Text) of
     {ok, Tokens} ->
-      parse(Tokens);
-    Error ->
-      Error
+      case parse(Tokens) of
+        {ok, Ast} ->
+          {ok, Ast};
+        Error ->
+          pp_error(Error)
+      end;
+    {error, {_, _, Error}, _} ->
+      Message = list_to_binary([piper_rule_lexer:format_error(Error), "."]),
+      {error, Message}
+  end.
+
+pp_error({error, {_, _, ["syntax error before: ", []]}}) ->
+  {error, <<"Unexpected end of input.">>};
+pp_error({error, {Line, _, Message}}) when is_integer(Line) ->
+  {error, list_to_binary(Message)};
+pp_error({error, {{Line, Col}, _, Message}}) ->
+  {error, list_to_binary(io_lib:format("(Line: ~p, Col: ~p) ~s.", [Line, Col, Message]))}.
+
+verify_command_name(String) ->
+  case verify_name(String) of
+    true ->
+      String;
+    false ->
+      return_error(get_location(String), "References to commands must include bundle and command name")
+  end.
+
+verify_permission_name(String) ->
+  case verify_name(String) of
+    true ->
+      String;
+    false ->
+      return_error(get_location(String), "References to permissions must start with a command bundle name or \"site\"")
   end.
 
 verify_name(String) ->
   Value = maps:get(value, String),
   case binary:matches(Value, <<":">>) of
     [] ->
-      throw({error, bad_name});
+      false;
     _ ->
-      String
+      true
   end.
 
 build_arg(Arg, Type) ->
@@ -216,7 +242,7 @@ build_arg(Arg, Type) ->
     true ->
       ?AST("Arg"):new(Arg, Type);
     false ->
-      throw({error, bad_arg_ref})
+      return_error(get_location(Arg), "Only integer, \"all\", or \"any\" argument index references allowed")
   end.
 
 store_tracker(Tracker) ->
@@ -250,3 +276,8 @@ verify_arg(_, any) ->
 
 update(#{'__struct__' := StructMod}=Expr, Opts) ->
   StructMod:update(Expr, Opts).
+
+get_location({_, Position, _}) ->
+  Position;
+get_location(Token) ->
+  {maps:get(line, Token), maps:get(col, Token)}.

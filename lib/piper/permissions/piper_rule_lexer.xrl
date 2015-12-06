@@ -29,18 +29,18 @@ Rules.
 {OPTION}                        : advance_count(length(TokenChars)), {token, {option, position(), nil}}.
 {AGGREGATE_OPTIONS}             : advance_count(length(TokenChars)), {token, {option, position(), nil}}.
 {OPERATORS}                     : advance_count(length(TokenChars)), {token, build_operator(TokenChars)}.
-{LPAREN}                        : advance_count(length(TokenChars)), {token, {lparen, position(), <<"(">>}}.
-{RPAREN}                        : advance_count(length(TokenChars)), {token, {rparen, position(), <<")">>}}.
-{LBRACKET}                      : advance_count(length(TokenChars)), {token, {lbracket, position(), <<"[">>}}.
-{RBRACKET}                      : advance_count(length(TokenChars)), {token, {rbracket, position(), <<"]">>}}.
-{COLON}                         : advance_count(length(TokenChars)), {token, {colon, position(), <<":">>}}.
-{COMMA}                         : advance_count(length(TokenChars)), {token, {comma, position(), <<",">>}}.
+{LPAREN}                        : advance_count(length(TokenChars)), {token, {lparen, position(), "("}}.
+{RPAREN}                        : advance_count(length(TokenChars)), {token, {rparen, position(), ")"}}.
+{LBRACKET}                      : advance_count(length(TokenChars)), {token, {lbracket, position(), "["}}.
+{RBRACKET}                      : advance_count(length(TokenChars)), {token, {rbracket, position(), "]"}}.
+{COLON}                         : advance_count(length(TokenChars)), {token, {colon, position(), ":"}}.
+{COMMA}                         : advance_count(length(TokenChars)), {token, {comma, position(), ","}}.
 {REGEX}                         : advance_count(length(TokenChars)), {token, {regex, position(), build_regex(TokenChars)}}.
 {FLOAT}                         : advance_count(length(TokenChars)), {token, {float, position(), list_to_float(TokenChars)}}.
 {INTEGER}                       : advance_count(length(TokenChars)), {token, {integer, position(), list_to_integer(TokenChars)}}.
 "(\\\^.|\\.|[^"])*"             : advance_count(length(TokenChars)), {token, {dqstring, position(), clean_string(TokenChars)}}.
 '(\\\^.|\\.|[^'])*'             : advance_count(length(TokenChars)), {token, {sqstring, position(), clean_string(TokenChars)}}.
-{STRING}                        : advance_count(length(TokenChars)), {token, {string, position(), list_to_binary(TokenChars)}}.
+{STRING}                        : advance_count(length(TokenChars)), {token, {string, position(), TokenChars}}.
 {WS}+                           : advance_count(length(TokenChars)), skip_token().
 {NEWLINE}+                      : advance_line(TokenLine), skip_token().
 
@@ -65,12 +65,12 @@ init() ->
   erlang:put(br_lexer_char_count, 0).
 
 clean_string([$'|Str]) ->
-  re:replace(Str, "'$", <<"">>, [global, {return, binary}]);
+  re:replace(Str, "'$", "", [global, {return, list}]);
 clean_string([$"|Str]) ->
-  re:replace(Str, "\"$", <<"">>, [global, {return, binary}]).
+  re:replace(Str, "\"$", "", [global, {return, list}]).
 
 position() ->
-  {get_with_default(br_lexer_line_count, 0),
+  {get_with_default(br_lexer_line_count, 1),
    get_with_default(br_lexer_char_count, 0) - get_with_default(br_lexer_last_char, 0)}.
 
 advance_line(TokenLine) ->
@@ -105,32 +105,32 @@ reserved_word("true") ->
 reserved_word("false") ->
   {boolean, position(), false};
 reserved_word(Word) ->
-  {list_to_atom(Word), position(), list_to_binary(Word)}.
+  {list_to_atom(Word), position(), Word}.
 
 build_operator("!=") ->
-  {not_equiv, position(), <<"!=">>};
+  {not_equiv, position(), "!="};
 build_operator("==") ->
-  {equiv, position(), <<"==">>};
+  {equiv, position(), "=="};
 build_operator(">") ->
-  {gt, position(), <<">">>};
+  {gt, position(), ">"};
 build_operator("<") ->
-  {lt, position(), <<"<">>};
+  {lt, position(), "<"};
 build_operator("=<") ->
-  {lte, position(), <<"=<">>};
+  {lte, position(), "=<"};
 build_operator(">=") ->
-  {gte, position(), <<">=">>};
+  {gte, position(), ">="};
 build_operator("and") ->
-  {'and', position(), <<"and">>};
+  {'and', position(), "and"};
 build_operator("or") ->
-  {'or', position(), <<"or">>};
+  {'or', position(), "or"};
 build_operator("not") ->
-  {'not', position(), <<"not">>};
+  {'not', position(), "not"};
 build_operator("in") ->
-  {'in', position(), <<"in">>}.
+  {'in', position(), "in"}.
 
 build_regex([$/|Str]) ->
-  re:replace(Str, "\/$", <<"">>, [global, {return, binary}]).
+  re:replace(Str, "\/$", "", [global, {return, list}]).
 
 decode_arg_index([$a, $r, $g, $\[|Index]) ->
-  list_to_integer(re:replace(Index, "]$", <<"">>, [global, {return, list}])).
+  list_to_integer(re:replace(Index, "]$", "", [global, {return, list}])).
 

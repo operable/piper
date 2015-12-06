@@ -104,4 +104,11 @@ defmodule Piper.Permissions.ParserTest do
       "and arg[0] == /^prod-lb/) must have foo:write", ["foo:write"]
   end
 
+  test "parser and lexer error handling" do
+    {:error, "illegal characters \"!r\"."} = Parser.parse("when command is foo:bar mst have foo!read")
+    {:error, "(Line: 1, Col: 5) syntax error before: \"comand\"."} = Parser.parse("when comand is foo:bar but have foo:read")
+    {:error,
+     "(Line: 1, Col: 34) References to permissions must start with a command bundle name or \"site\"."} =
+      Parser.parse("when command is foo:bar must have foo")
+  end
 end
