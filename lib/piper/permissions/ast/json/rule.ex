@@ -2,10 +2,6 @@ defimpl Piper.Permissions.Json, for: Piper.Permissions.Ast.Rule do
 
   alias Piper.Permissions.Ast
 
-  def to_json!(%Ast.Rule{}=rule) do
-    Poison.encode!(rule)
-  end
-
   def from_json!(%Ast.Rule{}=rule, json) do
     cs = Map.get(json, "command_selector")
     ps = Map.get(json, "permission_selector")

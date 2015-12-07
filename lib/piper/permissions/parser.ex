@@ -27,6 +27,7 @@ end
 defmodule Piper.Permissions.Parser do
 
   alias Piper.Permissions.Parser.Tracker
+  alias Piper.Permissions.Ast
 
   def parse(text) when is_binary(text) do
     {:ok, tracker} = Tracker.new
@@ -41,6 +42,15 @@ defmodule Piper.Permissions.Parser do
     after
       Tracker.stop(tracker)
     end
+  end
+
+  def rule_to_json!(%Ast.Rule{}=rule) do
+    Poison.encode!(rule)
+  end
+
+  def json_to_rule!(json) when is_binary(json) do
+    json = Poison.decode!(json)
+    Piper.Permissions.Json.from_json!(json, json)
   end
 
 end

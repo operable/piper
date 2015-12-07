@@ -2,10 +2,6 @@ defimpl Piper.Permissions.Json, for: Piper.Permissions.Ast.ContainExpr do
 
   alias Piper.Permissions.Ast.Json.Util
 
-  def to_json!(value) do
-    Poison.encode!(value)
-  end
-
   def from_json!(svalue, %{"line" => line,
                            "col" => col,
                            "left" => left,

@@ -2,7 +2,7 @@ defmodule Piper.Permissions.Ast.Json.Util do
 
   alias Piper.Permissions.Ast
 
-  defp map_to_empty_struct(value) do
+  def map_to_empty_struct(value) do
     value
     |> Map.fetch!("$ast$")
     |> struct_for_ast_type

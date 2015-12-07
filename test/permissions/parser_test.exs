@@ -7,13 +7,19 @@ defmodule Piper.Permissions.ParserTest do
 
   defp matches(text, perms) do
     {:ok, ast, parsed_perms} = Parser.parse(text)
+    json = Parser.rule_to_json!(ast)
+    json_ast = Parser.json_to_rule!(json)
     assert "#{ast}" == text
+    assert "#{json_ast}" == text
     assert Enum.sort(perms) == parsed_perms
   end
 
   defp matches_normalized(text, perms) do
     {:ok, ast, parsed_perms} = Parser.parse(text)
+    json = Parser.rule_to_json!(ast)
+    json_ast = Parser.json_to_rule!(json)
     assert "#{ast}" == normalize(text)
+    assert "#{json_ast}" == normalize(text)
     assert Enum.sort(perms) == parsed_perms
   end
 

@@ -11,10 +11,6 @@ defimpl Piper.Permissions.Json, for: [Piper.Permissions.Ast.String,
   alias Piper.Permissions.Ast
   alias Piper.Permissions.Ast.Json.Util
 
-  def to_json!(value) do
-    Poison.encode!(value)
-  end
-
   def from_json!(%Ast.String{}=svalue, %{"line" => line,
                                         "col" => col,
                                         "value" => value,
@@ -35,9 +31,9 @@ defimpl Piper.Permissions.Json, for: [Piper.Permissions.Ast.String,
   end
 
   def from_json!(%Ast.Option{}=svalue, %{"line" => line,
-                                        "col" => col,
-                                        "index" => index}) do
-    %{svalue | line: line, col: col, index: parse_index(index)}
+                                         "col" => col,
+                                         "name" => name}) do
+    %{svalue | line: line, col: col, name: parse_index(name)}
 
   end
 
@@ -64,6 +60,19 @@ defimpl Piper.Permissions.Json, for: [Piper.Permissions.Ast.String,
 
   defp parse_index("any"), do: :any
   defp parse_index("all"), do: :all
-  defp parse_index(x) when x > -1, do: x
+  defp parse_index(x), do: x
+
+end
+
+defimpl Poison.Encoder, for: Piper.Permissions.Ast.Regex do
+
+  alias Piper.Permissions.Ast
+
+  def encode(%Ast.Regex{line: line, col: col, value: value, "$ast$": ast_type}, _) do
+    Poison.encode!(%{"$ast$" => ast_type,
+                     "line" => line,
+                     "col" => col,
+                     "value" => value.source})
+  end
 
 end
