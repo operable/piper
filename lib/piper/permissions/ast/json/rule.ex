@@ -8,7 +8,8 @@ defimpl Piper.Permissions.Json, for: Piper.Permissions.Ast.Rule do
     cs = Piper.Permissions.Json.from_json!(cs, cs)
     ps = Piper.Permissions.Json.from_json!(ps, ps)
     command = Map.fetch!(json, "command")
-    %{rule | command_selector: cs, permission_selector: ps, command: command}
+    score = Map.fetch!(json, "score")
+    %{rule | command_selector: cs, permission_selector: ps, command: command, score: score}
   end
 
 end

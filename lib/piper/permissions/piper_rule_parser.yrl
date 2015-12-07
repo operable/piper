@@ -64,9 +64,9 @@ permission_criterion ->
                                                                                    {right, '$3'}]).
 
 permission_criteria ->
-  any in ns_name_list : ?AST("PermissionExpr"):new('$1', track_permissions('$3')).
+  any in ns_name_list : ?AST("PermissionExpr"):new('$1', track('$3')).
 permission_criteria ->
-  all in ns_name_list : ?AST("PermissionExpr"):new('$1', track_permissions('$3')).
+  all in ns_name_list : ?AST("PermissionExpr"):new('$1', track('$3')).
 permission_criteria ->
   string_expr : verify_permission_name('$1'),
                 ?AST("PermissionExpr"):new(add_permission('$1')).
@@ -95,9 +95,9 @@ input_criteria ->
   arg_or_option in value_list : ?AST("ContainExpr"):new('$2', '$1', '$3').
 
 arg_or_option ->
-  arg_ref : '$1'.
+  arg_ref : track('$1').
 arg_or_option ->
-  option_ref : '$1'.
+  option_ref : track('$1').
 
 option_ref ->
   any option : ?AST("Option"):new('$2', any).
@@ -185,7 +185,7 @@ Erlang code.
 -define(AST(E), (list_to_atom("Elixir.Piper.Permissions.Ast." ++ E))).
 
 parse_rule(Text) ->
-  Tracker = fun(_) -> ok end,
+  Tracker = fun(_, _) -> ok end,
   parse_rule(Text, Tracker).
 
 parse_rule(Text, Tracker) ->
@@ -244,24 +244,40 @@ build_arg(Arg, Type) ->
   end.
 
 store_tracker(Tracker) ->
-  erlang:put(permission_tracker_ref, Tracker).
+  erlang:put(parser_tracker_ref, Tracker).
 
-track_permissions(#{'__struct__' := 'Elixir.Piper.Permissions.Ast.List'}=Expr) ->
-  track_permissions(maps:get(values, Expr)),
+track(#{'__struct__' := 'Elixir.Piper.Permissions.Ast.Option'}=Expr) ->
+  add_option(Expr);
+track(#{'__struct__' := 'Elixir.Piper.Permissions.Ast.Arg'}=Expr) ->
+  add_arg(Expr);
+track(#{'__struct__' := 'Elixir.Piper.Permissions.Ast.List'}=Expr) ->
+  track(maps:get(values, Expr)),
   Expr;
-track_permissions([]) ->
+track([]) ->
   ok;
-track_permissions([#{'__struct__' := 'Elixir.Piper.Permissions.Ast.String'}=Expr|T]) ->
+track([#{'__struct__' := 'Elixir.Piper.Permissions.Ast.String'}=Expr|T]) ->
   add_permission(Expr),
-  track_permissions(T);
-track_permissions([_|T]) ->
-  track_permissions(T).
+  track(T);
+track([_|T]) ->
+  track(T).
 
 add_permission(Perm) ->
   Name = maps:get(value, Perm),
-  Tracker = erlang:get(permission_tracker_ref),
-  Tracker(Name),
+  Tracker = erlang:get(parser_tracker_ref),
+  Tracker(permission, Name),
   Perm.
+
+add_option(Option) ->
+  Name = maps:get(name, Option),
+  Tracker = erlang:get(parser_tracker_ref),
+  Tracker(option, Name),
+  Option.
+
+add_arg(Arg) ->
+  Index = maps:get(index, Arg),
+  Tracker = erlang:get(parser_tracker_ref),
+  Tracker(arg, Index),
+  Arg.
 
 verify_arg({arg, _, Index}, indexed) when Index > -1 ->
   true;

@@ -4,7 +4,7 @@ defmodule Piper.Permissions.Ast.Rule do
 
   @derive [Poison.Encoder]
 
-  defstruct [{:'$ast$', "rule"}, :command, :command_selector, :permission_selector]
+  defstruct [{:'$ast$', "rule"}, :command, :command_selector, :permission_selector, :score]
 
   def new(cmd_selector, perm_selector) do
     command = find_command_name(cmd_selector)

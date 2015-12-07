@@ -5,19 +5,23 @@ defmodule Piper.Permissions.ParserTest do
 
   use ExUnit.Case
 
-  defp matches(text, perms) do
+  defp matches(text, perms, score \\ 0) do
     {:ok, ast, parsed_perms} = Parser.parse(text)
+    assert ast.score == score
     json = Parser.rule_to_json!(ast)
     json_ast = Parser.json_to_rule!(json)
+    assert json_ast.score == ast.score
     assert "#{ast}" == text
     assert "#{json_ast}" == text
     assert Enum.sort(perms) == parsed_perms
   end
 
-  defp matches_normalized(text, perms) do
+  defp matches_normalized(text, perms, score \\ 0) do
     {:ok, ast, parsed_perms} = Parser.parse(text)
+    assert ast.score == score
     json = Parser.rule_to_json!(ast)
     json_ast = Parser.json_to_rule!(json)
+    assert json_ast.score == ast.score
     assert "#{ast}" == normalize(text)
     assert "#{json_ast}" == normalize(text)
     assert Enum.sort(perms) == parsed_perms
@@ -59,25 +63,25 @@ defmodule Piper.Permissions.ParserTest do
   end
 
   test "rules with input selector clauses parse" do
-    matches "when command is s3:delete with option[bucket] == /work-prod-.*/ must have site:deploy", ["site:deploy"]
-    matches "when command is s3:delete with arg[0] == 'all' must have site:admin", ["site:admin"]
-    matches "when command is s3:delete with arg[0] == 'all' and option[bucket] == /work-prod-.*/ must have site:deploy", ["site:deploy"]
+    matches "when command is s3:delete with option[bucket] == /work-prod-.*/ must have site:deploy", ["site:deploy"], 1
+    matches "when command is s3:delete with arg[0] == 'all' must have site:admin", ["site:admin"], 1
+    matches "when command is s3:delete with arg[0] == 'all' and option[bucket] == /work-prod-.*/ must have site:deploy", ["site:deploy"], 2
   end
 
   test "rules using 'any' input selectors parse" do
-    matches "when command is s3:bucket with any arg in [delete, erase] must have site:admin", ["site:admin"]
-    matches "when command is s3:bucket with any option in [cp, delete] must have site:ops", ["site:ops"]
+    matches "when command is s3:bucket with any arg in [delete, erase] must have site:admin", ["site:admin"], 3
+    matches "when command is s3:bucket with any option in [cp, delete] must have site:ops", ["site:ops"], 3
   end
 
   test "rules using conditional 'any' input selectors parse" do
     matches "when command is s3:bucket with (any arg in [delete, erase]) or any option in [prod, immediate] must have site:management",
-      ["site:management"]
+      ["site:management"], 6
   end
 
   test "rules using 'any' permission selectors parse" do
     matches "when command is s3:bucket must have any in [site:ops, s3:read]", ["site:ops", "s3:read"]
     matches "when command is s3:bucket with arg[0] == 'delete' or option[action] == 'delete' must have any in [site:ops, s3:write]",
-      ["site:ops", "s3:write"]
+      ["site:ops", "s3:write"], 2
   end
 
   test "rules using conditional 'any' permission selectors parse" do
@@ -95,9 +99,9 @@ defmodule Piper.Permissions.ParserTest do
 
   test "namespaced values for args or options parse" do
     matches "when command is operable:admin with option[action] == 'grant' and arg[0] == 'site:deploy' must have site:ops",
-      ["site:ops"]
+      ["site:ops"], 2
     matches "when command is operable:admin with option[action] == 'grant' and option[perm] == 'site:deploy' must have site:ops",
-      ["site:ops"]
+      ["site:ops"], 2
   end
 
   test "random whitespacing parses" do
@@ -108,7 +112,7 @@ defmodule Piper.Permissions.ParserTest do
   test "complicated rule round trips correctly" do
     matches "when command is foo:bar with (option[action] == \"delete\" " <>
       "and arg[0] == /^prod-db/) or (option[action] == \"restart\" " <>
-      "and arg[0] == /^prod-lb/) must have foo:write", ["foo:write"]
+      "and arg[0] == /^prod-lb/) must have foo:write", ["foo:write"], 2
   end
 
   test "rule returns referenced command name" do
