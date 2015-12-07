@@ -3,11 +3,12 @@ defimpl Piper.Permissions.Json, for: Piper.Permissions.Ast.Rule do
   alias Piper.Permissions.Ast
 
   def from_json!(%Ast.Rule{}=rule, json) do
-    cs = Map.get(json, "command_selector")
-    ps = Map.get(json, "permission_selector")
+    cs = Map.fetch!(json, "command_selector")
+    ps = Map.fetch!(json, "permission_selector")
     cs = Piper.Permissions.Json.from_json!(cs, cs)
     ps = Piper.Permissions.Json.from_json!(ps, ps)
-    %{rule | command_selector: cs, permission_selector: ps}
+    command = Map.fetch!(json, "command")
+    %{rule | command_selector: cs, permission_selector: ps, command: command}
   end
 
 end
