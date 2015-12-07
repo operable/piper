@@ -81,8 +81,6 @@ end
 
 defmodule Piper.Permissions.Ast.Regex do
 
-  @derive [Poison.Encoder]
-
   defstruct [{:'$ast$', "regex"}, :line, :col, :value]
 
   def new({:regex, {line, col}, value}) do
