@@ -69,14 +69,15 @@ defmodule Piper.Permissions.Parser do
   alias Piper.Permissions.Parser.Tracker
   alias Piper.Permissions.Ast
 
-  def parse(text) when is_binary(text) do
+  def parse(text, opts \\ [json: false]) when is_binary(text) do
     {:ok, tracker} = Tracker.new
     updater = fn(kind, thing) -> update_tracker(tracker, kind, thing) end
     try do
       case :piper_rule_parser.parse_rule(text, updater) do
         {:ok, ast} ->
           score = Tracker.get_score(tracker)
-          {:ok, %{ast | score: score}, Tracker.list_permissions(tracker)}
+          {:ok, format_ast(%{ast | score: score}, opts),
+           Tracker.list_permissions(tracker)}
         error ->
           error
       end
@@ -102,6 +103,13 @@ defmodule Piper.Permissions.Parser do
   end
   defp update_tracker(tracker, :arg, thing) do
     Tracker.add_arg(tracker, thing)
+  end
+
+  defp format_ast(ast, [json: true]) do
+    rule_to_json!(ast)
+  end
+  defp format_ast(ast, _) do
+    ast
   end
 
 end
