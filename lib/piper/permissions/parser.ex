@@ -69,7 +69,12 @@ defmodule Piper.Permissions.Parser do
   alias Piper.Permissions.Parser.Tracker
   alias Piper.Permissions.Ast
 
-  def parse(text, opts \\ [json: false]) when is_binary(text) do
+  def parse(text, opts \\ [json: false])
+
+  def parse(%Ast.Rule{}=rule, _opts) do
+    raise "Attempting to parse a JSON-ified rule for command #{rule.command}!"
+  end
+  def parse(text, opts) when is_binary(text) do
     {:ok, tracker} = Tracker.new
     updater = fn(kind, thing) -> update_tracker(tracker, kind, thing) end
     try do
