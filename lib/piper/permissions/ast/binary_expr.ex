@@ -25,6 +25,12 @@ defmodule Piper.Permissions.Ast.BinaryExpr do
       update(:parens, parens))
   end
 
+  def build(op, left, right) when op in [:equiv, :not_equiv,
+                                         :gt, :lt, :gte, :lte,
+                                         :with, :is] do
+    handle_regex(%__MODULE__{op: op, left: left, right: right, parens: false})
+  end
+
   defp update(expr, _, nil) do
     expr
   end

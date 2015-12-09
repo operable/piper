@@ -103,6 +103,13 @@ defmodule Piper.Permissions.Ast.Arg do
     %__MODULE__{line: line, col: col, index: index}
   end
 
+  def build(index) when index in [:any, :all] do
+    %__MODULE__{index: index}
+  end
+  def build(index) when index > -1 do
+    %__MODULE__{index: index}
+  end
+
 end
 
 defmodule Piper.Permissions.Ast.Option do
@@ -118,4 +125,12 @@ defmodule Piper.Permissions.Ast.Option do
     value = String.Chars.to_string(value)
     %__MODULE__{line: line, col: col, name: value}
   end
+
+  def build(type) when type in [:any, :all] do
+    %__MODULE__{name: type}
+  end
+  def build(name) when is_binary(name) do
+    %__MODULE__{name: name}
+  end
+
 end
