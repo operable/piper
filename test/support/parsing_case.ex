@@ -41,7 +41,9 @@ defmodule Parser.ParsingCase do
   end
 
   def ast_string(ast_str) do
-    fn(ent) ->
+    fn({:error, _}) ->
+      false
+      (ent) ->
       if "#{ent}" != ast_str do
         Logger.error("#{ent} didn't match expected #{ast_str}")
         false
