@@ -5,7 +5,18 @@ defmodule Parser.ParserTest do
 
   use Parser.ParsingCase
 
-  defmacrop should_parse(text, ast_text \\ nil, expect \\ true) do
+  defmacrop should_parse(text, ast_text \\ nil) do
+    if ast_text == nil do
+      ast_text = text
+    end
+    expect_parse(text, ast_text, true)
+  end
+
+  defmacrop should_not_parse(text) do
+    expect_parse(text, text, false)
+  end
+
+  defp expect_parse(text, ast_text, expect) do
     if ast_text == nil do
       ast_text = text
     end
@@ -90,4 +101,17 @@ defmodule Parser.ParserTest do
     should_parse "wubba:foo | wubba:bar 500 --limit=2 | wubba:baz"
     should_parse "foo | bar 500 --limit=2 | baz", "foo:foo | bar:bar 500 --limit=2 | baz:baz"
   end
+
+  test "Output redirection (single)" do
+    should_parse "foo:bar --baz > dm"
+  end
+
+  test "Bad single redirection" do
+    should_not_parse "foo:bar --baz > |"
+  end
+
+  test "Output redirection (multi)" do
+    should_parse "foo:bar --baz *> dm ops"
+  end
+
 end

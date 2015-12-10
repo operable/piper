@@ -11,7 +11,8 @@ defmodule Parser.LexerTest do
   test "lexing symbols" do
     assert matches Lexer.tokenize("["), types(:lbracket)
     assert matches Lexer.tokenize("]"), types(:rbracket)
-    assert matches Lexer.tokenize(">"), types(:redir)
+    assert matches Lexer.tokenize(">"), types(:redir_one)
+    assert matches Lexer.tokenize("*>"), types(:redir_multi)
     assert matches Lexer.tokenize("="), types(:equals)
     assert matches Lexer.tokenize("|"), types(:pipe)
     assert matches Lexer.tokenize("&&"), types(:iff)
