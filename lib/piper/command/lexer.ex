@@ -16,7 +16,8 @@ defmodule Piper.Command.Lexer do
   # Continue only if first command was successful
   token :iff,  pattern: ~r/\A(&&)/
   # Redirect output
-  token :redir, pattern: ~r/\A(>)/
+  token :redir_multi, pattern: ~r/\A(\*>)/
+  token :redir_one, pattern: ~r/\A(>)/
   token :equals, pattern: ~r/\A=/
   token :lbracket, pattern: ~r/\A\[/
   token :rbracket, pattern: ~r/\A\]/
