@@ -76,6 +76,14 @@ defmodule Piper.Command.Parser do
     push_node(parser, next)
   end
 
+  defp parse_invocation(%__MODULE__{}=parser) do
+    case parse_invocation(pop_token(parser)) do
+      %SyntaxError{}=error ->
+        error
+      parser ->
+        parse_pipeline(parser)
+    end
+  end
   defp parse_invocation({parser, %Token{type: :string}=bundle}) do
     case pop_token(parser) do
       {parser, %Token{type: :colon}} ->
@@ -105,14 +113,6 @@ defmodule Piper.Command.Parser do
   end
   defp parse_invocation({_parser, token}) do
     SyntaxError.new(:invocation, :command_name, token)
-  end
-  defp parse_invocation(%__MODULE__{}=parser) do
-    case parse_invocation(pop_token(parser)) do
-      %SyntaxError{}=error ->
-        error
-      parser ->
-        parse_pipeline(parser)
-    end
   end
 
   defp parse_args({parser, %Token{type: :option}=token}) do
@@ -153,10 +153,46 @@ defmodule Piper.Command.Parser do
         parse_args(pop_token(parser))
       {parser, false} ->
         parser
+        |> parse_redir
     end
   end
   defp parse_args(parser) do
     parse_args(pop_token(parser))
+  end
+
+  defp parse_redir(parser) do
+    case pop_token(parser) do
+      {parser, %Token{type: :redir_one}} ->
+        case pop_token(parser) do
+          {parser, %Token{type: :string}=tok} ->
+            {parser, invocation} = pop_node(parser)
+            invocation = Ast.Invocation.add_redir(invocation, tok.text)
+            push_node(parser, invocation)
+          {_parser, token} ->
+            SyntaxError.new(:redirect, [:string], token)
+        end
+      {parser, %Token{type: :redir_multi}} ->
+        case parse_dests(parser, []) do
+          {parser, dests} when is_list(dests) ->
+            {parser, invocation} = pop_node(parser)
+            invocation = Ast.Invocation.add_redirs(invocation, dests)
+            push_node(parser, invocation)
+          {_parser, errtoken} ->
+            SyntaxError.new(:redirect_multiple, [:string], errtoken)
+        end
+      {parser, token} ->
+        push_token(parser, token)
+    end
+  end
+
+  defp parse_dests(parser, accum) do
+    case pop_token(parser) do
+      {parser, %Token{type: :string}=tok} ->
+        parse_dests(parser, [tok.text|accum])
+      {parser, token} ->
+        parser = push_token(parser, token)
+        {parser, Enum.uniq(accum)}
+    end
   end
 
   defp parse_option_value(parser, option) do
