@@ -15,7 +15,7 @@ defmodule Parser.ParserTest do
   end
 
   test "parsing plain command" do
-    should_parse "foo"
+    should_parse "wubba:foo"
   end
 
   test "parsing variable command" do
@@ -23,7 +23,7 @@ defmodule Parser.ParserTest do
   end
 
   test "parsing options" do
-    should_parse "foo --bar=1 -f"
+    should_parse "wubba:foo --bar=1 -f"
     should_parse "$foo --bar=1 -f"
     should_parse "ec2:list-vm --tags=\"a,b,c\" 10", "ec2:list-vm --tags=a,b,c 10"
   end
@@ -41,35 +41,39 @@ defmodule Parser.ParserTest do
   end
 
   test "parsing args" do
-    should_parse "foo 123 abc"
+    should_parse "wubba:foo 123 abc"
   end
 
   test "parsing double quoted string arguments" do
-    should_parse "foo \"123 abc\"", "foo 123 abc"
+    should_parse "wubba:foo \"123 abc\"", "wubba:foo 123 abc"
   end
 
   test "parsing single quoted string arguments" do
-    should_parse "foo '123 abc'", "foo 123 abc"
+    should_parse "wubba:foo '123 abc'", "wubba:foo 123 abc"
   end
 
   test "parsing escaped double quoted strings" do
-    should_parse "foo \"123\\\"\" abc", "foo 123\" abc"
+    should_parse "wubba:foo \"123\\\"\" abc", "wubba:foo 123\" abc"
   end
 
   test "parsing escaped single quoted strings" do
-    should_parse "foo 123 a\\'b\\'c", "foo 123 a \\'b\\'c"
+    should_parse "wubba:foo 123 a\\'b\\'c", "wubba:foo 123 a \\'b\\'c"
   end
 
   test "parsing :pipe pipelines" do
-    should_parse "wubba:foo 1 --bar | baz"
+    should_parse "wubba:foo 1 --bar | wubba:baz"
   end
 
   test "parsing :iff pipelines" do
-    should_parse "wubba:foo --bar && baz 1"
+    should_parse "wubba:foo --bar && wubba:baz 1"
   end
 
   test "parsing combined pipelines" do
-    should_parse "foo | bar 500 --limit=2 | baz"
+    should_parse "wubba:foo | wubba:bar 500 --limit=2 | wubba:baz"
+  end
+
+  test "parsing shorthand command" do
+    should_parse "foo", "foo:foo"
   end
 
 end
