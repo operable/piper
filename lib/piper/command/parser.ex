@@ -76,19 +76,19 @@ defmodule Piper.Command.Parser do
     push_node(parser, next)
   end
 
-  defp parse_invocation({parser, %Token{type: :string}=token}) do
+  defp parse_invocation({parser, %Token{type: :string}=bundle}) do
     case pop_token(parser) do
       {parser, %Token{type: :colon}} ->
         case pop_token(parser) do
-          {parser, %Token{type: :string}=token1} ->
-            invocation = qualified_invocation(token, token1)
+          {parser, %Token{type: :string}=command} ->
+            invocation = qualified_invocation(bundle, command)
             push_node(parser, invocation)
             |> parse_args
           {_parser, errtoken} ->
             SyntaxError.new(:invocation, :command_name, errtoken)
         end
       {_parser, _next_token} ->
-        invocation = qualified_invocation(token)
+        invocation = qualified_invocation(bundle)
         push_node(parser, invocation)
         |> parse_args
     end
