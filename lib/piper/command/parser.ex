@@ -87,11 +87,9 @@ defmodule Piper.Command.Parser do
           {_parser, errtoken} ->
             SyntaxError.new(:invocation, :command_name, errtoken)
         end
-      {parser, tok} ->
+      {_parser, _next_token} ->
         invocation = qualified_invocation(token)
-
-        push_token(parser, tok)
-        |> push_node(invocation)
+        push_node(parser, invocation)
         |> parse_args
     end
   end
