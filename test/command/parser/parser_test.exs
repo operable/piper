@@ -99,14 +99,17 @@ defmodule Parser.ParserTest do
 
   test "parsing :pipe pipelines" do
     should_parse "#{command} 1 --bar | wubba:baz"
+    should_parse "wubba:baz 1 --bar | #{command}"
   end
 
   test "parsing :iff pipelines" do
     should_parse "#{command} --bar && wubba:baz 1"
+    should_parse "wubba:baz --bar && #{command} 1"
   end
 
   test "parsing combined pipelines" do
     should_parse "#{command} | wubba:bar 500 --limit=2 | wubba:baz"
+    should_parse "wubba:bar | #{command} 500 --limit=2 | wubba:baz"
   end
 
   test "parsing shorthand command" do
