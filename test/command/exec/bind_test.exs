@@ -45,9 +45,9 @@ defmodule Bind.BindTest do
 
   test "preparing simple command" do
     {:ok, ast} = parse_and_bind("echo 'foo'")
-    assert ast.command == "echo"
+    assert ast.command == "echo:echo"
     assert arg(ast, 0) == "foo"
-    assert "#{ast}" == "echo foo"
+    assert "#{ast}" == "echo:echo foo"
   end
 
   test "preparing command with options" do
