@@ -5,12 +5,15 @@ defmodule Parser.ParserTest do
 
   use Parser.ParsingCase
 
-  defmacrop should_parse(text, ast_text \\nil, expect \\ true) do
+  defmacrop should_parse(text, ast_text \\ nil, expect \\ true) do
     if ast_text == nil do
       ast_text = text
     end
-    quote location: :keep do
-      assert matches(Parser.scan_and_parse(unquote(text)), ast_string(unquote(ast_text))) == unquote(expect)
+
+    quote location: :keep, bind_quoted: [text: text, ast_text: ast_text, expect: expect] do
+      expected_ast = Parser.scan_and_parse(text)
+      actual_ast = ast_string(ast_text)
+      assert matches(expected_ast, actual_ast) == expect
     end
   end
 
