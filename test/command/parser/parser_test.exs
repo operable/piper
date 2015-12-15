@@ -10,30 +10,33 @@ defmodule Parser.ParserTest do
              {"foo", "foo:foo"},
              {"foo-bar", "foo-bar:foo-bar"}]
 
-  defmacrop should_parse(text, ast_text \\ nil, expect \\ true) do
-    if ast_text == nil do
-      ast_text = text
+  defmacrop should_parse(expected, actual \\ nil) do
+    if is_nil(actual) do
+      actual = expected
     end
 
-    if command_used?(text) do
-      quote location: :keep do
-        for {expected, actual} <- @commands do
-          var!(command) = expected
-          expected_ast = Parser.scan_and_parse(unquote(text))
+    case {command_used?(expected), command_used?(actual)} do
+      {false, false} ->
+        quote location: :keep do
+          expected_ast = Parser.scan_and_parse(unquote(expected))
+          actual_ast = ast_string(unquote(actual))
 
-          var!(command) = actual
-          actual_ast = ast_string(unquote(ast_text))
-
-          assert matches(expected_ast, actual_ast) == unquote(expect)
+          assert matches(expected_ast, actual_ast)
         end
-      end
-    else
-      quote location: :keep do
-        expected_ast = Parser.scan_and_parse(unquote(text))
-        actual_ast = ast_string(unquote(ast_text))
+      {true, true} ->
+        for {expected_command, actual_command} <- @commands do
+          quote location: :keep do
+            var!(command) = unquote(expected_command)
+            expected_ast = Parser.scan_and_parse(unquote(expected))
 
-        assert matches(expected_ast, actual_ast) == unquote(expect)
-      end
+            var!(command) = unquote(actual_command)
+            actual_ast = ast_string(unquote(actual))
+
+            assert matches(expected_ast, actual_ast)
+          end
+        end
+      _ ->
+        raise "Both expected and actual arguments must include reference to command"
     end
   end
 
