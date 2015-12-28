@@ -2,6 +2,7 @@ defmodule Bind.BindTest do
 
   use ExUnit.Case
 
+  alias Parser.TestHelpers
   alias Piper.Command.Parser
   alias Piper.Command.Bindable
   alias Piper.Command.Bind
@@ -32,8 +33,8 @@ defmodule Bind.BindTest do
     scope = Bind.Scope.from_map(vars)
     parse_and_bind2(text, scope)
   end
-  defp parse_and_bind2(text, scope) do
-    {:ok, ast} = Parser.scan_and_parse(text)
+  defp parse_and_bind2(text, scope, opts \\ []) do
+    {:ok, ast} = Parser.scan_and_parse(text, opts)
     {:ok, scope} = Bindable.resolve(ast, scope)
     {:ok, new_ast, _scope} = Bindable.bind(ast, scope)
     {:ok, new_ast}
@@ -113,6 +114,32 @@ defmodule Bind.BindTest do
     scope = Bind.Scope.from_map(%{"regions" => ["us-west-1", "us-west-2", "us-east-1"]})
     {:ok, ast} = parse_and_bind2("ec2:list_vms $regions", scope)
     assert "#{ast}" == "ec2:list_vms {{[\"us-west-1\",\"us-west-2\",\"us-east-1\"]}}"
+  end
+
+  test "disambiguate command name bound to variable" do
+    scope = Bind.Scope.from_map(%{"command" => "hello"})
+    {:ok, ast} = parse_and_bind2("$command", scope, command_resolver: &TestHelpers.resolve_commands/1)
+    assert "salutations:hello" == "#{ast}"
+  end
+
+  test "disambiguate hard references and variables" do
+    scope = Bind.Scope.from_map(%{"command" => "hello"})
+    {:ok, ast} = parse_and_bind2("goodbye | $command", scope, command_resolver: &TestHelpers.resolve_commands/1)
+    assert "salutations:goodbye | salutations:hello" == "#{ast}"
+  end
+
+  test "unknown commands fail resolution" do
+    scope = Bind.Scope.from_map(%{"command" => "fluff"})
+    {:ok, ast} = Parser.scan_and_parse("goodbye | $command", command_resolver: &TestHelpers.resolve_commands/1)
+    {:ok, scope} = Bindable.resolve(ast, scope)
+    {:error, "Installed command with name 'fluff' not found."} = Bindable.bind(ast, scope)
+  end
+
+  test "ambiguous command references fail resolution" do
+    scope = Bind.Scope.from_map(%{"command" => "multi"})
+    {:ok, ast} = Parser.scan_and_parse("goodbye | hello | $command", command_resolver: &TestHelpers.resolve_commands/1)
+    {:ok, scope} = Bindable.resolve(ast, scope)
+    {:error, "Command name 'multi' found in multiple bundles: a, b, c."} = Bindable.bind(ast, scope)
   end
 
 end
