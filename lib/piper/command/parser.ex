@@ -2,30 +2,33 @@ defmodule Piper.Command.Parser do
 
   alias Piper.Command.Ast
   alias Piper.Command.SyntaxError
+  alias Piper.Command.SemanticError
   alias Piper.Util.Token
 
   defstruct [tokens: nil, nodes: []]
 
-  def scan_and_parse(text) when is_binary(text) do
+  def scan_and_parse(text, opts \\[]) when is_binary(text) do
     case Piper.Command.Lexer.tokenize(text) do
       {:ok, tokens} ->
-        parse(tokens)
+        parse(tokens, opts)
       error ->
         Piper.Command.Lexer.format_error(error)
     end
   end
 
-  def parse(tokens) when is_list(tokens) do
-    case parse_invocation(%__MODULE__{tokens: tokens}) do
+  def parse(tokens, opts \\ []) when is_list(tokens) do
+    case parse_invocation(%__MODULE__{tokens: tokens}, opts) do
       %SyntaxError{}=error ->
         SyntaxError.format_error(error)
+      %SemanticError{}=error ->
+        SemanticError.format_error(error)
       parser ->
         {_parser, result} = pop_node(parser)
         {:ok, result}
     end
   end
 
-  defp parse_pipeline(parser) do
+  defp parse_pipeline(parser, opts) do
     case pop_token(parser) do
       {parser, %Token{type: type}=token} when type in [:pipe, :iff] ->
         {parser, pipeline} = case pop_node(parser) do
@@ -37,8 +40,10 @@ defmodule Piper.Command.Parser do
                                {parser, node} ->
                                  {push_node(parser, node), Ast.Pipeline.new(token)}
                              end
-        case parse_invocation(pop_token(parser)) do
+        case parse_invocation(pop_token(parser), opts) do
           %SyntaxError{}=error ->
+            error
+          %SemanticError{}=error ->
             error
           parser ->
             {parser, invocation} = pop_node(parser)
@@ -48,7 +53,7 @@ defmodule Piper.Command.Parser do
               false ->
                 assemble_pipelines(parser)
               true ->
-                parse_pipeline(parser)
+                parse_pipeline(parser, opts)
             end
         end
       {parser, token} ->
@@ -76,42 +81,54 @@ defmodule Piper.Command.Parser do
     push_node(parser, next)
   end
 
-  defp parse_invocation(%__MODULE__{}=parser) do
-    case parse_invocation(pop_token(parser)) do
+  defp parse_invocation(%__MODULE__{}=parser, opts) do
+    case parse_invocation(pop_token(parser), opts) do
       %SyntaxError{}=error ->
         error
+      %SemanticError{}=error ->
+        error
       parser ->
-        parse_pipeline(parser)
+        parse_pipeline(parser, opts)
     end
   end
-  defp parse_invocation({parser, %Token{type: :string}=bundle}) do
+  defp parse_invocation({parser, %Token{type: :string}=bundle}, opts) do
     case pop_token(parser) do
       {parser, %Token{type: :colon}} ->
         case pop_token(parser) do
           {parser, %Token{type: :string}=command} ->
-            invocation = qualified_invocation(bundle, command)
+            invocation = qualified_invocation(bundle, command, opts)
             push_node(parser, invocation)
             |> parse_args
           {_parser, errtoken} ->
             SyntaxError.new(:invocation, :command_name, errtoken)
         end
       {_parser, _next_token} ->
-        invocation = qualified_invocation(bundle)
-        push_node(parser, invocation)
-        |> parse_args
+        case qualified_invocation(bundle, opts) do
+          invocation=%Ast.Invocation{} ->
+            push_node(parser, invocation)
+            |> parse_args
+          error ->
+            error
+        end
     end
   end
-  defp parse_invocation({parser, %Token{type: :variable}=token}) do
+  defp parse_invocation({parser, %Token{type: :variable}=token}, opts) do
     case parse_variable({parser, token}) do
       {parser, true} ->
         {parser, var} = pop_node(parser)
+        var = case Keyword.get(opts, :command_resolver) do
+                nil ->
+                  var
+                resolver ->
+                  Ast.Variable.set_binding_hook(var, resolver)
+              end
         push_node(parser, Ast.Invocation.new(var))
         |> parse_args
       error ->
         error
     end
   end
-  defp parse_invocation({_parser, token}) do
+  defp parse_invocation({_parser, token}, _opts) do
     SyntaxError.new(:invocation, :command_name, token)
   end
 
@@ -248,7 +265,7 @@ defmodule Piper.Command.Parser do
     {push_token(parser, token), false}
   end
 
-  def parse_variable({parser, %Token{type: type}=token}) when type in [:variable, :optvar] do
+  defp parse_variable({parser, %Token{type: type}=token}) when type in [:variable, :optvar] do
     case pop_token(parser) do
       {parser, %Token{type: :lbracket}} ->
         case parse_value(pop_token(parser)) do
@@ -303,10 +320,30 @@ defmodule Piper.Command.Parser do
     {%{parser | nodes: t}, h}
   end
 
-  defp qualified_invocation(command) do
-    qualified_invocation(command, command)
+  defp qualified_invocation(command, opts) do
+    case disambiguate_command(command, Keyword.get(opts, :command_resolver)) do
+      {:ok, bundle} ->
+        Ast.Invocation.new(%{command | text: bundle <> ":" <> command.text})
+      error=%SemanticError{} ->
+        SemanticError.update_position(error, command)
+      error ->
+        error
+    end
   end
-  defp qualified_invocation(bundle, command) do
+  defp qualified_invocation(bundle=%Token{}, command=%Token{}, _opts) do
     Ast.Invocation.new(%{bundle | text: bundle.text <> ":" <> command.text})
   end
+
+  defp disambiguate_command(command, resolver) when is_function(resolver) do
+    case resolver.(command.text) do
+      {:ok, bundle} ->
+        {:ok, bundle}
+      error ->
+        error
+    end
+  end
+  defp disambiguate_command(command, _) do
+    {:ok, command.text}
+  end
+
 end

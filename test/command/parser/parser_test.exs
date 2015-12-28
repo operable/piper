@@ -3,6 +3,7 @@ defmodule Parser.ParserTest do
   # These tests use AST nodes' String.Chars impl as an indirect way
   # of verifying parse tree results
 
+  alias Parser.TestHelpers
   use Parser.ParsingCase
 
   defmacrop should_parse(text, ast_text \\ nil) do
@@ -112,6 +113,30 @@ defmodule Parser.ParserTest do
 
   test "Output redirection (multi)" do
     should_parse "foo:bar --baz *> dm ops"
+  end
+
+  test "resolves ambiguous command names" do
+    {:ok, ast} = Parser.scan_and_parse("hello", command_resolver: &TestHelpers.resolve_commands/1)
+    assert "salutations:hello" == "#{ast}"
+  end
+
+  test "resolves ambiguous command names in pipelines" do
+    {:ok, ast} = Parser.scan_and_parse("hello bobby | goodbye -l", command_resolver: &TestHelpers.resolve_commands/1)
+    assert "salutations:hello bobby | salutations:goodbye -l" == "#{ast}"
+  end
+
+  test "unknown commands fail resolution" do
+    {:error, message} = Parser.scan_and_parse("fluff", command_resolver: &TestHelpers.resolve_commands/1)
+    assert message == "Error on line 1, column 1, starting at 'fluff'. Installed command with name 'fluff' not found."
+    {:error, message} = Parser.scan_and_parse("hello | goodbye | fluff", command_resolver: &TestHelpers.resolve_commands/1)
+    assert message == "Error on line 1, column 19, starting at 'fluff'. Installed command with name 'fluff' not found."
+  end
+
+  test "ambiguous commands fail resolution" do
+    {:error, message} = Parser.scan_and_parse("multi", command_resolver: &TestHelpers.resolve_commands/1)
+    assert message == "Error on line 1, column 1, starting at 'multi'. Command name 'multi' found in multiple bundles: a, b, c."
+    {:error, message} = Parser.scan_and_parse("hello | multi", command_resolver: &TestHelpers.resolve_commands/1)
+    assert message == "Error on line 1, column 9, starting at 'multi'. Command name 'multi' found in multiple bundles: a, b, c."
   end
 
 end
