@@ -142,4 +142,10 @@ defmodule Bind.BindTest do
     {:error, "Command name 'multi' found in multiple bundles: a, b, c."} = Bindable.bind(ast, scope)
   end
 
+  test "fully qualified command references skip resolution" do
+    scope = Bind.Scope.from_map(%{"command" => "operable:mirror"})
+    {:ok, ast} = parse_and_bind2("goodbye | $command", scope, command_resolver: &TestHelpers.resolve_commands/1)
+    assert "salutations:goodbye | operable:mirror" == "#{ast}"
+  end
+
 end

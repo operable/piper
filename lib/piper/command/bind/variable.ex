@@ -64,6 +64,8 @@ defimpl Piper.Command.Bindable, for: Piper.Command.Ast.Variable do
     case hook.(value) do
       {:ok, bundle} ->
         {:ok, bundle <> ":" <> value}
+      :identity ->
+        {:ok, value}
       error=%SemanticError{} ->
         SemanticError.format_error(error)
     end
