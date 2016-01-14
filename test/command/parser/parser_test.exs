@@ -46,6 +46,8 @@ defmodule Parser.ParserTest do
 
     should_parse "ec2:list-vm --tags=\"a,b,c\" 10", "ec2:list-vm --tags=a,b,c 10"
     should_parse "ec2 --tags=\"a,b,c\" 10", "ec2:ec2 --tags=a,b,c 10"
+
+    should_parse "foo --bar=testing/testy", "foo:foo --bar=testing/testy"
   end
 
   test "parsing options referring to names" do
