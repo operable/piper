@@ -1,5 +1,4 @@
-defmodule Parser.LexerTest do
-
+defmodule Parser.LexerTest do 
   use Parser.ParsingCase
 
   test "lexing whitespace returns empty token list" do
@@ -30,13 +29,14 @@ defmodule Parser.LexerTest do
     assert matches Lexer.tokenize("list_vms"), [types(:string), text("list_vms")]
   end
 
-  test "lexing invalid commands results in non-name results" do
-    assert matches Lexer.tokenize("1list_vms"), [types([:integer, :string]), text(["1", "list_vms"])]
-  end
-
   test "lexing numbers" do
     assert matches Lexer.tokenize("123 1072.05 0.05"), [types([:integer, :float, :float]),
                                                         text(["123", "1072.05", "0.05"])]
+  end
+
+  test "lexing strings that start with numbers" do
+    assert matches Lexer.tokenize("0fcaec64-0792-4826-8637-9a50593a7c03"), [types([:string]),
+                                                                            text(["0fcaec64-0792-4826-8637-9a50593a7c03"])]
   end
 
   test "lexing booleans" do
