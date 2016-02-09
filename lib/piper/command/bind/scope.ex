@@ -23,12 +23,7 @@ defimpl Piper.Command.Scoped, for: Piper.Command.Bind.Scope do
   end
 
   def lookup(%Scope{values: values, parent: nil}, name) do
-    case Map.get(values, name) do
-      nil ->
-        {:error, {:not_found, name}}
-      value ->
-        {:ok, value}
-    end
+    {:ok, Map.get(values, name)}
   end
   def lookup(%Scope{values: values, parent: parent}, name) do
     case Map.get(values, name) do
@@ -62,12 +57,7 @@ defimpl Piper.Command.Scoped, for: Piper.Command.Bind.Scope do
 
   def lookup_variable(%Scope{bindings: bindings}, var) do
     key = "#{var}"
-    case Map.get(bindings, key) do
-      nil ->
-        {:error, :not_found}
-      value ->
-        {:ok, value}
-    end
+    {:ok, Map.get(bindings, key)}
   end
 
 end
