@@ -44,20 +44,12 @@ defimpl Piper.Command.Scoped, for: Piper.Command.Bind.Scope do
   end
 
   def bind_variable(%Scope{bindings: bindings}=scope, var, value) do
-    key = "#{var}"
-    case Map.has_key?(bindings, key) do
-      true ->
-        raise RuntimeError, "#{key} is already bound!"
-#        {:error, {:already_bound, key}}
-      false ->
-        bindings = Map.put(bindings, key, value)
-        {:ok, %{scope | bindings: bindings}}
-    end
+    bindings = Map.put_new(bindings, to_string(var), value)
+    {:ok, %{scope | bindings: bindings}}
   end
 
   def lookup_variable(%Scope{bindings: bindings}, var) do
-    key = "#{var}"
-    {:ok, Map.get(bindings, key)}
+    {:ok, Map.get(bindings, to_string(var))}
   end
 
 end
