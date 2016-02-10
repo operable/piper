@@ -67,6 +67,11 @@ defmodule Bind.BindTest do
     assert "#{ast}" == "ec2:list_vms --region=us-west-1"
   end
 
+  test "preparing command with the same variable multiple times" do
+    {:ok, ast} = parse_and_bind("echo $padding $value $padding", %{"padding" => "***", "value" => "cheeseburger"})
+    assert "#{ast}" == "echo:echo *** cheeseburger ***"
+  end
+
   test "preparing command with variable option and option value" do
     {:ok, ast} = parse_and_bind("ec2:list_vms --$region_opt=$region", %{"region_opt" => "region",
                                                                                     "region" => "us-west-2"})
