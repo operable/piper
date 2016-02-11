@@ -39,6 +39,10 @@ defmodule Parser.LexerTest do
                                                                             text(["0fcaec64-0792-4826-8637-9a50593a7c03"])]
   end
 
+  test "lexing strings that contain commas" do
+    assert matches Lexer.tokenize("name,email,username"), [types([:string]), text(["name,email,username"])]
+  end
+
   test "lexing booleans" do
     assert matches Lexer.tokenize("true TRUE #t false FALSE #f TrUe FAlse trUE fAlse"), [types([:bool, :bool, :bool,
                                                                                                 :bool, :bool, :bool,
