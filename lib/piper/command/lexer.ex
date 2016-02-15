@@ -37,7 +37,7 @@ defmodule Piper.Command.Lexer do
   token :bool, pattern: ~r/\A(true|TRUE|\#t|false|FALSE|\#f)/
   token :float, pattern: ~r/\A([0-9])+\.([0-9])+\b/
   token :integer, pattern: ~r/\A([0-9])+\b/
-  token :string, pattern: ~r/\A([a-zA-Z0-9_\-\/])+/
+  token :string, pattern: ~r/\A([a-zA-Z0-9_\-\/,])+/
   token :string, pattern: ~r/\A([[:graph:]\/])+(?:\s|\z)*/, post: :clean_string
 
   def clean_quoted_string(text) do
