@@ -3,8 +3,8 @@ defmodule Piper.Mixfile do
 
   def project do
     [app: :piper,
-     version: "0.0.1",
-     elixir: "~> 1.1",
+     version: "0.2",
+     elixir: "~> 1.2",
      erlc_paths: ["lib/piper/permissions"],
      erlc_options: [:debug_info, :warnings_as_errors],
      leex_options: [:warnings_as_errors],
