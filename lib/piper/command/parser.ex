@@ -23,10 +23,21 @@ defmodule Piper.Command.Parser do
       %SemanticError{}=error ->
         SemanticError.format_error(error)
       parser ->
-        {_parser, result} = pop_node(parser)
-        {:ok, result}
+        {parser, result} = pop_node(parser)
+        {:ok, prepare_result(result, opts)}
     end
   end
+
+  defp prepare_result(%Ast.Invocation{}=invocation, opts) do
+    case Keyword.get(opts, :return_pipeline, false) do
+      true ->
+        %Ast.Pipeline{invocations: [invocation]}
+      false ->
+        invocation
+    end
+  end
+  defp prepare_result(%Ast.Pipeline{}=pipeline, _),
+    do: pipeline
 
   defp parse_pipeline(parser, opts) do
     case pop_token(parser) do
