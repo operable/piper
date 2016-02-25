@@ -13,6 +13,10 @@ defmodule Piper.Command.SemanticError do
     error = new_with_position(near)
     %{error | reason: :ambiguous_command, meta: bundles}
   end
+  def new(near, {:ambiguous_alias, entities}) do
+    error = new_with_position(near)
+    %{error | reason: :ambiguous_alias, meta: entities}
+  end
 
   def update_position(error, %Token{line: line, col: col, text: text}) do
     %{error | line: line, col: col, text: text}
@@ -33,6 +37,10 @@ defmodule Piper.Command.SemanticError do
   defp message_for_reason(:ambiguous_command, text, bundles) do
     bundles = Enum.join(bundles, ", ")
     "Command name '#{text}' found in multiple bundles: #{bundles}."
+  end
+  defp message_for_reason(:ambiguous_alias, text, entities) do
+    {command_name, alias_name} = entities
+    "Ambiguous alias for '#{text}'. Command '#{command_name}' is ambiguous with alias '#{alias_name}'."
   end
 
   defp new_with_position(%Token{col: col, line: line, text: text}) do
