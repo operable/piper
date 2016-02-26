@@ -102,25 +102,18 @@ defmodule Piper.Command.Parser do
         parse_pipeline(parser, opts)
     end
   end
-  defp parse_invocation({parser, %Token{type: :string}=bundle}, opts) do
-    case pop_token(parser) do
-      {parser, %Token{type: :colon}} ->
-        case pop_token(parser) do
-          {parser, %Token{type: :string}=command} ->
-            invocation = qualified_invocation(bundle, command, opts)
-            push_node(parser, invocation)
-            |> parse_args
-          {_parser, errtoken} ->
-            SyntaxError.new(:invocation, :command_name, errtoken)
-        end
-      {_parser, _next_token} ->
-        case qualified_invocation(bundle, opts) do
-          invocation=%Ast.Invocation{} ->
-            push_node(parser, invocation)
-            |> parse_args
-          error ->
-            error
-        end
+  defp parse_invocation({parser, %Token{type: :ns_name}=name}, opts) do
+    invocation = qualified_invocation(name, opts)
+    push_node(parser, invocation)
+    |> parse_args
+  end
+  defp parse_invocation({parser, %Token{type: :string}=command}, opts) do
+    case qualified_invocation(command, opts) do
+      invocation=%Ast.Invocation{} ->
+        push_node(parser, invocation)
+        |> parse_args
+      error ->
+        error
     end
   end
   defp parse_invocation({parser, %Token{type: :variable}=token}, opts) do
@@ -248,6 +241,9 @@ defmodule Piper.Command.Parser do
   defp parse_value({parser, %Token{type: :bool}=token}) do
     {push_node(parser, Ast.Bool.new(token)), true}
   end
+  defp parse_value({parser, %Token{type: :ns_name}=token}) do
+    {push_node(parser, Ast.String.new(token)), true}
+  end
   defp parse_value({parser, %Token{type: :json}=token}) do
     {push_node(parser, Ast.Json.new(token)), true}
   end
@@ -331,6 +327,9 @@ defmodule Piper.Command.Parser do
     {%{parser | nodes: t}, h}
   end
 
+  defp qualified_invocation(%Token{type: :ns_name}=name, _opts) do
+    Ast.Invocation.new(name)
+  end
   defp qualified_invocation(command, opts) do
     case disambiguate_command(command, Keyword.get(opts, :command_resolver)) do
       {:ok, bundle} ->
@@ -340,9 +339,6 @@ defmodule Piper.Command.Parser do
       error ->
         error
     end
-  end
-  defp qualified_invocation(bundle=%Token{}, command=%Token{}, _opts) do
-    Ast.Invocation.new(%{bundle | text: bundle.text <> ":" <> command.text})
   end
 
   defp disambiguate_command(command, resolver) when is_function(resolver) do

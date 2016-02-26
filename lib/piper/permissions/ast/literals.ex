@@ -8,6 +8,10 @@ defmodule Piper.Permissions.Ast.String do
     text = String.Chars.to_string(text)
     %__MODULE__{line: line, col: col, value: text}
   end
+  def new({:name, {line, col}, text}) do
+    text = String.Chars.to_string(text)
+    %__MODULE__{line: line, col: col, value: text}
+  end
   def new({:dqstring, {line, col}, text}) do
     text = String.Chars.to_string(text)
     %__MODULE__{line: line, col: col, value: text, quotes: "\""}
