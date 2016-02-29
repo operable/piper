@@ -104,6 +104,11 @@ defmodule Piper.Permissions.ParserTest do
       ["site:ops"], 2
   end
 
+  test "slack emoji commands successfully parse" do
+    matches "when command is pd::pager: must have site:ops", ["site:ops"], 0
+    matches "when command is pd::pager: with arg[0] == /prod.*/ must have site:ops and site:prod", ["site:ops", "site:prod"], 1
+  end
+
   test "random whitespacing parses" do
     matches_normalized "when#{ws}command#{ws}is#{ws} s3:bucket must#{ws} have#{ws}all in [s3:read]", ["s3:read"]
     matches_normalized "when#{ws}command#{ws}is#{ws} s3:bucket must#{ws} have#{ws}all in [s3:read]", ["s3:read"]
