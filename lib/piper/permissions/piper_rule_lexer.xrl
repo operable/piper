@@ -7,6 +7,7 @@ INDEXED_ARG                     = arg\[([0-9])+\]
 OPTION                          = option
 AGGREGATE_OPTIONS               = options
 OPERATORS                       = (<|>|=<|>=|==|!=|and|or|not|in)
+NAME                            = [a-zA-Z]+[a-zA-Z0-9_\-]*::?[a-zA-Z]+[a-zA-Z0-9_\-:]*
 INTEGER                         = ([0-9])+
 FLOAT                           = ([0-9])+\.([0-9])+
 STRING                          = ([a-zA-Z0-9_\-])+
@@ -33,9 +34,10 @@ Rules.
 {RPAREN}                        : advance_count(length(TokenChars)), {token, {rparen, position(), ")"}}.
 {LBRACKET}                      : advance_count(length(TokenChars)), {token, {lbracket, position(), "["}}.
 {RBRACKET}                      : advance_count(length(TokenChars)), {token, {rbracket, position(), "]"}}.
-{COLON}                         : advance_count(length(TokenChars)), {token, {colon, position(), ":"}}.
+%%{COLON}                         : advance_count(length(TokenChars)), {token, {colon, position(), ":"}}.
 {COMMA}                         : advance_count(length(TokenChars)), {token, {comma, position(), ","}}.
 {REGEX}                         : advance_count(length(TokenChars)), {token, {regex, position(), build_regex(TokenChars)}}.
+{NAME}                          : advance_count(length(TokenChars)), {token, {name, position(), TokenChars}}.
 {FLOAT}                         : advance_count(length(TokenChars)), {token, {float, position(), list_to_float(TokenChars)}}.
 {INTEGER}                       : advance_count(length(TokenChars)), {token, {integer, position(), list_to_integer(TokenChars)}}.
 "(\\\^.|\\.|[^"])*"             : advance_count(length(TokenChars)), {token, {dqstring, position(), clean_string(TokenChars)}}.

@@ -21,12 +21,14 @@ defmodule Piper.Command.Lexer do
   token :equals, pattern: ~r/\A=/
   token :lbracket, pattern: ~r/\A\[/
   token :rbracket, pattern: ~r/\A\]/
-  token :colon, pattern: ~r/\A\:/
+#  token :colon, pattern: ~r/\A\:/
   # Variable as option name
   token :option, pattern: ~r/\A\-\-/
   token :option, pattern: ~r/\A\-/
   # JSON literal
   token :json, pattern: ~r/\A{{([[:graph:]]| )+}}/, post: :clean_json
+  # Namespaced name
+  token :ns_name, pattern: ~r/\A[a-zA-Z]+[a-zA-Z0-9_\-]*::?[a-zA-Z]+[a-zA-Z0-9_\-:]*/
   # Tokenize quoted strings as whole strings
   token :quoted_string, pattern: ~r/\A'(\\\\A.|\\.|[^'])*'(?:\s|\z)*/, post: :clean_quoted_string
   # Tokenize double-quoted strings as whole strings

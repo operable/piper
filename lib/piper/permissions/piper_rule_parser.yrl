@@ -7,7 +7,7 @@ all any arg command have is must option when with
 and or in equiv not_equiv lt gt lte gte
 
 %% Data types
-boolean float integer dqstring sqstring string regex
+name boolean float integer dqstring sqstring string regex
 
 %% Punctuation
 colon comma lbracket rbracket lparen rparen.
@@ -18,7 +18,7 @@ access_rule
 
 command_selector command_criteria
 
-ns_name_list ns_name_list_body
+ns_name_list ns_name_list_body ns_name
 
 input_criterion input_criteria input_criteria_binop
 
@@ -68,11 +68,11 @@ permission_criteria ->
 permission_criteria ->
   all in ns_name_list : ?AST("PermissionExpr"):new('$1', track('$3')).
 permission_criteria ->
-  string_expr : verify_permission_name('$1'),
-                ?AST("PermissionExpr"):new(add_permission('$1')).
+  ns_name : verify_permission_name('$1'),
+           ?AST("PermissionExpr"):new(add_permission('$1')).
 
 command_criteria ->
-  is string_expr : ?AST("BinaryExpr"):new('$1', [{right, verify_command_name('$2')}]).
+  is ns_name : ?AST("BinaryExpr"):new('$1', [{right, verify_command_name('$2')}]).
 
 input_criterion ->
   input_criteria : '$1'.
@@ -132,13 +132,18 @@ ns_name_list ->
   lbracket ns_name_list_body rbracket : ?AST("List"):new('$1', '$2').
 
 ns_name_list_body ->
-  string_expr comma ns_name_list_body : [verify_permission_name('$1')] ++ '$3'.
+  ns_name comma ns_name_list_body : [verify_permission_name('$1')] ++ '$3'.
 ns_name_list_body ->
   regular_expr comma ns_name_list_body : ['$1'] ++ '$3'.
 ns_name_list_body ->
-  string_expr : [verify_permission_name('$1')].
+  ns_name : [verify_permission_name('$1')].
 ns_name_list_body ->
   regular_expr : ['$1'].
+
+ns_name ->
+  name : ?AST("String"):new('$1').
+ns_name ->
+  string_expr : '$1'.
 
 regular_expr ->
   regex : ?AST("Regex"):new('$1').
@@ -164,8 +169,6 @@ value ->
 value ->
   regular_expr : '$1'.
 
-string_expr ->
-  string colon string_expr : ?AST("String"):new(?AST("String"):new('$1'), '$2', '$3').
 string_expr ->
   dqstring colon string_expr : ?AST("String"):new(?AST("String"):new('$1', "\""), '$2', '$3').
 string_expr ->

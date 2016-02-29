@@ -1,4 +1,4 @@
-defmodule Parser.LexerTest do 
+defmodule Parser.LexerTest do
   use Parser.ParsingCase
 
   test "lexing whitespace returns empty token list" do
@@ -81,8 +81,8 @@ defmodule Parser.LexerTest do
                                                          text(["--", "foo", "=", "foo@bar"])]
     assert matches Lexer.tokenize("--foo='foo bar'"), [types([:option, :string, :equals, :quoted_string]),
                                                        text(["--", "foo", "=", "foo bar"])]
-    assert matches Lexer.tokenize("--foo=test:test"), [types([:option, :string, :equals, :string, :colon, :string]),
-                                                       text(["--", "foo", "=", "test", ":", "test"])]
+    assert matches Lexer.tokenize("--foo=test:test"), [types([:option, :string, :equals, :ns_name]),
+                                                       text(["--", "foo", "=", "test:test"])]
   end
 
   test "lexing long variable options" do
@@ -104,8 +104,8 @@ defmodule Parser.LexerTest do
                                                          text(["--", "foo", "=", "foo@bar"])]
     assert matches Lexer.tokenize("--$foo='foo bar'"), [types([:option, :variable, :equals, :quoted_string]),
                                                        text(["--", "foo", "=", "foo bar"])]
-    assert matches Lexer.tokenize("--$foo=test:test"), [types([:option, :variable, :equals, :string, :colon, :string]),
-                                                        text(["--", "foo", "=", "test", ":", "test"])]
+    assert matches Lexer.tokenize("--$foo=test:test"), [types([:option, :variable, :equals, :ns_name]),
+                                                        text(["--", "foo", "=", "test:test"])]
   end
 
   test "lexing long variable optvars" do
@@ -127,8 +127,8 @@ defmodule Parser.LexerTest do
                                                       text(["-", "f", "foo@bar"])]
     assert matches Lexer.tokenize("-f 'foo bar'"), [types([:option, :string, :quoted_string]),
                                                        text(["-", "f", "foo bar"])]
-    assert matches Lexer.tokenize("-f test:test"), [types([:option, :string, :string, :colon, :string]),
-                                                    text(["-", "f", "test", ":", "test"])]
+    assert matches Lexer.tokenize("-f test:test"), [types([:option, :string, :ns_name]),
+                                                    text(["-", "f", "test:test"])]
   end
 
   test "lexing short variable options" do
@@ -151,8 +151,8 @@ defmodule Parser.LexerTest do
                                                       text(["-", "f", "=", "foo@bar"])]
     assert matches Lexer.tokenize("-f='foo bar'"), [types([:option, :string, :equals, :quoted_string]),
                                                        text(["-", "f", "=", "foo bar"])]
-    assert matches Lexer.tokenize("-f=test:test"), [types([:option, :string, :equals, :string, :colon, :string]),
-                                                    text(["-", "f", "=", "test", ":", "test"])]
+    assert matches Lexer.tokenize("-f=test:test"), [types([:option, :string, :equals, :ns_name]),
+                                                    text(["-", "f", "=", "test:test"])]
   end
 
   test "lexing short options with assigned variable values" do
@@ -174,8 +174,8 @@ defmodule Parser.LexerTest do
                                                       text(["-", "f", "foo@bar"])]
     assert matches Lexer.tokenize("-$f 'foo bar'"), [types([:option, :variable, :quoted_string]),
                                                        text(["-", "f", "foo bar"])]
-    assert matches Lexer.tokenize("-$f test:test"), [types([:option, :variable, :string, :colon, :string]),
-                                                       text(["-", "f", "test", ":", "test"])]
+    assert matches Lexer.tokenize("-$f test:test"), [types([:option, :variable, :ns_name]),
+                                                       text(["-", "f", "test:test"])]
   end
 
   test "lexing short variable optvars" do
@@ -197,8 +197,8 @@ defmodule Parser.LexerTest do
                                                       text(["-", "f", "=", "foo@bar"])]
     assert matches Lexer.tokenize("-$f='foo bar'"), [types([:option, :variable, :equals, :quoted_string]),
                                                        text(["-", "f", "=", "foo bar"])]
-    assert matches Lexer.tokenize("-$f=test:test"), [types([:option, :variable, :equals, :string, :colon, :string]),
-                                                       text(["-", "f", "=", "test", ":", "test"])]
+    assert matches Lexer.tokenize("-$f=test:test"), [types([:option, :variable, :equals, :ns_name]),
+                                                       text(["-", "f", "=", "test:test"])]
   end
 
   test "lexing short optvars with assigned variable value" do

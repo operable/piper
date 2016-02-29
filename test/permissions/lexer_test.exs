@@ -81,6 +81,8 @@ defmodule Piper.Permissions.LexerTest do
   test "quoting namespaced names" do
     matches "\"foo:bar\"", [dqstring: 'foo:bar']
     matches "'foo:bar'", [sqstring: 'foo:bar']
+    matches "\"foo:bar:\"", [dqstring: 'foo:bar:']
+    matches "'foo:bar:'", [sqstring: 'foo:bar:']
   end
 
   test "quoting quoted strings" do
@@ -108,7 +110,8 @@ defmodule Piper.Permissions.LexerTest do
   end
 
   test "tokenizing namespaced names" do
-    matches "foo:bar", [{:string, 'foo'}, :colon, {:string, 'bar'}]
+    matches "foo:bar", [name: 'foo:bar']
+    matches "foo:bar:", [name: 'foo:bar:']
   end
 
 end
