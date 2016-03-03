@@ -1,13 +1,11 @@
-defmodule Parser.ParsingCase do
+defmodule Parser.NewParsingCase do
 
   require Logger
-  alias Piper.Util.Token
 
   defmacro __using__(_) do
     quote do
-      alias Piper.Command.Parser
-      alias Piper.Command.Lexer
-      alias Piper.Command.Ast
+      alias :piper_cmd_lexer, as: Lexer
+      alias :piper_cmd_parser, as: Parser
       use ExUnit.Case
 
       import unquote(__MODULE__), only: [types: 1,
@@ -25,11 +23,11 @@ defmodule Parser.ParsingCase do
   end
 
   def text(text) when is_binary(text) do
-    fn([ent]) -> ent.text == text end
+    fn([{_, _, token}]) -> String.Chars.to_string(token) == text end
   end
   def text(texts) when is_list(texts) do
     fn(ents) when is_list(ents) ->
-      ent_texts = Enum.map(ents, &(&1.text))
+      ent_texts = Enum.map(ents, fn({_, _, token}) -> String.Chars.to_string(token) end)
       result = ent_texts == texts
       if result == false do
         Logger.error "#{inspect ent_texts} didn't match text list #{inspect texts}"
@@ -89,7 +87,7 @@ defmodule Parser.ParsingCase do
       else
         true
       end
-      (%Token{}=ent) ->
+      (ent) ->
         ent_types = Enum.map([ent], &(extract_type(&1)))
         if ttypes != ent_types do
           Logger.error("#{inspect ent_types} didn't match expected #{inspect ttypes}")
@@ -100,9 +98,6 @@ defmodule Parser.ParsingCase do
     end
   end
 
-  defp extract_type(%Token{}=token) do
-    token.type
-  end
   defp extract_type({type, _, _}), do: type
 
 end
