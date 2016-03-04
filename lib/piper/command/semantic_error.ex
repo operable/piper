@@ -3,7 +3,6 @@ defmodule Piper.Command.SemanticError do
   defstruct [:col, :line, :text, :reason,
              :meta]
 
-  alias Piper.Util.Token
 
   def new(near, :no_command) do
     error = new_with_position(near)
@@ -13,34 +12,22 @@ defmodule Piper.Command.SemanticError do
     error = new_with_position(near)
     %{error | reason: :ambiguous_command, meta: bundles}
   end
-  def new(near, {:ambiguous_alias, entities}) do
-    error = new_with_position(near)
-    %{error | reason: :ambiguous_alias, meta: entities}
-  end
-
-  def update_position(error, %Token{line: line, col: col, text: text}) do
-    %{error | line: line, col: col, text: text}
-  end
 
   def format_error(%__MODULE__{col: col, line: line, text: text, reason: reason, meta: meta}) do
-    {:error, position_info(col, line, text) <> message_for_reason(reason, text, meta)}
+    {:error, position_info(col, line) <> message_for_reason(reason, text, meta)}
   end
 
-  defp position_info(nil, _, _), do: ""
-  defp position_info(col, line, text) do
-    "Error on line #{line}, column #{col}, starting at '#{text}'. "
+  defp position_info(nil, _), do: ""
+  defp position_info(col, line) do
+    "(Line: #{line}, Col: #{col}) "
   end
 
   defp message_for_reason(:no_command, text, _) do
-    "Installed command with name '#{text}' not found."
+    "Command '#{text}' not found in any installed bundle."
   end
   defp message_for_reason(:ambiguous_command, text, bundles) do
-    bundles = Enum.join(bundles, ", ")
-    "Command name '#{text}' found in multiple bundles: #{bundles}."
-  end
-  defp message_for_reason(:ambiguous_alias, text, entities) do
-    {command_name, alias_name} = entities
-    "Ambiguous alias for '#{text}'. Command '#{command_name}' is ambiguous with alias '#{alias_name}'."
+    "Ambiguous command reference detected. " <>
+    "Command '#{text}' found in bundles #{format_bundles(bundles)}."
   end
 
   defp new_with_position(%Token{col: col, line: line, text: text}) do
@@ -48,6 +35,19 @@ defmodule Piper.Command.SemanticError do
   end
   defp new_with_position(near) when is_binary(near) do
     %__MODULE__{text: near}
+  end
+
+  defp format_bundles(bundles) do
+    format_bundles(bundles, "")
+  end
+  defp format_bundles([bundle|rest], accum) when rest == [] do
+    accum <> ", and '#{bundle}'"
+  end
+  defp format_bundles([bundle|rest], "") do
+    format_bundles(rest, "'#{bundle}'")
+  end
+  defp format_bundles([bundle|rest], accum) do
+    format_bundles(rest, accum <> ", '#{bundle}'")
   end
 
 end
