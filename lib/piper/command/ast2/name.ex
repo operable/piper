@@ -7,24 +7,22 @@ defmodule Piper.Command.Ast2.Name do
   def new(opts) do
     bundle = parse(opts, :bundle)
     entity = parse(opts, :entity)
-    bundle = resolve(bundle, entity)
+    bundle = lookup_bundle(bundle, entity)
     %__MODULE__{bundle: bundle, entity: entity}
   end
 
-  defp resolve(nil, entity) do
+  defp lookup_bundle(nil, entity) do
     resolver = :erlang.get(:cc_resolver)
-    if resolver != :undefined do
-      if resolver != nil do
-        case resolver.(entity.value) do
-          {:ok, bundle} ->
-            Ast2.String.new(bundle)
-          error ->
-            throw error
-        end
+    if resolver != :undefined and resolver != nil do
+      case resolver.(entity.value) do
+        {:ok, bundle} ->
+          Ast2.String.new(bundle)
+        error ->
+          throw error
       end
     end
   end
-  defp resolve(bundle, _), do: bundle
+  defp lookup_bundle(bundle, _), do: bundle
 
   defp parse(opts, key) do
     case Keyword.get(opts, key) do
