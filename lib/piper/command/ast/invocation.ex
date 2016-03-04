@@ -14,8 +14,6 @@ end
 
 defmodule Piper.Command.Ast.InvocationConnector do
 
-  alias Piper.Command.Ast
-
   defstruct [line: nil, col: nil, left: nil, right: nil, type: nil]
 
   def new({type, {line, col}, _}, left, right) when type in [:pipe, :iff] do

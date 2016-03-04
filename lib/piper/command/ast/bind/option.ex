@@ -1,7 +1,6 @@
 defimpl Piper.Command.Bindable, for: Piper.Command.Ast.Option do
 
   alias Piper.Command.Bindable
-  alias Piper.Command.Ast
 
   def resolve(option, scope) do
     if option.value != nil do
