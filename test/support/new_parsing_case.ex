@@ -5,7 +5,7 @@ defmodule Parser.NewParsingCase do
   defmacro __using__(_) do
     quote do
       alias :piper_cmd_lexer, as: Lexer
-      alias :piper_cmd_parser, as: Parser
+      alias Piper.Command.Parser2, as: Parser
       use ExUnit.Case
 
       import unquote(__MODULE__), only: [types: 1,

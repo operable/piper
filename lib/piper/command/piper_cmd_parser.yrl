@@ -146,10 +146,22 @@ scan_and_parse(Text) when is_binary(Text) ->
 scan_and_parse(Text) ->
   case piper_cmd_lexer:tokenize(Text) of
     {ok, Tokens} ->
-      parse(Tokens);
+      case parse(Tokens) of
+        {ok, Ast} ->
+          {ok, Ast};
+        Error ->
+          pp_error(Error)
+      end;
     Error ->
-      Error
+      {error, list_to_binary([piper_cmd_lexer:format_error(Error), "."])}
   end.
+
+pp_error({error, {_, _, ["syntax error before: ", []]}}) ->
+  {error, <<"Unexpected end of input.">>};
+pp_error({error, {Line, _, Message}}) when is_integer(Line) ->
+  {error, list_to_binary(Message)};
+pp_error({error, {{Line, Col}, _, Message}}) ->
+  {error, list_to_binary(io_lib:format("(Line: ~p, Col: ~p) ~s.", [Line, Col, Message]))}.
 
 merge_strings([{_, Pos, _}|_]=Strings) ->
   Strings1 = [Value || {_, _, Value} <- Strings],

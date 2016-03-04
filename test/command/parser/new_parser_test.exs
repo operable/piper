@@ -74,6 +74,11 @@ defmodule Parser.NewParserTest do
     should_parse "foo '123 abc'", "foo 123 abc"
   end
 
+  test "using variables for command names should fail" do
+    should_not_parse "wubba:$foo"
+    should_not_parse "$foo --bar"
+  end
+
   # test "parsing escaped double quoted strings" do
   #   should_parse "wubba:foo \"123\\\"\" abc", "wubba:foo 123\\\" abc"
   #   should_parse "foo \"123\\\"\" abc", "foo 123\" abc"
@@ -123,16 +128,16 @@ defmodule Parser.NewParserTest do
 
   test "unknown commands fail resolution" do
     {:error, message} = Parser.scan_and_parse("fluff", command_resolver: &TestHelpers.resolve_commands/1)
-    assert message == "Error on line 1, column 1, starting at 'fluff'. Installed command with name 'fluff' not found."
+    assert message == "Command 'fluff' not found in any installed bundle."
     {:error, message} = Parser.scan_and_parse("hello | goodbye | fluff", command_resolver: &TestHelpers.resolve_commands/1)
-    assert message == "Error on line 1, column 19, starting at 'fluff'. Installed command with name 'fluff' not found."
+    assert message == "Command 'fluff' not found in any installed bundle."
   end
 
   test "ambiguous commands fail resolution" do
     {:error, message} = Parser.scan_and_parse("multi", command_resolver: &TestHelpers.resolve_commands/1)
-    assert message == "Error on line 1, column 1, starting at 'multi'. Command name 'multi' found in multiple bundles: a, b, c."
+    assert message ==  "Ambiguous command reference detected. Command 'multi' found in bundles 'a', 'b', and 'c'."
     {:error, message} = Parser.scan_and_parse("hello | multi", command_resolver: &TestHelpers.resolve_commands/1)
-    assert message == "Error on line 1, column 9, starting at 'multi'. Command name 'multi' found in multiple bundles: a, b, c."
+    assert message == "Ambiguous command reference detected. Command 'multi' found in bundles 'a', 'b', and 'c'."
   end
 
 end
