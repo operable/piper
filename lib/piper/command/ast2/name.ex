@@ -18,7 +18,7 @@ defmodule Piper.Command.Ast2.Name do
         {:ok, bundle} ->
           Ast2.String.new(bundle)
         error ->
-          throw error
+          throw %{error | col: entity.col, line: entity.line}
       end
     end
   end
