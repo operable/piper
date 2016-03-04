@@ -3,37 +3,23 @@ defimpl String.Chars, for: [Piper.Command.Ast.Integer,
                             Piper.Command.Ast.Bool] do
 
   def to_string(literal) do
-    value = Map.fetch!(literal, :value)
-    "#{value}"
+    "#{literal.value}"
   end
 
 end
 
 defimpl String.Chars, for: [Piper.Command.Ast.String] do
 
-  alias Piper.Command.Ast
-
-  def to_string(%Ast.String{value: value}) do
-    value
+  def to_string(str) do
+    str.value
   end
 
 end
 
-defimpl String.Chars, for: [Piper.Command.Ast.Json] do
+defimpl String.Chars, for: [Piper.Command.Ast.Emoji] do
 
-  alias Piper.Command.Ast
-
-  def to_string(%Ast.Json{raw: raw}) do
-    raw
-  end
-
-end
-
-defimpl String.Chars, for: [Elixir.Map] do
-
-  def to_string(data) do
-    json = Poison.encode!(data)
-    "{{" <> json <> "}}"
+  def to_string(emoji) do
+    emoji.value
   end
 
 end

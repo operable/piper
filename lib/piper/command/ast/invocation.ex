@@ -1,62 +1,25 @@
 defmodule Piper.Command.Ast.Invocation do
 
-  alias Piper.Util.Token
   alias Piper.Command.Ast
 
-  defstruct [line: nil, col: nil, command: nil, args: [], options: [],
-             redirs: []]
+  defstruct [name: nil, args: [], redir: nil]
 
-  def new(%Token{type: :ns_name}=token) do
-    %__MODULE__{line: token.line, col: token.col,
-                command: token.text}
-  end
-  def new(%Token{type: :string}=token) do
-    %__MODULE__{line: token.line, col: token.col,
-                command: token.text}
-  end
-  def new(%Ast.Variable{line: line, col: col}=var) do
-    %__MODULE__{line: line, col: col, command: var}
-  end
-  def add_arg(%__MODULE__{args: args}=invocation, arg) do
-    %{invocation | args: args ++ [arg]}
+  def new(%Ast.Name{}=name, opts \\ []) do
+    args = Keyword.get(opts, :args, [])
+    redir = Keyword.get(opts, :redir)
+    %__MODULE__{name: name, args: args, redir: redir}
   end
 
-  def bundle_name(%__MODULE__{command: command}) do
-    case String.split(command, "::") do
-      [bundle, _command] ->
-        bundle
-      [_] ->
-        hd(String.split(command, ":"))
-    end
-  end
+end
 
-  def command_name(%__MODULE__{command: command}) do
-    case String.split(command, "::") do
-      [_bundle, command] ->
-        ":" <> command
-      [_] ->
-        [_bundle, command] = String.split(command, ":")
-        command
-    end
-  end
+defmodule Piper.Command.Ast.InvocationConnector do
 
-  def add_redir(%__MODULE__{redirs: redirs}=invocation, dest) when is_binary(dest) do
-    if Enum.member?(redirs, dest) do
-      invocation
-    else
-      %{invocation | redirs: [dest|redirs]}
-    end
-  end
+  alias Piper.Command.Ast
 
-  def add_redirs(%__MODULE__{redirs: redirs}=invocation, dests) when is_list(dests) do
-    updated = Enum.reduce(dests, redirs,
-      fn(dest, acc) ->
-        if Enum.member?(acc, dest) do
-          acc
-        else
-          [dest|acc]
-        end end)
-    %{invocation | redirs: updated}
+  defstruct [line: nil, col: nil, left: nil, right: nil, type: nil]
+
+  def new({type, {line, col}, _}, left, right) when type in [:pipe, :iff] do
+    %__MODULE__{line: line, col: col, left: left, right: right, type: type}
   end
 
 end

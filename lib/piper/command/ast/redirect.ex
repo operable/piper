@@ -1,4 +1,4 @@
-defmodule Piper.Command.Ast2.Redirect do
+defmodule Piper.Command.Ast.Redirect do
 
   defstruct [line: nil, col: nil, type: nil, targets: nil]
 

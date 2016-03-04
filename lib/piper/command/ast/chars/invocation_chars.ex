@@ -1,29 +1,38 @@
 defimpl String.Chars, for: Piper.Command.Ast.Invocation do
 
-  use Piper.Command.Ast.Chars.Util
+  alias Piper.Command.Ast
+
+  def to_string(%Ast.Invocation{name: name, args: args, redir: redir}) do
+    formatted_args = if Enum.empty?(args) do
+      ""
+    else
+      " " <> Enum.join(Enum.map(args, &("#{&1}")), " ")
+    end
+    formatted_command = "#{name}#{formatted_args}"
+    if redir == nil do
+      formatted_command
+    else
+      formatted_command <> " #{redir}"
+    end
+  end
+
+end
+
+defimpl String.Chars, for: Piper.Command.Ast.InvocationConnector do
 
   alias Piper.Command.Ast
 
-  def to_string(%Ast.Invocation{command: command, args: args, options: options,
-                                redirs: redirs}) do
-    formatted_opts = for {_, opt} <- options do
-      "#{opt}"
-    end
-    formatted_args = for arg <- args do
-      "#{escape(arg)}"
-    end
-    formatted_command = ["#{command}"|formatted_opts] ++ formatted_args
-    formatted_command = format_redirs(formatted_command, redirs)
-    Enum.join(formatted_command, " ")
+  def to_string(%Ast.InvocationConnector{type: type, left: left, right: right}) do
+    left = String.strip("#{left}")
+    right = String.strip("#{right}")
+    left <> " #{symbol_for_type(type)} " <> right
   end
 
-  defp format_redirs(command, []),
-  do: command
-  defp format_redirs(command, [_]=dests) do
-    command ++ [">"|dests]
+  defp symbol_for_type(:iff) do
+    "&&"
   end
-  defp format_redirs(command, dests) do
-    command ++ ["*>"|dests]
+  defp symbol_for_type(:pipe) do
+    "|"
   end
 
 end

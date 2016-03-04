@@ -1,8 +1,8 @@
-defimpl String.Chars, for: Piper.Command.Ast2.Redirect do
+defimpl String.Chars, for: Piper.Command.Ast.Redirect do
 
-  alias Piper.Command.Ast2
+  alias Piper.Command.Ast
 
-  def to_string(%Ast2.Redirect{type: type, targets: targets}) do
+  def to_string(%Ast.Redirect{type: type, targets: targets}) do
     targets = Enum.map(targets, &("#{&1}"))
     "#{symbol_for_type(type)} #{Enum.join(targets, " ")}"
   end

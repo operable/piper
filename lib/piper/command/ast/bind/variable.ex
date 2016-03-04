@@ -1,7 +1,7 @@
-defimpl Piper.Command.Bindable, for: Piper.Command.Ast2.Variable do
+defimpl Piper.Command.Bindable, for: Piper.Command.Ast.Variable do
 
   alias Piper.Command.Scoped
-  alias Piper.Command.Ast2
+  alias Piper.Command.Ast
   alias Piper.Command.SemanticError
 
   def bind(var, scope) do

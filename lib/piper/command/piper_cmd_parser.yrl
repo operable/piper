@@ -134,7 +134,7 @@ Erlang code.
 -export([scan_and_parse/1,
          scan_and_parse/2]).
 
--define(AST(E), (list_to_atom("Elixir.Piper.Command.Ast2." ++ E))).
+-define(AST(E), (list_to_atom("Elixir.Piper.Command.Ast." ++ E))).
 
 scan_and_parse(Text, Opts) when is_list(Opts) ->
   Resolver = proplists:get_value(command_resolver, Opts),

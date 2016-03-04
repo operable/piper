@@ -2,11 +2,10 @@ defmodule Bind.BindTest do
 
   use ExUnit.Case
 
-  alias Parser.TestHelpers
-  alias Piper.Command.Parser
+  alias :piper_cmd_parser, as: Parser
   alias Piper.Command.Bindable
   alias Piper.Command.Bind
-  alias Piper.Command.Ast
+  alias Piper.Command.Ast, as: Ast
 
   defp link_scopes([]) do
     Bind.Scope.empty_scope()
@@ -46,47 +45,30 @@ defmodule Bind.BindTest do
 
   test "preparing simple command" do
     {:ok, ast} = parse_and_bind("echo 'foo'")
-    assert ast.command == "echo:echo"
+    assert "#{ast.name}" == "echo"
     assert arg(ast, 0) == "foo"
-    assert "#{ast}" == "echo:echo foo"
+    assert "#{ast}" == "echo foo"
   end
 
   test "preparing command with options" do
     {:ok, ast} = parse_and_bind("ec2:list_vms --region=us-east-1")
-    assert ast.command == "ec2:list_vms"
-    assert arg(ast, 0).flag == "region"
-    assert arg(ast, 0).value == "us-east-1"
+    assert "#{ast.name}" == "ec2:list_vms"
+    assert "#{arg(ast, 0).name}" == "region"
+    assert "#{arg(ast, 0).value}" == "us-east-1"
     assert "#{ast}" == "ec2:list_vms --region=us-east-1"
   end
 
   test "preparing command with variable arg" do
     {:ok, ast} = parse_and_bind("ec2:list_vms --region=$region", %{"region" => "us-west-1"})
-    assert ast.command == "ec2:list_vms"
-    assert arg(ast, 0).flag == "region"
-    assert arg(ast, 0).value == "us-west-1"
+    assert "#{ast.name}" == "ec2:list_vms"
+    assert "#{arg(ast, 0).name}" == "region"
+    assert "#{arg(ast, 0).value}" == "us-west-1"
     assert "#{ast}" == "ec2:list_vms --region=us-west-1"
   end
 
   test "preparing command with the same variable multiple times" do
     {:ok, ast} = parse_and_bind("echo $padding $value $padding", %{"padding" => "***", "value" => "cheeseburger"})
-    assert "#{ast}" == "echo:echo *** cheeseburger ***"
-  end
-
-  test "preparing command with variable option and option value" do
-    {:ok, ast} = parse_and_bind("ec2:list_vms --$region_opt=$region", %{"region_opt" => "region",
-                                                                                    "region" => "us-west-2"})
-    assert ast.command == "ec2:list_vms"
-    assert arg(ast, 0).flag == "region"
-    assert arg(ast, 0).value == "us-west-2"
-    assert "#{ast}" == "ec2:list_vms --region=us-west-2"
-  end
-
-  test "preparing command with variable option" do
-    {:ok, ast} = parse_and_bind("ec2:list_vms --$region_opt=us-east-1", %{"region_opt" => "region"})
-    assert ast.command == "ec2:list_vms"
-    assert arg(ast, 0).flag == "region"
-    assert arg(ast, 0).value == "us-east-1"
-    assert "#{ast}" == "ec2:list_vms --region=us-east-1"
+    assert "#{ast}" == "echo *** cheeseburger ***"
   end
 
   test "preparing command with chained scopes" do
@@ -95,62 +77,18 @@ defmodule Bind.BindTest do
     assert "#{ast}" == "ec2:list_vms --region=us-west-2 --user=becky 5"
   end
 
-  test "array indexing" do
-    scope = Bind.Scope.from_map(%{"region" => ["us-west-1", "us-east-1"]})
-    {:ok, ast} = parse_and_bind2("ec2:list_vms --region=$region[1]", scope)
-    assert "#{ast}" == "ec2:list_vms --region=us-east-1"
-  end
+  # TODO: Add back support for indexed variables
+  # test "array indexing" do
+  #   scope = Bind.Scope.from_map(%{"region" => ["us-west-1", "us-east-1"]})
+  #   {:ok, ast} = parse_and_bind2("ec2:list_vms --region=$region[1]", scope)
+  #   assert "#{ast}" == "ec2:list_vms --region=us-east-1"
+  # end
 
-  test "map indexing" do
-    scope = Bind.Scope.from_map(%{"region" => %{"west-1" => "us-west-1", "east" => "us-east-1"}})
-    {:ok, ast} = parse_and_bind2("ec2:list_vms --region=$region[\"west-1\"]", scope)
-    assert "#{ast}" == "ec2:list_vms --region=us-west-1"
-  end
-
-  test "map binding" do
-    scope = Bind.Scope.from_map(%{"region" => %{"west-1" => "us-west-1", "east" => "us-east-1"}})
-    {:ok, ast} = parse_and_bind2("ec2:list_vms $region", scope)
-    {:ok, literal_ast} = parse_and_bind2("ec2:list_vms {{{\"west-1\":\"us-west-1\",\"east\":\"us-east-1\"}}}", scope)
-    {:ok, dogfood_ast} = parse_and_bind2("#{ast}", scope)
-    assert literal_ast == dogfood_ast
-  end
-
-  test "list binding" do
-    scope = Bind.Scope.from_map(%{"regions" => ["us-west-1", "us-west-2", "us-east-1"]})
-    {:ok, ast} = parse_and_bind2("ec2:list_vms $regions", scope)
-    assert "#{ast}" == "ec2:list_vms {{[\"us-west-1\",\"us-west-2\",\"us-east-1\"]}}"
-  end
-
-  test "disambiguate command name bound to variable" do
-    scope = Bind.Scope.from_map(%{"command" => "hello"})
-    {:ok, ast} = parse_and_bind2("$command", scope, command_resolver: &TestHelpers.resolve_commands/1)
-    assert "salutations:hello" == "#{ast}"
-  end
-
-  test "disambiguate hard references and variables" do
-    scope = Bind.Scope.from_map(%{"command" => "hello"})
-    {:ok, ast} = parse_and_bind2("goodbye | $command", scope, command_resolver: &TestHelpers.resolve_commands/1)
-    assert "salutations:goodbye | salutations:hello" == "#{ast}"
-  end
-
-  test "unknown commands fail resolution" do
-    scope = Bind.Scope.from_map(%{"command" => "fluff"})
-    {:ok, ast} = Parser.scan_and_parse("goodbye | $command", command_resolver: &TestHelpers.resolve_commands/1)
-    {:ok, scope} = Bindable.resolve(ast, scope)
-    {:error, "Installed command with name 'fluff' not found."} = Bindable.bind(ast, scope)
-  end
-
-  test "ambiguous command references fail resolution" do
-    scope = Bind.Scope.from_map(%{"command" => "multi"})
-    {:ok, ast} = Parser.scan_and_parse("goodbye | hello | $command", command_resolver: &TestHelpers.resolve_commands/1)
-    {:ok, scope} = Bindable.resolve(ast, scope)
-    {:error, "Command name 'multi' found in multiple bundles: a, b, c."} = Bindable.bind(ast, scope)
-  end
-
-  test "fully qualified command references skip resolution" do
-    scope = Bind.Scope.from_map(%{"command" => "operable:mirror"})
-    {:ok, ast} = parse_and_bind2("goodbye | $command", scope, command_resolver: &TestHelpers.resolve_commands/1)
-    assert "salutations:goodbye | operable:mirror" == "#{ast}"
-  end
+  # TODO: Add back support for indexed variables
+  # test "map indexing" do
+  #   scope = Bind.Scope.from_map(%{"region" => %{"west-1" => "us-west-1", "east" => "us-east-1"}})
+  #   {:ok, ast} = parse_and_bind2("ec2:list_vms --region=$region[\"west-1\"]", scope)
+  #   assert "#{ast}" == "ec2:list_vms --region=us-west-1"
+  # end
 
 end

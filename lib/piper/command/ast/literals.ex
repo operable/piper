@@ -1,108 +1,71 @@
 defmodule Piper.Command.Ast.Integer do
 
-  use Piper.Util.TokenWrapper
+  defstruct [line: nil, col: nil, value: nil]
 
-  defwrapper [value: :value, converter: :convert, token_type: :integer]
 
-  def new(line, col, value) do
-    %__MODULE__{line: line, col: col, value: value}
-  end
-
-  def convert(%__MODULE__{value: value}=literal) when is_binary(value) do
-    try do
-      %{literal | value: String.to_integer(value)}
-    rescue
-      ArgumentError ->
-        {:error, "Failed to convert '#{value}' to an integer"}
-    end
+  def new({:integer, {line, col}, value}) do
+    %__MODULE__{line: line, col: col, value: String.to_integer(String.Chars.to_string(value))}
   end
 
 end
 
 defmodule Piper.Command.Ast.Float do
 
-  use Piper.Util.TokenWrapper
+  defstruct [line: nil, col: nil, value: nil]
 
-  defwrapper [value: :value, converter: :convert, token_type: :float]
-
-  def new(line, col, value) do
-    %__MODULE__{line: line, col: col, value: value}
-  end
-
-  def convert(%__MODULE__{value: value}=literal) when is_binary(value) do
-    try do
-      %{literal | value: String.to_float(value)}
-    rescue
-      ArgumentError ->
-        {:error, "Failed to convert '#{value}' to a float"}
-    end
+  def new({:float, {line, col}, value}) do
+    %__MODULE__{line: line, col: col, value: String.to_float(String.Chars.to_string(value))}
   end
 
 end
 
 defmodule Piper.Command.Ast.Bool do
 
-  use Piper.Util.TokenWrapper
+  defstruct [line: nil, col: nil, value: nil]
 
-  defwrapper [value: :value, converter: :convert, token_type: :bool]
-
-  def new(line, col, value) when value in [:true, :false] do
-    %__MODULE__{line: line, col: col, value: value}
+  def new({:bool, {line, col}, value}) do
+    %__MODULE__{line: line, col: col, value: convert(value)}
   end
 
-  def convert(%__MODULE__{value: value}=literal) do
-    %{literal | value: convert(String.downcase(value))}
+  def new(line, col, value) do
+    new({:bool, {line, col}, value})
   end
-  def convert("true") do
+
+  defp convert('true') do
     true
   end
-  def convert("#t") do
-    true
-  end
-  def convert("false") do
+  defp convert('false') do
     false
   end
-  def convert("#f") do
-    false
-  end
+
 end
 
 defmodule Piper.Command.Ast.String do
 
-  defstruct [:line, :col, :value]
+  defstruct [line: nil, col: nil, value: nil]
 
-  alias Piper.Util.Token
-
-  def new(%Token{line: line, col: col, text: text}) do
-    %__MODULE__{line: line, col: col, value: text}
+  def new({:string, {line, col}, value}) do
+    %__MODULE__{line: line, col: col, value: String.Chars.to_string(value)}
+  end
+  def new({:datum, {line, col}, value}) do
+    %__MODULE__{line: line, col: col, value: String.Chars.to_string(value)}
+  end
+  def new(value) when is_binary(value) do
+    %__MODULE__{line: 0, col: 0, value: value}
   end
 
-  def new(line, col, text) do
-    %__MODULE__{line: line, col: col, value: text}
+  def new({line, col}, value) do
+    %__MODULE__{line: line, col: col, value: value}
   end
+
 end
 
-defmodule Piper.Command.Ast.Json do
+defmodule Piper.Command.Ast.Emoji do
 
-  defstruct [:line, :col, :raw, :value]
+  defstruct [line: nil, col: nil, value: nil]
 
-  alias Piper.Util.Token
-
-  def new(%Token{line: line, col: col, text: text, raw: raw}) do
-    %__MODULE__{line: line, col: col, value: text, raw: raw}
-  end
-
-  def new(line, col, value) do
-    convert(%__MODULE__{line: line, col: col, value: value})
-  end
-
-  def convert(%__MODULE__{value: value}=node) when is_binary(value) do
-    raw = "{{" <> value <> "}}"
-    %{node | value: Poison.decode!(value), raw: raw}
-  end
-  def convert(%__MODULE__{value: value}=node) do
-    json = Posion.encode!(value)
-    %{node | value: json, raw: "{{" <> json <> "}}"}
+  def new({:emoji, {line, col}, value}) do
+    %__MODULE__{line: line, col: col, value: String.Chars.to_string(value)}
   end
 
 end

@@ -35,20 +35,20 @@ defmodule Parser.LexerTest do
   end
 
   test "lexing strings that start with numbers" do
-    assert matches Lexer.tokenize("0fcaec64-0792-4826-8637-9a50593a7c03"), [types([:string]),
+    assert matches Lexer.tokenize("0fcaec64-0792-4826-8637-9a50593a7c03"), [types([:datum]),
                                                                             text(["0fcaec64-0792-4826-8637-9a50593a7c03"])]
   end
 
   test "lexing strings that contain commas" do
-    assert matches Lexer.tokenize("name,email,username"), [types([:string]), text(["name,email,username"])]
+    assert matches Lexer.tokenize("name,email,username"), [types([:datum]), text(["name,email,username"])]
   end
 
   test "lexing booleans" do
-    assert matches Lexer.tokenize("true TRUE #t false FALSE #f TrUe FAlse trUE fAlse"), [types([:bool, :bool, :bool,
-                                                                                                :bool, :bool, :bool,
-                                                                                                :string, :string,
-                                                                                                :string, :string])]
-    assert matches Lexer.tokenize("echo true false \"testing\""), [types([:string, :bool, :bool, :quoted_string])]
+    assert matches Lexer.tokenize("true TRUE false FALSE TrUe FAlse trUE fAlse"), [types([:bool, :bool,
+                                                                                          :bool, :bool,
+                                                                                          :string, :string,
+                                                                                          :string, :string])]
+    assert matches Lexer.tokenize("echo true false \"testing\""), [types([:string, :bool, :bool, :string])]
   end
 
   test "lexing plain variables" do
@@ -58,200 +58,191 @@ defmodule Parser.LexerTest do
   end
 
   test "lexing option variable" do
-    assert matches Lexer.tokenize("--$abc"), [types([:option, :variable]), text(["--", "abc"])]
-    assert matches Lexer.tokenize("-$abc"), [types([:option, :variable]), text(["-", "abc"])]
-    assert matches Lexer.tokenize("--$ABC"), [types([:option, :variable]), text(["--", "ABC"])]
-    assert matches Lexer.tokenize("-$ABC"), [types([:option, :variable]), text(["-", "ABC"])]
-    assert matches Lexer.tokenize("--$AbC12"), [types([:option, :variable]), text(["--", "AbC12"])]
-    assert matches Lexer.tokenize("-$AbC12"), [types([:option, :variable]), text(["-", "AbC12"])]
-    assert matches Lexer.tokenize("-$A"), [types([:option, :variable]), text(["-", "A"])]
+    assert matches Lexer.tokenize("--$abc"), [types([:longopt, :variable]), text(["--", "abc"])]
+    assert matches Lexer.tokenize("-$abc"), [types([:shortopt, :variable]), text(["-", "abc"])]
+    assert matches Lexer.tokenize("--$ABC"), [types([:longopt, :variable]), text(["--", "ABC"])]
+    assert matches Lexer.tokenize("-$ABC"), [types([:shortopt, :variable]), text(["-", "ABC"])]
+    assert matches Lexer.tokenize("--$AbC12"), [types([:longopt, :variable]), text(["--", "AbC12"])]
+    assert matches Lexer.tokenize("-$AbC12"), [types([:shortopt, :variable]), text(["-", "AbC12"])]
+    assert matches Lexer.tokenize("-$A"), [types([:shortopt, :variable]), text(["-", "A"])]
   end
 
   test "lexing long numeric options" do
-    assert matches Lexer.tokenize("--foo=123"), [types([:option, :string, :equals, :integer]),
+    assert matches Lexer.tokenize("--foo=123"), [types([:longopt, :string, :equals, :integer]),
                                                  text(["--", "foo", "=", "123"])]
-    assert matches Lexer.tokenize("--foo=123.33"), [types([:option, :string, :equals, :float]),
+    assert matches Lexer.tokenize("--foo=123.33"), [types([:longopt, :string, :equals, :float]),
                                                     text(["--", "foo", "=", "123.33"])]
   end
 
   test "lexing long string-like options" do
-    assert matches Lexer.tokenize("--foo=abc"), [types([:option, :string, :equals, :string]),
+    assert matches Lexer.tokenize("--foo=abc"), [types([:longopt, :string, :equals, :string]),
                                                  text(["--", "foo", "=", "abc"])]
-    assert matches Lexer.tokenize("--foo=\"foo@bar\""), [types([:option, :string, :equals, :quoted_string]),
+    assert matches Lexer.tokenize("--foo=\"foo@bar\""), [types([:longopt, :string, :equals, :string]),
                                                          text(["--", "foo", "=", "foo@bar"])]
-    assert matches Lexer.tokenize("--foo='foo bar'"), [types([:option, :string, :equals, :quoted_string]),
+    assert matches Lexer.tokenize("--foo='foo bar'"), [types([:longopt, :string, :equals, :string]),
                                                        text(["--", "foo", "=", "foo bar"])]
-    assert matches Lexer.tokenize("--foo=test:test"), [types([:option, :string, :equals, :ns_name]),
-                                                       text(["--", "foo", "=", "test:test"])]
+    assert matches Lexer.tokenize("--foo=test:test"), [types([:longopt, :string, :equals, :string, :colon, :string]),
+                                                       text(["--", "foo", "=", "test", ":", "test"])]
   end
 
   test "lexing long variable options" do
-    assert matches Lexer.tokenize("--foo=$bar"), [types([:option, :string, :equals, :variable]),
+    assert matches Lexer.tokenize("--foo=$bar"), [types([:longopt, :string, :equals, :variable]),
                                                   text(["--", "foo", "=", "bar"])]
   end
 
   test "lexing long numeric optvars" do
-    assert matches Lexer.tokenize("--$foo=123"), [types([:option, :variable, :equals, :integer]),
+    assert matches Lexer.tokenize("--$foo=123"), [types([:longopt, :variable, :equals, :integer]),
                                                  text(["--", "foo", "=", "123"])]
-    assert matches Lexer.tokenize("--$foo=123.33"), [types([:option, :variable, :equals, :float]),
+    assert matches Lexer.tokenize("--$foo=123.33"), [types([:longopt, :variable, :equals, :float]),
                                                      text(["--", "foo", "=", "123.33"])]
   end
 
   test "lexing long string-like optvars" do
-    assert matches Lexer.tokenize("--$foo=abc"), [types([:option, :variable, :equals, :string]),
+    assert matches Lexer.tokenize("--$foo=abc"), [types([:longopt, :variable, :equals, :string]),
                                                  text(["--", "foo", "=", "abc"])]
-    assert matches Lexer.tokenize("--$foo=\"foo@bar\""), [types([:option, :variable, :equals, :quoted_string]),
+    assert matches Lexer.tokenize("--$foo=\"foo@bar\""), [types([:longopt, :variable, :equals, :string]),
                                                          text(["--", "foo", "=", "foo@bar"])]
-    assert matches Lexer.tokenize("--$foo='foo bar'"), [types([:option, :variable, :equals, :quoted_string]),
+    assert matches Lexer.tokenize("--$foo='foo bar'"), [types([:longopt, :variable, :equals, :string]),
                                                        text(["--", "foo", "=", "foo bar"])]
-    assert matches Lexer.tokenize("--$foo=test:test"), [types([:option, :variable, :equals, :ns_name]),
-                                                        text(["--", "foo", "=", "test:test"])]
+    assert matches Lexer.tokenize("--$foo=test:test"), [types([:longopt, :variable, :equals, :string, :colon, :string]),
+                                                        text(["--", "foo", "=", "test", ":", "test"])]
   end
 
   test "lexing long variable optvars" do
-    assert matches Lexer.tokenize("--$foo=$bar"), [types([:option, :variable, :equals, :variable]),
+    assert matches Lexer.tokenize("--$foo=$bar"), [types([:longopt, :variable, :equals, :variable]),
                                                    text(["--", "foo", "=", "bar"])]
   end
 
   test "lexing short numeric options" do
-    assert matches Lexer.tokenize("-f 123"), [types([:option, :string, :integer]),
+    assert matches Lexer.tokenize("-f 123"), [types([:shortopt, :string, :integer]),
                                               text(["-", "f", "123"])]
-    assert matches Lexer.tokenize("-f 123.33"), [types([:option, :string, :float]),
+    assert matches Lexer.tokenize("-f 123.33"), [types([:shortopt, :string, :float]),
                                                  text(["-", "f", "123.33"])]
   end
 
   test "lexing short string-like options" do
-    assert matches Lexer.tokenize("-f abc"), [types([:option, :string, :string]),
+    assert matches Lexer.tokenize("-f abc"), [types([:shortopt, :string, :string]),
                                               text(["-", "f", "abc"])]
-    assert matches Lexer.tokenize("-f \"foo@bar\""), [types([:option, :string, :quoted_string]),
+    assert matches Lexer.tokenize("-f \"foo@bar\""), [types([:shortopt, :string, :string]),
                                                       text(["-", "f", "foo@bar"])]
-    assert matches Lexer.tokenize("-f 'foo bar'"), [types([:option, :string, :quoted_string]),
+    assert matches Lexer.tokenize("-f 'foo bar'"), [types([:shortopt, :string, :string]),
                                                        text(["-", "f", "foo bar"])]
-    assert matches Lexer.tokenize("-f test:test"), [types([:option, :string, :ns_name]),
-                                                    text(["-", "f", "test:test"])]
+    assert matches Lexer.tokenize("-f test:test"), [types([:shortopt, :string, :string, :colon, :string]),
+                                                    text(["-", "f", "test", ":", "test"])]
   end
 
   test "lexing short variable options" do
-    assert matches Lexer.tokenize("-f $bar"), [types([:option, :string, :variable]),
+    assert matches Lexer.tokenize("-f $bar"), [types([:shortopt, :string, :variable]),
                                                     text(["-", "f", "bar"])]
 
   end
 
   test "lexing short options with assigned numeric values" do
-    assert matches Lexer.tokenize("-f=123"), [types([:option, :string, :equals, :integer]),
+    assert matches Lexer.tokenize("-f=123"), [types([:shortopt, :string, :equals, :integer]),
                                               text(["-", "f", "=", "123"])]
-    assert matches Lexer.tokenize("-f=123.33"), [types([:option, :string, :equals, :float]),
+    assert matches Lexer.tokenize("-f=123.33"), [types([:shortopt, :string, :equals, :float]),
                                                  text(["-", "f", "=", "123.33"])]
   end
 
   test "lexing short options with assigned string-like values" do
-    assert matches Lexer.tokenize("-f=abc"), [types([:option, :string, :equals, :string]),
+    assert matches Lexer.tokenize("-f=abc"), [types([:shortopt, :string, :equals, :string]),
                                               text(["-", "f", "=", "abc"])]
-    assert matches Lexer.tokenize("-f=\"foo@bar\""), [types([:option, :string, :equals, :quoted_string]),
+    assert matches Lexer.tokenize("-f=\"foo@bar\""), [types([:shortopt, :string, :equals, :string]),
                                                       text(["-", "f", "=", "foo@bar"])]
-    assert matches Lexer.tokenize("-f='foo bar'"), [types([:option, :string, :equals, :quoted_string]),
+    assert matches Lexer.tokenize("-f='foo bar'"), [types([:shortopt, :string, :equals, :string]),
                                                        text(["-", "f", "=", "foo bar"])]
-    assert matches Lexer.tokenize("-f=test:test"), [types([:option, :string, :equals, :ns_name]),
-                                                    text(["-", "f", "=", "test:test"])]
+    assert matches Lexer.tokenize("-f=test:test"), [types([:shortopt, :string, :equals, :string, :colon, :string]),
+                                                    text(["-", "f", "=", "test", ":", "test"])]
   end
 
   test "lexing short options with assigned variable values" do
-    assert matches Lexer.tokenize("-f=$bar"), [types([:option, :string, :equals, :variable]),
+    assert matches Lexer.tokenize("-f=$bar"), [types([:shortopt, :string, :equals, :variable]),
                                                     text(["-", "f", "=", "bar"])]
   end
 
   test "lexing short numeric optvars" do
-    assert matches Lexer.tokenize("-$f 123"), [types([:option, :variable, :integer]),
+    assert matches Lexer.tokenize("-$f 123"), [types([:shortopt, :variable, :integer]),
                                               text(["-", "f", "123"])]
-    assert matches Lexer.tokenize("-$f 123.33"), [types([:option, :variable, :float]),
+    assert matches Lexer.tokenize("-$f 123.33"), [types([:shortopt, :variable, :float]),
                                                   text(["-", "f", "123.33"])]
   end
 
   test "lexing short string-like optvars" do
-    assert matches Lexer.tokenize("-$f abc"), [types([:option, :variable, :string]),
+    assert matches Lexer.tokenize("-$f abc"), [types([:shortopt, :variable, :string]),
                                               text(["-", "f", "abc"])]
-    assert matches Lexer.tokenize("-$f \"foo@bar\""), [types([:option, :variable, :quoted_string]),
+    assert matches Lexer.tokenize("-$f \"foo@bar\""), [types([:shortopt, :variable, :string]),
                                                       text(["-", "f", "foo@bar"])]
-    assert matches Lexer.tokenize("-$f 'foo bar'"), [types([:option, :variable, :quoted_string]),
+    assert matches Lexer.tokenize("-$f 'foo bar'"), [types([:shortopt, :variable, :string]),
                                                        text(["-", "f", "foo bar"])]
-    assert matches Lexer.tokenize("-$f test:test"), [types([:option, :variable, :ns_name]),
-                                                       text(["-", "f", "test:test"])]
+    assert matches Lexer.tokenize("-$f test:test"), [types([:shortopt, :variable, :string, :colon, :string]),
+                                                       text(["-", "f", "test", ":", "test"])]
   end
 
   test "lexing short variable optvars" do
-    assert matches Lexer.tokenize("-$f $bar"), [types([:option, :variable, :variable]),
+    assert matches Lexer.tokenize("-$f $bar"), [types([:shortopt, :variable, :variable]),
                                                 text(["-", "f", "bar"])]
   end
 
   test "lexing short optvars with assigned numeric values" do
-    assert matches Lexer.tokenize("-$f=123"), [types([:option, :variable, :equals, :integer]),
+    assert matches Lexer.tokenize("-$f=123"), [types([:shortopt, :variable, :equals, :integer]),
                                                text(["-", "f", "=", "123"])]
-    assert matches Lexer.tokenize("-$f=123.33"), [types([:option, :variable, :equals, :float]),
+    assert matches Lexer.tokenize("-$f=123.33"), [types([:shortopt, :variable, :equals, :float]),
                                                   text(["-", "f", "=", "123.33"])]
   end
 
   test "lexing short optvars with assigned string-like values" do
-    assert matches Lexer.tokenize("-$f=abc"), [types([:option, :variable, :equals, :string]),
+    assert matches Lexer.tokenize("-$f=abc"), [types([:shortopt, :variable, :equals, :string]),
                                               text(["-", "f", "=", "abc"])]
-    assert matches Lexer.tokenize("-$f=\"foo@bar\""), [types([:option, :variable, :equals, :quoted_string]),
+    assert matches Lexer.tokenize("-$f=\"foo@bar\""), [types([:shortopt, :variable, :equals, :string]),
                                                       text(["-", "f", "=", "foo@bar"])]
-    assert matches Lexer.tokenize("-$f='foo bar'"), [types([:option, :variable, :equals, :quoted_string]),
+    assert matches Lexer.tokenize("-$f='foo bar'"), [types([:shortopt, :variable, :equals, :string]),
                                                        text(["-", "f", "=", "foo bar"])]
-    assert matches Lexer.tokenize("-$f=test:test"), [types([:option, :variable, :equals, :ns_name]),
-                                                       text(["-", "f", "=", "test:test"])]
+    assert matches Lexer.tokenize("-$f=test:test"), [types([:shortopt, :variable, :equals, :string, :colon, :string]),
+                                                       text(["-", "f", "=", "test", ":", "test"])]
   end
 
   test "lexing short optvars with assigned variable value" do
-    assert matches Lexer.tokenize("-$f=$bar"), [types([:option, :variable, :equals, :variable]),
+    assert matches Lexer.tokenize("-$f=$bar"), [types([:shortopt, :variable, :equals, :variable]),
                                                 text(["-", "f", "=", "bar"])]
   end
 
-  test "lexing correct json" do
-    assert matches Lexer.tokenize("{{\"abc\": [1,2,1.05,\"foo\"]}}"), [types(:json),
-                                                                       text("{\"abc\":[1,2,1.05,\"foo\"]}")]
-  end
-
-  test "lexing incorrect json" do
-    {:error, _} = Lexer.tokenize("{{\"abc}}")
-  end
-
   test "lexing single-quoted strings" do
-    assert matches Lexer.tokenize("'this is a test'"), [types(:quoted_string), text("this is a test")]
+    assert matches Lexer.tokenize("'this is a test'"), [types(:string), text("this is a test")]
   end
 
   test "lexing double-quoted strings" do
-    assert matches Lexer.tokenize("\"this is a test\""), [types(:quoted_string), text("this is a test")]
+    assert matches Lexer.tokenize("\"this is a test\""), [types(:string), text("this is a test")]
   end
 
   test "lexing mixed quotes" do
-    assert matches Lexer.tokenize("'\"this is a test\"'"), [types(:quoted_string), text("\"this is a test\"")]
-    assert matches Lexer.tokenize("\"'this is a test'\""), [types(:quoted_string), text("'this is a test'")]
+    assert matches Lexer.tokenize("'\"this is a test\"'"), [types(:string), text("\"this is a test\"")]
+    assert matches Lexer.tokenize("\"'this is a test'\""), [types(:string), text("'this is a test'")]
   end
 
   test "lexing escaped quotes" do
-    assert matches Lexer.tokenize("\"this is a \\\"test\\\"\""), [types(:quoted_string), text("this is a \"test\"")]
-    assert matches Lexer.tokenize("'this is a \\'test\\''"), [types(:quoted_string), text("this is a 'test'")]
+    assert matches Lexer.tokenize("\"this is a \\\"test\\\"\""), [types(:string), text("this is a \\\"test\\\"")]
+    assert matches Lexer.tokenize("'this is a \\'test\\''"), [types(:string), text("this is a \\\'test\\\'")]
   end
 
   test "lexing quoted terms returns strings" do
-    assert matches Lexer.tokenize("\"123\""), [types([:quoted_string]), text("123")]
-    assert matches Lexer.tokenize("\"0.05\""), [types([:quoted_string]), text("0.05")]
-    assert matches Lexer.tokenize("'123'"), [types([:quoted_string]), text("123")]
-    assert matches Lexer.tokenize("'$abc_def'"), [types([:quoted_string]), text("$abc_def")]
-    assert matches Lexer.tokenize("'$ab3_Def'"), [types([:quoted_string]), text("$ab3_Def")]
+    assert matches Lexer.tokenize("\"123\""), [types([:string]), text("123")]
+    assert matches Lexer.tokenize("\"0.05\""), [types([:string]), text("0.05")]
+    assert matches Lexer.tokenize("'123'"), [types([:string]), text("123")]
+    assert matches Lexer.tokenize("'$abc_def'"), [types([:string]), text("$abc_def")]
+    assert matches Lexer.tokenize("'$ab3_Def'"), [types([:string]), text("$ab3_Def")]
   end
 
   test "single-quoted terms remain separate" do
-    assert matches Lexer.tokenize("'abc' 'def' '1231'"), [types([:quoted_string, :quoted_string, :quoted_string]),
+    assert matches Lexer.tokenize("'abc' 'def' '1231'"), [types([:string, :string, :string]),
                                                           text(["abc", "def", "1231"])]
-    assert matches Lexer.tokenize("'abc''def''1231'"), [types([:quoted_string, :quoted_string, :quoted_string]),
+    assert matches Lexer.tokenize("'abc''def''1231'"), [types([:string, :string, :string]),
                                                         text(["abc", "def", "1231"])]
   end
 
   test "double-quoted terms remain separate" do
-    assert matches Lexer.tokenize("\"abc\" \"def\" \"1231\""), [types([:quoted_string, :quoted_string, :quoted_string]),
+    assert matches Lexer.tokenize("\"abc\" \"def\" \"1231\""), [types([:string, :string, :string]),
                                                                 text(["abc", "def", "1231"])]
-    assert matches Lexer.tokenize("\"abc\"\"def\"\"1231\""), [types([:quoted_string, :quoted_string, :quoted_string]),
+    assert matches Lexer.tokenize("\"abc\"\"def\"\"1231\""), [types([:string, :string, :string]),
                                                               text(["abc", "def", "1231"])]
   end
 
