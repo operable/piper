@@ -1,6 +1,6 @@
 defmodule Piper.Command.Ast2.Integer do
 
-  defstruct [line: nil, col: nil, value: nil, token_type: :integer]
+  defstruct [line: nil, col: nil, value: nil]
 
 
   def new({:integer, {line, col}, value}) do
@@ -11,7 +11,7 @@ end
 
 defmodule Piper.Command.Ast2.Float do
 
-  defstruct [line: nil, col: nil, value: nil, token_type: :float]
+  defstruct [line: nil, col: nil, value: nil]
 
   def new({:float, {line, col}, value}) do
     %__MODULE__{line: line, col: col, value: String.to_float(String.Chars.to_string(value))}
@@ -21,7 +21,7 @@ end
 
 defmodule Piper.Command.Ast2.Bool do
 
-  defstruct [line: nil, col: nil, value: nil, token_type: :bool]
+  defstruct [line: nil, col: nil, value: nil]
 
   def new({:bool, {line, col}, value}) do
     %__MODULE__{line: line, col: col, value: convert(value)}
@@ -42,7 +42,7 @@ end
 
 defmodule Piper.Command.Ast2.String do
 
-  defstruct [line: nil, col: nil, value: nil, token_type: :string]
+  defstruct [line: nil, col: nil, value: nil]
 
   def new({:string, {line, col}, value}) do
     %__MODULE__{line: line, col: col, value: String.Chars.to_string(value)}
@@ -62,7 +62,7 @@ end
 
 defmodule Piper.Command.Ast2.Emoji do
 
-  defstruct [line: nil, col: nil, value: nil, token_type: :emoji]
+  defstruct [line: nil, col: nil, value: nil]
 
   def new({:emoji, {line, col}, value}) do
     %__MODULE__{line: line, col: col, value: String.Chars.to_string(value)}
