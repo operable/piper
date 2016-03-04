@@ -30,9 +30,6 @@ defmodule Piper.Command.SemanticError do
     "Command '#{text}' found in bundles #{format_bundles(bundles)}."
   end
 
-  defp new_with_position(%Token{col: col, line: line, text: text}) do
-    %__MODULE__{col: col, line: line, text: text}
-  end
   defp new_with_position(near) when is_binary(near) do
     %__MODULE__{text: near}
   end
