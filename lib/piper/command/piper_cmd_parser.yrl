@@ -64,7 +64,7 @@ name ->
 name ->
   string : ?AST("Name"):new([{entity, '$1'}]).
 name ->
-  emoji: ?AST("Name"):new([{entity, '$1'}]).
+  emoji : ?AST("Name"):new([{entity, '$1'}]).
 
 args ->
   arg : ['$1'].

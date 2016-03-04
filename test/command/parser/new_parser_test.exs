@@ -32,6 +32,10 @@ defmodule Parser.NewParserTest do
   test "parsing plain command" do
     should_parse "wubba:foo"
     should_parse "foo", "foo"
+    should_parse ":simple_smile:", ":simple_smile:"
+    should_parse "foo::simple_smile:", "foo::simple_smile:"
+    should_parse "(simple_smile)", "(simple_smile)"
+    should_parse "foo:(simple_smile)", "foo:(simple_smile)"
   end
 
   test "parsing options" do
