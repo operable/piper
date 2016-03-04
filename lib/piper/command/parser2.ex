@@ -10,11 +10,13 @@ defmodule Piper.Command.Parser2 do
     end
   end
 
-  defp build_error_message(%SemanticError{reason: :ambiguous_command, text: name, meta: bundles}) do
-    "Ambiguous command reference detected. Command '#{name}' found in bundles #{format_bundles(bundles)}."
+  defp build_error_message(%SemanticError{line: line, col: col, reason: :ambiguous_command,
+                                          text: name, meta: bundles}) do
+    "(Line: #{line}, Col: #{col}) Ambiguous command reference detected. " <>
+      "Command '#{name}' found in bundles #{format_bundles(bundles)}."
   end
-  defp build_error_message(%SemanticError{reason: :no_command, text: name}) do
-    "Command '#{name}' not found in any installed bundle."
+  defp build_error_message(%SemanticError{line: line, col: col, reason: :no_command, text: name}) do
+    "(Line: #{line}, Col: #{col}) Command '#{name}' not found in any installed bundle."
   end
 
   defp format_bundles(bundles) do
