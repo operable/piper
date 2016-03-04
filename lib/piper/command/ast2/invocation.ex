@@ -2,24 +2,12 @@ defmodule Piper.Command.Ast2.Invocation do
 
   alias Piper.Command.Ast2
 
-  defstruct [name: nil, orig_args: [], args: [], options: [], redir: nil]
+  defstruct [name: nil, args: [], redir: nil]
 
   def new(%Ast2.Name{}=name, opts \\ []) do
     args = Keyword.get(opts, :args, [])
-    orig_args = args
-    {options, args} = Enum.partition(args, fn(%Ast2.Option{}) -> true
-      (_) -> false
-    end)
     redir = Keyword.get(opts, :redir)
-    %__MODULE__{name: name, orig_args: orig_args, args: args, options: options, redir: redir}
-  end
-
-  def add_arg(%__MODULE__{args: args}=invocation, arg) do
-    %{invocation | args: args ++ [arg]}
-  end
-
-  def add_option(%__MODULE__{options: options}=invocation, option) do
-    %{invocation | options: options ++ [option]}
+    %__MODULE__{name: name, args: args, redir: redir}
   end
 
 end
