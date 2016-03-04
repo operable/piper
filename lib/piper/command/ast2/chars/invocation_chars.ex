@@ -2,11 +2,11 @@ defimpl String.Chars, for: Piper.Command.Ast2.Invocation do
 
   alias Piper.Command.Ast2
 
-  def to_string(%Ast2.Invocation{name: name, orig_args: orig_args, redir: redir}) do
-    formatted_args = if Enum.empty?(orig_args) do
+  def to_string(%Ast2.Invocation{name: name, args: args, redir: redir}) do
+    formatted_args = if Enum.empty?(args) do
       ""
     else
-      " " <> Enum.join(Enum.map(orig_args, &("#{&1}")), " ")
+      " " <> Enum.join(Enum.map(args, &("#{&1}")), " ")
     end
     formatted_command = "#{name}#{formatted_args}"
     if redir == nil do
