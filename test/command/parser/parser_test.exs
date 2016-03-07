@@ -130,6 +130,16 @@ defmodule Parser.ParserTest do
     assert "salutations:hello bobby | salutations:goodbye -l" == "#{ast}"
   end
 
+  test "non-string/non-emoji bundle name fails resolution" do
+    {:error, message} = Parser.scan_and_parse("hello | bogus", TestHelpers.parser_options())
+    assert message == "(Line: 1, Col: 9) Failed to parse bundle name ':foo' for command 'bogus'. Bundle names must be strings or emojis."
+  end
+
+  test "non-string/non-emoji command name fails resolution" do
+    {:error, message} = Parser.scan_and_parse("hello | bogus2", TestHelpers.parser_options())
+    assert message == "(Line: 1, Col: 9) Replacing command name 'bogus2' with ':bogus' failed. Command names must be strings or emojis."
+  end
+
   test "unknown commands fail resolution" do
     {:error, message} = Parser.scan_and_parse("fluff", TestHelpers.parser_options())
     assert message == "(Line: 1, Col: 1) Command 'fluff' not found in any installed bundle."

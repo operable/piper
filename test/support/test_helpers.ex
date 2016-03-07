@@ -1,23 +1,25 @@
 defmodule Parser.TestHelpers do
 
-  alias Piper.Command.SemanticError
   alias Piper.Command.ParserOptions
 
   def parser_options() do
-    %ParserOptions{command_resolver: &resolve_commands/1}
+    %ParserOptions{resolver: &resolve_commands/2}
   end
 
-  def resolve_commands(cmd) when cmd in ["hello", "goodbye"] do
-    {:ok, "salutations"}
+  def resolve_commands(_bundle, cmd) when cmd in ["hello", "goodbye"] do
+    {:command, {"salutations", cmd}}
   end
-  def resolve_commands("multi") do
-    SemanticError.new("multi", {:ambiguous_command, ["a","b","c"]})
+  def resolve_commands(_bundle, "multi") do
+    {:ambiguous, ["a","b","c"]}
   end
-  def resolve_commands("operable:mirror") do
-    :identity
+  def resolve_commands(_bundle, "bogus") do
+    {:command, {":foo", "bogus"}}
   end
-  def resolve_commands(name) do
-    SemanticError.new(name, :no_command)
+  def resolve_commands(_bundle, "bogus2") do
+    {:command, {"foo", ":bogus"}}
+  end
+  def resolve_commands(_bundle, _name) do
+    :not_found
   end
 
 end

@@ -1,7 +1,22 @@
 defmodule Piper.Command.ParserOptions do
 
-  defstruct [command_resolver: nil,
-             max_expansion_depth: 5]
+  @type bundle_ref :: nil | String.t
+  @type command_or_alias :: String.t
+  @type bundle_name :: String.t
+  @type command_name :: String.t
+  @type pipeline :: String.t
+  @type command_resolver :: ((bundle_ref, command_or_alias) -> {:command, {bundle_name, command_name}} |
+                                                               {:command, {bundle_name, command_name, term}} |
+                                                               {:pipeline, pipeline} |
+                                                               {:ambiguous, [bundle_name]} |
+                                                               :not_found)
+
+  @type t :: %__MODULE__{
+               resolver: command_resolver,
+               expansion_limit: pos_integer}
+
+  defstruct [resolver: nil,
+             expansion_limit: 5]
 
   def defaults() do
     %__MODULE__{}
