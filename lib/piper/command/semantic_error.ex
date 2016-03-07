@@ -37,10 +37,10 @@ defmodule Piper.Command.SemanticError do
     "Command '#{text}' found in bundles #{format_bundles(bundles)}."
   end
   defp message_for_reason(:bad_bundle, text, bundle) do
-    "Failed to parse bundle name '#{bundle}' for command '#{text}'. Bundle names must be strings or emojis."
+    "Failed to parse bundle name '#{bundle}' for command '#{text}'. Bundle names must be a string or emoji."
   end
   defp message_for_reason(:bad_command, text, command) do
-    "Replacing command name '#{text}' with '#{command}' failed. Command names must be strings or emojis."
+    "Replacing command name '#{text}' with '#{command}' failed. Command names must be a string or emoji."
   end
 
   defp new_with_position({_, {line, col}, text}) do
