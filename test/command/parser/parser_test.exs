@@ -121,26 +121,26 @@ defmodule Parser.ParserTest do
   end
 
   test "resolves ambiguous command names" do
-    {:ok, ast} = Parser.scan_and_parse("hello", command_resolver: &TestHelpers.resolve_commands/1)
+    {:ok, ast} = Parser.scan_and_parse("hello", TestHelpers.parser_options())
     assert "salutations:hello" == "#{ast}"
   end
 
   test "resolves ambiguous command names in pipelines" do
-    {:ok, ast} = Parser.scan_and_parse("hello bobby | goodbye -l", command_resolver: &TestHelpers.resolve_commands/1)
+    {:ok, ast} = Parser.scan_and_parse("hello bobby | goodbye -l", TestHelpers.parser_options())
     assert "salutations:hello bobby | salutations:goodbye -l" == "#{ast}"
   end
 
   test "unknown commands fail resolution" do
-    {:error, message} = Parser.scan_and_parse("fluff", command_resolver: &TestHelpers.resolve_commands/1)
+    {:error, message} = Parser.scan_and_parse("fluff", TestHelpers.parser_options())
     assert message == "(Line: 1, Col: 1) Command 'fluff' not found in any installed bundle."
-    {:error, message} = Parser.scan_and_parse("hello | goodbye | fluff", command_resolver: &TestHelpers.resolve_commands/1)
+    {:error, message} = Parser.scan_and_parse("hello | goodbye | fluff", TestHelpers.parser_options())
     assert message == "(Line: 1, Col: 19) Command 'fluff' not found in any installed bundle."
   end
 
   test "ambiguous commands fail resolution" do
-    {:error, message} = Parser.scan_and_parse("multi", command_resolver: &TestHelpers.resolve_commands/1)
+    {:error, message} = Parser.scan_and_parse("multi", TestHelpers.parser_options())
     assert message ==  "(Line: 1, Col: 1) Ambiguous command reference detected. Command 'multi' found in bundles 'a', 'b', and 'c'."
-    {:error, message} = Parser.scan_and_parse("hello | multi", command_resolver: &TestHelpers.resolve_commands/1)
+    {:error, message} = Parser.scan_and_parse("hello | multi", TestHelpers.parser_options())
     assert message == "(Line: 1, Col: 9) Ambiguous command reference detected. Command 'multi' found in bundles 'a', 'b', and 'c'."
   end
 

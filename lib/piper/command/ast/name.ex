@@ -12,13 +12,15 @@ defmodule Piper.Command.Ast.Name do
   end
 
   defp lookup_bundle(nil, entity) do
-    resolver = :erlang.get(:cc_resolver)
-    if resolver != :undefined and resolver != nil do
-      case resolver.(entity.value) do
-        {:ok, bundle} ->
-          Ast.String.new(bundle)
-        error ->
-          throw %{error | col: entity.col, line: entity.line}
+    options = :piper_cmd_parser.get_options()
+    if options != nil do
+      if options.command_resolver != nil do
+        case options.command_resolver.(entity.value) do
+          {:ok, bundle} ->
+            Ast.String.new(bundle)
+          error ->
+            throw %{error | col: entity.col, line: entity.line}
+        end
       end
     end
   end

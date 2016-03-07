@@ -131,15 +131,17 @@ any ->
 
 Erlang code.
 
--export([scan_and_parse/1,
-         scan_and_parse/2]).
+-export([scan_and_parse/2,
+         get_options/0]).
 
 -define(AST(E), (list_to_atom("Elixir.Piper.Command.Ast." ++ E))).
 
-scan_and_parse(Text, Opts) when is_list(Opts) ->
-  Resolver = proplists:get_value(command_resolver, Opts),
-  erlang:put(cc_resolver, Resolver),
+scan_and_parse(Text, Opts) when is_map(Opts) ->
+  erlang:put(piper_cc_options, Opts),
   scan_and_parse(Text).
+
+get_options() ->
+  erlang:get(piper_cc_options).
 
 scan_and_parse(Text) when is_binary(Text) ->
   scan_and_parse(binary_to_list(Text));

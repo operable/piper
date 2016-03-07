@@ -2,7 +2,8 @@ defmodule Bind.BindTest do
 
   use ExUnit.Case
 
-  alias :piper_cmd_parser, as: Parser
+  alias Piper.Command.Parser
+  alias Piper.Command.ParserOptions
   alias Piper.Command.Bindable
   alias Piper.Command.Bind
   alias Piper.Command.Ast, as: Ast
@@ -32,7 +33,7 @@ defmodule Bind.BindTest do
     scope = Bind.Scope.from_map(vars)
     parse_and_bind2(text, scope)
   end
-  defp parse_and_bind2(text, scope, opts \\ []) do
+  defp parse_and_bind2(text, scope, opts \\ %ParserOptions{}) do
     {:ok, ast} = Parser.scan_and_parse(text, opts)
     {:ok, scope} = Bindable.resolve(ast, scope)
     {:ok, new_ast, _scope} = Bindable.bind(ast, scope)

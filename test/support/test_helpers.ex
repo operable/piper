@@ -1,6 +1,11 @@
 defmodule Parser.TestHelpers do
 
   alias Piper.Command.SemanticError
+  alias Piper.Command.ParserOptions
+
+  def parser_options() do
+    %ParserOptions{command_resolver: &resolve_commands/1}
+  end
 
   def resolve_commands(cmd) when cmd in ["hello", "goodbye"] do
     {:ok, "salutations"}

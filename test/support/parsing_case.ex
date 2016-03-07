@@ -6,6 +6,7 @@ defmodule Parser.ParsingCase do
     quote do
       alias :piper_cmd_lexer, as: Lexer
       alias Piper.Command.Parser
+      alias Piper.Command.ParserOptions
       use ExUnit.Case
 
       import unquote(__MODULE__), only: [types: 1,
