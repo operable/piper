@@ -171,4 +171,38 @@ defmodule Parser.ParserTest do
     assert message == "(Line: 1, Col: 9) Ambiguous command reference detected. Command 'multi' found in bundles 'a', 'b', and 'c'."
   end
 
+  test "splicing aliases into parse tree" do
+    {:ok, ast} = Parser.scan_and_parse("pipe1", TestHelpers.parser_options())
+    assert "#{ast}" == "salutations:hello"
+  end
+
+  test "splicing aliases into start of parse tree" do
+    {:ok, ast} = Parser.scan_and_parse("pipe1 | hello", TestHelpers.parser_options())
+    assert "#{ast}" == "salutations:hello | salutations:hello"
+  end
+
+  test "splicing aliases into middle of parse tree" do
+    {:ok, ast} = Parser.scan_and_parse("goodbye | pipe1 | goodbye", TestHelpers.parser_options())
+    assert Enum.count(ast) == 3
+    assert "#{ast}" == "salutations:goodbye | salutations:hello | salutations:goodbye"
+  end
+
+  test "splicing aliases into end of parse tree" do
+    {:ok, ast} = Parser.scan_and_parse("goodbye | hello | pipe1", TestHelpers.parser_options())
+    assert Enum.count(ast) == 3
+    assert "#{ast}" == "salutations:goodbye | salutations:hello | salutations:hello"
+  end
+
+  test "splicing bi-level alias into parse tree" do
+    {:ok, ast} = Parser.scan_and_parse("pipe2", TestHelpers.parser_options())
+    assert Enum.count(ast) == 1
+    assert "#{ast}" == "salutations:hello"
+  end
+
+  test "splicing bi-level alias into start of parse tree" do
+    {:ok, ast} = Parser.scan_and_parse("goodbye | pipe2", TestHelpers.parser_options())
+    assert Enum.count(ast) == 2
+    assert "#{ast}" == "salutations:goodbye | salutations:hello"
+  end
+
 end

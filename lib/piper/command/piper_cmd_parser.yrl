@@ -10,7 +10,7 @@ Nonterminals
 
 pipeline
 
-invocation_chain invocation name arg args
+pipeline_stages invocation name arg args
 
 redir redir_targets redir_target
 
@@ -23,13 +23,13 @@ any.
 Rootsymbol pipeline.
 
 pipeline ->
-  invocation_chain : ?AST("Pipeline"):new('$1').
+  pipeline_stages : ?AST("Pipeline"):new('$1').
 
-invocation_chain ->
-  invocation pipe invocation_chain : ?AST("PipelineStage"):new('$2', '$1', '$3').
-invocation_chain ->
-  invocation iff invocation_chain : ?AST("PipelineStage"):new('$2', '$1', '$3').
-invocation_chain ->
+pipeline_stages ->
+  invocation pipe pipeline_stages : ?AST("PipelineStage"):new('$2', '$1', '$3').
+pipeline_stages ->
+  invocation iff pipeline_stages : ?AST("PipelineStage"):new('$2', '$1', '$3').
+pipeline_stages ->
   invocation : ?AST("PipelineStage"):new('$1').
 
 invocation ->

@@ -18,6 +18,12 @@ defmodule Parser.TestHelpers do
   def resolve_commands(_bundle, "bogus2") do
     {:command, {"foo", ":bogus"}}
   end
+  def resolve_commands(_bundle, "pipe2") do
+    {:pipeline, "pipe1"}
+  end
+  def resolve_commands(_bundle, "pipe1") do
+    {:pipeline, "hello"}
+  end
   def resolve_commands(_bundle, _name) do
     :not_found
   end

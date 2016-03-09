@@ -36,11 +36,18 @@ defmodule Piper.Command.Parser do
 
   def scan_and_parse(text), do: scan_and_parse(text, ParserOptions.defaults())
   def scan_and_parse(text, %ParserOptions{}=opts) do
+    Process.put(:piper_cc_expansions, 0)
+    Process.put(:piper_cc_aliases, [])
     try do
       :piper_cmd_parser.scan_and_parse(text, opts)
     catch
       error -> SemanticError.format_error(error)
     end
+  end
+
+  def expand(_alias, text) do
+    opts = Process.get(:piper_cc_options)
+    :piper_cmd_parser.scan_and_parse(text, opts)
   end
 
 end

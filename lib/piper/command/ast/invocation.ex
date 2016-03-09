@@ -2,14 +2,19 @@ defmodule Piper.Command.Ast.Invocation do
 
   alias Piper.Command.SemanticError
   alias Piper.Command.Ast
+  alias Piper.Command.Parser
 
   defstruct [name: nil, args: [], redir: nil, meta: nil]
 
   def new(%Ast.Name{}=name, opts \\ []) do
-    {name, meta} = resolve_name!(name)
-    args = Keyword.get(opts, :args, [])
-    redir = Keyword.get(opts, :redir)
-    %__MODULE__{name: name, args: args, redir: redir, meta: meta}
+    case resolve_name!(name) do
+      {:pipeline, pipeline} ->
+        pipeline.stages
+      {:command, name, meta} ->
+        args = Keyword.get(opts, :args, [])
+        redir = Keyword.get(opts, :redir)
+        %__MODULE__{name: name, args: args, redir: redir, meta: meta}
+    end
   end
 
   defp resolve_name!(%Ast.Name{bundle: bundle, entity: entity}=name) do
@@ -17,7 +22,7 @@ defmodule Piper.Command.Ast.Invocation do
     if options != nil and options.resolver != nil do
       call_resolver!(options, bundle, entity)
     else
-      {name, nil}
+      {:command, name, nil}
     end
   end
 
@@ -30,9 +35,12 @@ defmodule Piper.Command.Ast.Invocation do
     entity_name = entity.value
     case options.resolver.(bundle_name, entity_name) do
       {:command, {resolved_bundle, resolved_command, meta}} ->
-        {build_replacement_name(resolved_bundle, resolved_command, entity), meta}
+        {:command, build_replacement_name(resolved_bundle, resolved_command, entity), meta}
       {:command, {resolved_bundle, resolved_command}} ->
-        {build_replacement_name(resolved_bundle, resolved_command, entity), nil}
+        {:command, build_replacement_name(resolved_bundle, resolved_command, entity), nil}
+      {:pipeline, text} when is_binary(text) ->
+        {:ok, pipeline} = Parser.expand(entity_name, text)
+        {:pipeline, pipeline}
       {:ambiguous, bundles} ->
         throw SemanticError.new(entity, {:ambiguous, bundles})
       :not_found ->
