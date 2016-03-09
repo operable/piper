@@ -6,6 +6,10 @@ defmodule Piper.Command.Ast.Pipeline do
     %__MODULE__{stages: stages}
   end
 
+  def to_stream(%__MODULE__{}=pipeline, chunk_size \\ 1) do
+    Stream.chunk(pipeline, 1)
+  end
+
 end
 
 defmodule Piper.Command.Ast.PipelineStage do
