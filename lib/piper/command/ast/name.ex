@@ -1,7 +1,6 @@
 defmodule Piper.Command.Ast.Name do
 
   alias Piper.Command.Ast
-  alias Piper.Command.SemanticError
 
   defstruct [bundle: nil, entity: nil]
 
