@@ -78,6 +78,46 @@ defmodule Bind.BindTest do
     assert "#{ast}" == "ec2:list_vms --region=us-west-2 --user=becky 5"
   end
 
+  test "array indexing" do
+    scope = Bind.Scope.from_map(%{"region" => ["us-west-1", "us-east-1"]})
+    {:ok, ast} = parse_and_bind2("ec2:list_vms --region=$region[1]", scope)
+    assert "#{ast}" == "ec2:list_vms --region=us-east-1"
+  end
+
+  test "map indexing" do
+    scope = Bind.Scope.from_map(%{"envs" => %{"prod" => "us-east-1", "test" => "us-west-2"}})
+    {:ok, ast} = parse_and_bind2("ec2:list_vms --region=$envs.prod", scope)
+    assert "#{ast}" == "ec2:list_vms --region=us-east-1"
+  end
+
+  test "nested access" do
+    envs = [%{"region" => "us-east-1", "owner" => "admin1"}, %{"region" => "us-west-2", "owner" => "admin2"}]
+    scope = Bind.Scope.from_map(%{"envs" => envs})
+    {:ok, ast} = parse_and_bind2("site:monkey_with_vms --region=$envs[0].region --notify=$envs[0].owner", scope)
+    assert "#{ast}" == "site:monkey_with_vms --region=us-east-1 --notify=admin1"
+  end
+
+  test "moar nested access" do
+    envs = [%{"region" => "us-east-1", "owners" => ["admin1", "admin3"]}, %{"region" => "us-west-2", "owners" => ["admin2"]}]
+    scope = Bind.Scope.from_map(%{"envs" => envs})
+    {:ok, ast} = parse_and_bind2("site:monkey_with_vms --region=$envs[0].region --notify=$envs[0].owners[1]", scope)
+    assert "#{ast}" == "site:monkey_with_vms --region=us-east-1 --notify=admin3"
+  end
+
+  test "nested access with spaces in keys" do
+    envs = [%{"region" => "us-east-1", "env owners" => ["admin1", "admin3"]}, %{"region" => "us-west-2", "owner" => "admin2"}]
+    scope = Bind.Scope.from_map(%{"envs" => envs})
+    {:ok, ast} = parse_and_bind2("site:monkey_with_vms --region=$envs[0].region --notify=$envs[0].'env owners'[1]", scope)
+    assert "#{ast}" == "site:monkey_with_vms --region=us-east-1 --notify=admin3"
+  end
+
+  test "old school map access" do
+    envs = [%{"region" => "us-east-1", "env owners" => ["admin1", "admin3"]}, %{"region" => "us-west-2", "owner" => "admin2"}]
+    scope = Bind.Scope.from_map(%{"envs" => envs})
+    {:ok, ast} = parse_and_bind2("site:monkey_with_vms --region=$envs[0][region] --notify=$envs[0]['env owners'][1]", scope)
+    assert "#{ast}" == "site:monkey_with_vms --region=us-east-1 --notify=admin3"
+  end
+
   # TODO: Add back support for indexed variables
   # test "array indexing" do
   #   scope = Bind.Scope.from_map(%{"region" => ["us-west-1", "us-east-1"]})

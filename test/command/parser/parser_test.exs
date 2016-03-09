@@ -205,4 +205,12 @@ defmodule Parser.ParserTest do
     assert "#{ast}" == "salutations:goodbye | salutations:hello"
   end
 
+  test "nested variable reference" do
+    should_parse "foo --opt1=$blah[3].wubba", nil, 1
+  end
+
+  test "malformed nested variable references fails to parse" do
+    should_not_parse "foo --opt1=$blah[3.wubba"
+  end
+
 end

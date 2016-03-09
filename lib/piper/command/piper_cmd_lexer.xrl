@@ -10,6 +10,7 @@ DOUBLE_DASH                = \-\-
 SINGLE_DASH                = \-
 COLON                      = :
 EQUALS                     = =
+DOT                        = \.
 SLACK_EMOJI                = :[a-zA-Z]+[a-zA-Z0-9_\-]*:
 HIPCHAT_EMOJI              = \([a-zA-Z]+[a-zA-Z0-9_\-]*\)
 VAR                        = \$[a-zA-Z]+[a-zA-Z0-9_]*
@@ -34,6 +35,7 @@ Rules.
 {RBRACKET}                 : advance_count(length(TokenChars)), {token, {rbracket, position(), "]"}}.
 {COLON}                    : advance_count(length(TokenChars)), {token, {colon, position(), ":"}}.
 {EQUALS}                   : advance_count(length(TokenChars)), {token, {equals, position(), "="}}.
+{DOT}                      : advance_count(length(TokenChars)), {token, {dot, position(), "."}}.
 {SLACK_EMOJI}              : advance_count(length(TokenChars)), {token, {emoji, position(), TokenChars}}.
 {HIPCHAT_EMOJI}            : advance_count(length(TokenChars)), {token, {emoji, position(), TokenChars}}.
 {VAR}                      : advance_count(length(TokenChars)), {token, {variable, position(), tl(TokenChars)}}.

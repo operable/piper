@@ -4,7 +4,7 @@ Terminals
 integer float bool string datum emoji variable
 
 % Notation
-shortopt longopt colon equals pipe iff redir_one redir_multi.
+shortopt longopt colon equals lbracket rbracket dot pipe iff redir_one redir_multi.
 
 Nonterminals
 
@@ -16,7 +16,7 @@ redir redir_targets redir_target
 
 short_option long_option
 
-var_expr
+var_expr var_ops
 
 any.
 
@@ -117,6 +117,29 @@ long_option ->
 
 var_expr ->
   variable : ?AST("Variable"):new('$1').
+var_expr ->
+  variable var_ops : ?AST("Variable"):new('$1', '$2').
+
+var_ops ->
+  lbracket integer rbracket : [{index, token_to_integer('$2')}].
+var_ops ->
+  lbracket string rbracket : [{key, token_to_string('$2')}].
+var_ops ->
+  lbracket datum rbracket : [{key, token_to_string('$2')}].
+var_ops ->
+  dot string : [{key, token_to_string('$2')}].
+var_ops ->
+  dot datum : [{key, token_to_string('$2')}].
+var_ops ->
+  lbracket integer rbracket var_ops : [{index, token_to_integer('$2')}] ++ '$4'.
+var_ops ->
+  lbracket string rbracket var_ops : [{key, token_to_string('$2')}] ++ '$4'.
+var_ops ->
+  lbracket datum rbracket var_ops : [{key, token_to_string('$2')}] ++ '$4'.
+var_ops ->
+  dot string var_ops : [{key, token_to_string('$2')}] ++ '$3'.
+var_ops ->
+  dot datum var_ops : [{key, token_to_string('$2')}] ++ '$3'.
 
 any ->
   integer : ?AST("Integer"):new('$1').
@@ -168,3 +191,10 @@ pp_error({error, {{Line, Col}, _, Message}}) ->
 merge_strings([{_, Pos, _}|_]=Strings) ->
   Strings1 = [Value || {_, _, Value} <- Strings],
   ?AST("String"):new(Pos, iolist_to_binary(Strings1)).
+
+token_to_integer({integer, _, Text}) ->
+  list_to_integer(Text).
+
+token_to_string({Type, _, Text}) when Type == string orelse
+                                      Type == datum ->
+  list_to_binary(Text).
