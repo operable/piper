@@ -18,11 +18,14 @@ defimpl String.Chars, for: Piper.Command.Ast.Invocation do
 
 end
 
-defimpl String.Chars, for: Piper.Command.Ast.InvocationConnector do
+defimpl String.Chars, for: Piper.Command.Ast.PipelineStage do
 
   alias Piper.Command.Ast
 
-  def to_string(%Ast.InvocationConnector{type: type, left: left, right: right}) do
+  def to_string(%Ast.PipelineStage{left: left, right: nil}) do
+    "#{left}"
+  end
+  def to_string(%Ast.PipelineStage{type: type, left: left, right: right}) do
     left = String.strip("#{left}")
     right = String.strip("#{right}")
     left <> " #{symbol_for_type(type)} " <> right

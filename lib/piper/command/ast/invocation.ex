@@ -60,13 +60,3 @@ defmodule Piper.Command.Ast.Invocation do
   end
 
 end
-
-defmodule Piper.Command.Ast.InvocationConnector do
-
-  defstruct [line: nil, col: nil, left: nil, right: nil, type: nil]
-
-  def new({type, {line, col}, _}, left, right) when type in [:pipe, :iff] do
-    %__MODULE__{line: line, col: col, left: left, right: right, type: type}
-  end
-
-end

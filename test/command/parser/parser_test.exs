@@ -22,7 +22,7 @@ defmodule Parser.ParserTest do
       ast_text = text
     end
 
-    quote location: :keep, bind_quoted: [text: text, ast_text: ast_text, expect: expect] do
+    quote bind_quoted: [text: text, ast_text: ast_text, expect: expect] do
       expected_ast = Parser.scan_and_parse(text)
       actual_ast = ast_string(ast_text)
       assert matches(expected_ast, actual_ast) == expect

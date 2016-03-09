@@ -40,20 +40,20 @@ defmodule Bind.BindTest do
     {:ok, new_ast}
   end
 
-  defp arg(%Ast.Invocation{}=ast, index) do
-    Enum.at(ast.args, index)
+  defp arg(%Ast.Pipeline{}=ast, index) do
+    Enum.at(ast.stages.left.args, index)
   end
 
   test "preparing simple command" do
     {:ok, ast} = parse_and_bind("echo 'foo'")
-    assert "#{ast.name}" == "echo"
+    assert "#{ast.stages.left.name}" == "echo"
     assert arg(ast, 0) == "foo"
     assert "#{ast}" == "echo foo"
   end
 
   test "preparing command with options" do
     {:ok, ast} = parse_and_bind("ec2:list_vms --region=us-east-1")
-    assert "#{ast.name}" == "ec2:list_vms"
+    assert "#{ast.stages.left.name}" == "ec2:list_vms"
     assert "#{arg(ast, 0).name}" == "region"
     assert "#{arg(ast, 0).value}" == "us-east-1"
     assert "#{ast}" == "ec2:list_vms --region=us-east-1"
@@ -61,7 +61,7 @@ defmodule Bind.BindTest do
 
   test "preparing command with variable arg" do
     {:ok, ast} = parse_and_bind("ec2:list_vms --region=$region", %{"region" => "us-west-1"})
-    assert "#{ast.name}" == "ec2:list_vms"
+    assert "#{ast.stages.left.name}" == "ec2:list_vms"
     assert "#{arg(ast, 0).name}" == "region"
     assert "#{arg(ast, 0).value}" == "us-west-1"
     assert "#{ast}" == "ec2:list_vms --region=us-west-1"

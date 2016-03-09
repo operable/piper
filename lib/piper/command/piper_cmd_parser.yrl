@@ -23,14 +23,14 @@ any.
 Rootsymbol pipeline.
 
 pipeline ->
-  invocation_chain : '$1'.
+  invocation_chain : ?AST("Pipeline"):new('$1').
 
 invocation_chain ->
-  invocation pipe invocation_chain : ?AST("InvocationConnector"):new('$2', '$1', '$3').
+  invocation pipe invocation_chain : ?AST("PipelineStage"):new('$2', '$1', '$3').
 invocation_chain ->
-  invocation iff invocation_chain : ?AST("InvocationConnector"):new('$2', '$1', '$3').
+  invocation iff invocation_chain : ?AST("PipelineStage"):new('$2', '$1', '$3').
 invocation_chain ->
-  invocation : '$1'.
+  invocation : ?AST("PipelineStage"):new('$1').
 
 invocation ->
   name args: ?AST("Invocation"):new('$1', [{args, '$2'}]).
