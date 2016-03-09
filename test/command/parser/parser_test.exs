@@ -130,6 +130,13 @@ defmodule Parser.ParserTest do
     should_parse "foo:bar --baz *> dm ops", nil, 1
   end
 
+  test "Final redirects are stored on pipeline" do
+    {:ok, ast} = Parser.scan_and_parse("foo > me | bar *> me ops")
+    assert ast.redirect_to != nil
+    assert Enum.count(ast.redirect_to.targets) == 2
+    assert Enum.map(ast.redirect_to.targets, &("#{&1}")) == ["me", "ops"]
+  end
+
   test "resolves ambiguous command names" do
     {:ok, ast} = Parser.scan_and_parse("hello", TestHelpers.parser_options())
     assert "salutations:hello" == "#{ast}"

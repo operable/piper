@@ -1,9 +1,13 @@
 defmodule Piper.Command.Ast.Pipeline do
 
-  defstruct [stages: nil]
+  alias Piper.Command.Ast
+
+  defstruct [stages: nil, redirect_to: nil]
 
   def new(stages) do
-    %__MODULE__{stages: stages}
+    pipeline = %__MODULE__{stages: stages}
+    redir = Enum.reduce(pipeline, nil, fn(invocation, _) -> invocation.redir end)
+    %{pipeline | redirect_to: redir}
   end
 
   def to_stream(%__MODULE__{}=pipeline, chunk_size \\ 1) do
