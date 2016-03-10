@@ -33,18 +33,28 @@ defmodule Piper.Command.Ast.Invocation do
       nil
     end
     entity_name = entity.value
-    case options.resolver.(bundle_name, entity_name) do
-      {:command, {resolved_bundle, resolved_command, meta}} ->
-        {:command, build_replacement_name(resolved_bundle, resolved_command, entity), meta}
-      {:command, {resolved_bundle, resolved_command}} ->
-        {:command, build_replacement_name(resolved_bundle, resolved_command, entity), nil}
-      {:pipeline, text} when is_binary(text) ->
-        {:ok, pipeline} = Parser.expand(entity_name, text)
-        {:pipeline, pipeline}
-      {:ambiguous, bundles} ->
-        throw SemanticError.new(entity, {:ambiguous, bundles})
-      :not_found ->
-        throw SemanticError.new(entity, :not_found)
+    expansion_status = Parser.start_alias(entity_name)
+    try do
+      case expansion_status do
+        {:error, {:max_depth, offender, max_depth}} ->
+          throw SemanticError.new(entity, {:expansion_limit, offender, max_depth})
+        :ok ->
+          case options.resolver.(bundle_name, entity_name) do
+            {:command, {resolved_bundle, resolved_command, meta}} ->
+              {:command, build_replacement_name(resolved_bundle, resolved_command, entity), meta}
+            {:command, {resolved_bundle, resolved_command}} ->
+              {:command, build_replacement_name(resolved_bundle, resolved_command, entity), nil}
+            {:pipeline, text} when is_binary(text) ->
+              {:ok, pipeline} = Parser.expand(entity_name, text)
+              {:pipeline, pipeline}
+            {:ambiguous, bundles} ->
+              throw SemanticError.new(entity, {:ambiguous, bundles})
+            :not_found ->
+              throw SemanticError.new(entity, :not_found)
+          end
+      end
+    after
+      Parser.finish_alias(entity_name)
     end
   end
 

@@ -57,4 +57,14 @@ defmodule Piper.Command.Parser do
     ParseContext.get_options(context)
   end
 
+  def start_alias(alias) do
+    context = Process.get(:piper_cp_context)
+    ParseContext.start_alias(context, alias)
+  end
+
+  def finish_alias(alias) do
+    context = Process.get(:piper_cp_context)
+    ParseContext.finish_alias(context, alias)
+  end
+
 end

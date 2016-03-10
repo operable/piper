@@ -58,12 +58,17 @@ defmodule Piper.Command.ParseContext do
   defp do_start_alias(state, alias) do
     case List.keyfind(state.expansions, alias, 0) do
       nil ->
-        {:ok, %{state | expansions: [{alias, 1}|state.expansions]}}
+        updated_state = %{state | expansions: [{alias, 1}|state.expansions]}
+        if over_depth_limit?(updated_state) do
+          max_depth_error(updated_state)
+        else
+          {:ok, updated_state}
+        end
       {^alias, count} ->
         updated = {alias, count + 1}
         updated_state = %{state | expansions: List.keyreplace(state.expansions, alias, 0, updated)}
         if over_depth_limit?(updated_state) do
-          {{:error, {:max_depth, state.max_depth}}, state}
+          max_depth_error(updated_state)
         else
           {:ok, updated_state}
         end
@@ -84,8 +89,12 @@ defmodule Piper.Command.ParseContext do
 
   defp over_depth_limit?(state) do
     current_depth = Enum.reduce(state.expansions, 0, fn({_, count}, acc) -> acc + count end)
-    IO.puts "#{current_depth} #{state.max_depth}"
     current_depth > state.max_depth
+  end
+
+  defp max_depth_error(state) do
+    [{root_alias, _}|_] = Enum.reverse(state.expansions)
+    {{:error, {:max_depth, root_alias, state.max_depth}}, state}
   end
 
 end

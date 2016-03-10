@@ -20,6 +20,10 @@ defmodule Piper.Command.SemanticError do
     error = new_with_position(near)
     %{error | reason: :bad_command, meta: command}
   end
+  def new(near, {:expansion_limit, alias, limit}) do
+    error = new_with_position(near.value)
+    %{error | reason: :expansion_limit, meta: {alias, limit}}
+  end
   def format_error(%__MODULE__{col: col, line: line, text: text, reason: reason, meta: meta}) do
     {:error, position_info(col, line) <> message_for_reason(reason, text, meta)}
   end
@@ -41,6 +45,9 @@ defmodule Piper.Command.SemanticError do
   end
   defp message_for_reason(:bad_command, text, command) do
     "Replacing command name '#{text}' with '#{command}' failed. Command names must be a string or emoji."
+  end
+  defp message_for_reason(:expansion_limit, _last_alias, {first_alias, limit}) do
+    "Alias expansion limit (#{limit}) exceeded starting with '#{first_alias}'."
   end
 
   defp new_with_position({_, {line, col}, text}) do
