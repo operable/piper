@@ -26,28 +26,35 @@ end
 
 defmodule Piper.Command.Parser do
 
-  alias Piper.Command.ParserOptions
-
   @moduledoc """
   Elixir interface to :piper_cmd_parser.
   """
 
   alias Piper.Command.SemanticError
+  alias Piper.Command.ParserOptions
+  alias Piper.Command.ParseContext
 
   def scan_and_parse(text), do: scan_and_parse(text, ParserOptions.defaults())
   def scan_and_parse(text, %ParserOptions{}=opts) do
-    Process.put(:piper_cc_expansions, 0)
-    Process.put(:piper_cc_aliases, [])
+    {:ok, context} = ParseContext.start_link(opts)
+    Process.put(:piper_cp_context, context)
     try do
-      :piper_cmd_parser.scan_and_parse(text, opts)
+      :piper_cmd_parser.scan_and_parse(text)
     catch
       error -> SemanticError.format_error(error)
+    after
+      Process.delete(:piper_cp_context)
+      ParseContext.stop(context)
     end
   end
 
   def expand(_alias, text) do
-    opts = Process.get(:piper_cc_options)
-    :piper_cmd_parser.scan_and_parse(text, opts)
+    :piper_cmd_parser.scan_and_parse(text)
+  end
+
+  def get_options() do
+    context = Process.get(:piper_cp_context)
+    ParseContext.get_options(context)
   end
 
 end

@@ -18,7 +18,7 @@ defmodule Piper.Command.Ast.Invocation do
   end
 
   defp resolve_name!(%Ast.Name{bundle: bundle, entity: entity}=name) do
-    options = :piper_cmd_parser.get_options()
+    options = Parser.get_options()
     if options != nil and options.resolver != nil do
       call_resolver!(options, bundle, entity)
     else

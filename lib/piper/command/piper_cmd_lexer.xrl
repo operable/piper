@@ -54,12 +54,13 @@ Rules.
 
 Erlang code.
 
--export([tokenize/1]).
+-export([tokenize/1,
+         tokenize/2]).
 
-tokenize(Text) when is_binary(Text) ->
-  tokenize(binary_to_list(Text));
-tokenize(Text) when is_list(Text) ->
-  init(),
+tokenize(Text, MaxDepth) when is_binary(Text) ->
+  tokenize(binary_to_list(Text), MaxDepth);
+tokenize(Text, MaxDepth) when is_list(Text) ->
+  init(MaxDepth),
   case string(Text) of
     {ok, Tokens, _} ->
       {ok, Tokens};
@@ -70,39 +71,34 @@ tokenize(Text) when is_list(Text) ->
       Error
   end.
 
-init() ->
-  erlang:put(cc_lexer_line_count, 1),
-  erlang:put(cc_lexer_current_token, 1),
-  erlang:put(cc_lexer_next_token, 1).
+tokenize(Text) when is_binary(Text) ->
+  tokenize(binary_to_list(Text));
+tokenize(Text) when is_list(Text) ->
+  case string(Text) of
+    {ok, Tokens, _} ->
+      {ok, Tokens};
+    {error, {_, _, {illegal, Bad}}, _} ->
+      Pos = string:str(Text, Bad),
+      {error, {unexpected_input, Pos, Bad}};
+    Error ->
+      Error
+  end.
+
+init(MaxDepth) ->
+  {ok, Context} = 'Elixir.Piper.Command.ParseContext':start_link(MaxDepth),
+  erlang:put(piper_cp_context, Context).
 
 position() ->
-  {get_with_default(cc_lexer_line_count, 1),
-   get_with_default(cc_lexer_current_token, 1)}.
+  Context = erlang:get(piper_cp_context),
+  'Elixir.Piper.Command.ParseContext':position(Context).
 
 advance_line(TokenLine) ->
-  erlang:put(cc_lexer_line_count, TokenLine),
-  erlang:put(cc_lexer_current_token, 1),
-  erlang:put(cc_lexer_next_token, 0).
+  Context = erlang:get(piper_cp_context),
+  'Elixir.Piper.Command.ParseContext':start_line(Context, TokenLine).
 
 advance_count(Count) ->
-  erlang:put(cc_lexer_current_token, get_with_default(cc_lexer_next_token, 1)),
-  set_or_add(cc_lexer_next_token, Count).
-
-get_with_default(Key, Default) ->
-  case erlang:get(Key) of
-    undefined ->
-      Default;
-    Value ->
-      Value
-  end.
-
-set_or_add(Key, Value) ->
-  case erlang:get(Key) of
-    undefined ->
-      erlang:put(Key, Value);
-    OldValue ->
-      erlang:put(Key, OldValue + Value)
-  end.
+  Context = erlang:get(piper_cp_context),
+  'Elixir.Piper.Command.ParseContext':advance_count(Context, Count).
 
 clean_dquotes(String) ->
   String1 = re:replace(String, "^\"", "", [{return, list}]),

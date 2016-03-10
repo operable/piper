@@ -118,18 +118,4 @@ defmodule Bind.BindTest do
     assert "#{ast}" == "site:monkey_with_vms --region=us-east-1 --notify=admin3"
   end
 
-  # TODO: Add back support for indexed variables
-  # test "array indexing" do
-  #   scope = Bind.Scope.from_map(%{"region" => ["us-west-1", "us-east-1"]})
-  #   {:ok, ast} = parse_and_bind2("ec2:list_vms --region=$region[1]", scope)
-  #   assert "#{ast}" == "ec2:list_vms --region=us-east-1"
-  # end
-
-  # TODO: Add back support for indexed variables
-  # test "map indexing" do
-  #   scope = Bind.Scope.from_map(%{"region" => %{"west-1" => "us-west-1", "east" => "us-east-1"}})
-  #   {:ok, ast} = parse_and_bind2("ec2:list_vms --region=$region[\"west-1\"]", scope)
-  #   assert "#{ast}" == "ec2:list_vms --region=us-west-1"
-  # end
-
 end
