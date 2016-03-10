@@ -39,12 +39,12 @@ defmodule Piper.Command.ParseContext do
     Agent.get(agent, fn(state) -> state.parse_options end)
   end
 
-  def start_alias(tracker, alias) do
-    GenServer.call(tracker, {:start, alias}, :infinity)
+  def start_alias(agent, alias) do
+    Agent.get_and_update(agent, &(do_start_alias(&1, alias)))
   end
 
-  def finish_alias(tracker, alias) do
-    GenServer.call(tracker, {:finish, alias}, :infinity)
+  def finish_alias(agent, alias) do
+    Agent.update(agent, &(do_finish_alias(&1, alias)))
   end
 
   defp do_start_line(state, linenum) do
@@ -55,35 +55,31 @@ defmodule Piper.Command.ParseContext do
     %{state | current_token: state.next_token, next_token: state.next_token + count}
   end
 
-  def handle_call({:start, alias}, _from, state) do
+  defp do_start_alias(state, alias) do
     case List.keyfind(state.expansions, alias, 0) do
       nil ->
-        {:reply, :ok, %{state | expansions: [{alias, 1}|state.expansions]}}
+        {:ok, %{state | expansions: [{alias, 1}|state.expansions]}}
       {^alias, count} ->
         updated = {alias, count + 1}
         updated_state = %{state | expansions: List.keyreplace(state.expansions, alias, 0, updated)}
         if over_depth_limit?(updated_state) do
-          {:reply, {:error, {:max_depth, state.max_depth}}, state}
+          {{:error, {:max_depth, state.max_depth}}, state}
         else
-          {:reply, :ok, updated_state}
+          {:ok, updated_state}
         end
     end
   end
 
-  def handle_call({:finish, alias}, _from, state) do
+  def do_finish_alias(state, alias) do
     case List.keyfind(state.expansions, alias, 0) do
       nil ->
-        {:reply, :ok, state}
+        state
       {^alias, 1} ->
-        {:reply, :ok, %{state | expansions: List.keydelete(state.expansions, alias, 0)}}
+        %{state | expansions: List.keydelete(state.expansions, alias, 0)}
       {^alias, count} ->
         updated = {alias, count - 1}
-        {:reply, :ok, %{state | expansions: List.keyreplace(state.expansions, alias, 0, updated)}}
+        %{state | expansions: List.keyreplace(state.expansions, alias, 0, updated)}
     end
-  end
-
-  def handle_call(:dispose, _from, _state) do
-    {:stop, :shutdown, :ok, nil}
   end
 
   defp over_depth_limit?(state) do
