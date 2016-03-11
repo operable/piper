@@ -7,12 +7,18 @@ defmodule Piper.Command.Ast.Invocation do
   defstruct [name: nil, args: [], redir: nil, meta: nil]
 
   def new(%Ast.Name{}=name, opts \\ []) do
+    args = Keyword.get(opts, :args, [])
+    redir = Keyword.get(opts, :redir)
     case resolve_name!(name) do
       {:pipeline, pipeline} ->
-        pipeline.stages
+        left = pipeline.stages.left
+        updated_left = %{left | args: left.args ++ args}
+        if redir != nil do
+          propagate_redir(%{pipeline.stages | left: updated_left}, redir)
+        else
+          %{pipeline.stages | left: updated_left}
+        end
       {:command, name, meta} ->
-        args = Keyword.get(opts, :args, [])
-        redir = Keyword.get(opts, :redir)
         %__MODULE__{name: name, args: args, redir: redir, meta: meta}
     end
   end
@@ -77,6 +83,14 @@ defmodule Piper.Command.Ast.Invocation do
     bundle_token = tokenize(resolved_bundle, entity)
     command_token = tokenize(resolved_command, entity, false)
     Ast.Name.new([bundle: bundle_token, entity: command_token])
+  end
+
+  defp propagate_redir(stage, redir) do
+    if stage.right == nil do
+      %{stage | left: %{stage.left | redir: redir}}
+    else
+      %{stage | right: propagate_redir(stage.right, redir)}
+    end
   end
 
 end

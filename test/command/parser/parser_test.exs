@@ -205,6 +205,43 @@ defmodule Parser.ParserTest do
     assert "#{ast}" == "salutations:goodbye | salutations:hello"
   end
 
+  test "splicing aliases merges arg lists" do
+    {:ok, ast} = Parser.scan_and_parse("goodbye | pipe2 --foo=1 -v --title=Wonka", TestHelpers.parser_options())
+    assert Enum.count(ast) == 2
+    assert "#{ast}" == "salutations:goodbye | salutations:hello --foo=1 -v --title=Wonka"
+    {:ok, ast} = Parser.scan_and_parse("pipe2 --foo=1 | pipe2 -v | goodbye", TestHelpers.parser_options())
+    assert Enum.count(ast) == 3
+    assert "#{ast}" == "salutations:hello --foo=1 | salutations:hello -v | salutations:goodbye"
+  end
+
+  test "splicing aliases with args works" do
+    {:ok, ast} = Parser.scan_and_parse("red | blue --count=3 | yellow", TestHelpers.gnarly_options())
+    assert "#{ast}" == "colors:red | colors:yellow --action=baa --count=3 | colors:yellow"
+  end
+
+  test "splicing multi-level aliases with args works" do
+    {:ok, ast} = Parser.scan_and_parse("blue --count=1 | blue --count=2 | blue --count=3 | blue -c=4", TestHelpers.gnarly_options())
+    assert "#{ast}" == "colors:yellow --action=baa --count=1 | colors:yellow --action=baa --count=2 | " <>
+      "colors:yellow --action=baa --count=3 | colors:yellow --action=baa -c=4"
+  end
+
+  test "splicing aliases with redirects works" do
+    {:ok, ast} = Parser.scan_and_parse("pepperoni", TestHelpers.redirect_options())
+    assert "#{ast}" == "foods:pizza > stomach"
+  end
+
+  test "overriding alias redirects works" do
+    {:ok, ast} = Parser.scan_and_parse("pepperoni > mouth", TestHelpers.redirect_options())
+    assert "#{ast}" == "foods:pizza > mouth"
+  end
+
+  test "overriding broadcast alias works" do
+    {:ok, ast} = Parser.scan_and_parse("hot_cocoa", TestHelpers.redirect_options())
+    assert "#{ast}" == "foods:milk | foods:cocoa | foods:marshmallows *> mug mouth stomach"
+    {:ok, ast} = Parser.scan_and_parse("hot_cocoa > friend", TestHelpers.redirect_options())
+    assert "#{ast}" == "foods:milk | foods:cocoa | foods:marshmallows > friend"
+  end
+
   test "nested variable reference" do
     should_parse "foo --opt1=$blah[3].wubba", nil, 1
   end

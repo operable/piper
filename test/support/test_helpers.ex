@@ -10,6 +10,15 @@ defmodule Parser.TestHelpers do
     %ParserOptions{resolver: &expand_commands/2}
   end
 
+  def gnarly_options() do
+    %ParserOptions{resolver: &gnarly_expansions/2}
+  end
+
+  def redirect_options() do
+    %ParserOptions{resolver: &redirect_expansions/2}
+  end
+
+
   def resolve_commands(_bundle, cmd) when cmd in ["hello", "goodbye"] do
     {:command, {"salutations", cmd}}
   end
@@ -70,6 +79,26 @@ defmodule Parser.TestHelpers do
   end
   def expand_commands(_bundle, cmd) when cmd in ["hello"] do
     {:command, {"greetings", cmd}}
+  end
+
+  def gnarly_expansions(_bundle, color) when color in ["red", "yellow"] do
+    {:command, {"colors", color}}
+  end
+  def gnarly_expansions(_bundle, "green") do
+    {:pipeline, "blue --title=moo | yellow"}
+  end
+  def gnarly_expansions(_bundle, "blue") do
+    {:pipeline, "yellow --action=baa"}
+  end
+
+  def redirect_expansions(_bundle, food) when food in ["pizza", "milk", "cocoa", "marshmallows"] do
+    {:command, {"foods", food}}
+  end
+  def redirect_expansions(_bundle, "pepperoni") do
+    {:pipeline, "foods:pizza > stomach"}
+  end
+  def redirect_expansions(_bundle, "hot_cocoa") do
+    {:pipeline, "milk | cocoa | marshmallows *> mug mouth stomach"}
   end
 
 end

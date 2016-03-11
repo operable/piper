@@ -6,7 +6,7 @@ defimpl String.Chars, for: Piper.Command.Ast.Option do
     "-#{name}"
   end
   def to_string(%Option{name: name, value: value, opt_type: :short}) do
-    "-#{name} #{value}"
+    "-#{name}=#{value}"
   end
   def to_string(%Option{name: name, value: nil, opt_type: :long}) do
     "--#{name}"

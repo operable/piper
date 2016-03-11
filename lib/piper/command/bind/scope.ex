@@ -1,4 +1,8 @@
 defmodule Piper.Command.Bind.Scope do
+
+  alias Piper.Command.Bindable
+  alias Piper.Command.BindError
+
   defstruct [values: %{}, bindings: %{}, parent: nil]
 
   def from_map(values) do
@@ -7,6 +11,15 @@ defmodule Piper.Command.Bind.Scope do
 
   def empty_scope() do
     %__MODULE__{}
+  end
+
+  def bind(ast, %__MODULE__{}=scope) do
+    try do
+      {:ok, scope} = Bindable.resolve(ast, scope)
+      Bindable.bind(ast, scope)
+    catch
+      error -> BindError.format_error(error)
+    end
   end
 
 end

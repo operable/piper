@@ -4,7 +4,7 @@ defmodule Bind.BindTest do
 
   alias Piper.Command.Parser
   alias Piper.Command.ParserOptions
-  alias Piper.Command.Bindable
+  alias Piper.Command.Bind.Scope
   alias Piper.Command.Bind
   alias Piper.Command.Ast, as: Ast
 
@@ -35,9 +35,12 @@ defmodule Bind.BindTest do
   end
   defp parse_and_bind2(text, scope, opts \\ %ParserOptions{}) do
     {:ok, ast} = Parser.scan_and_parse(text, opts)
-    {:ok, scope} = Bindable.resolve(ast, scope)
-    {:ok, new_ast, _scope} = Bindable.bind(ast, scope)
-    {:ok, new_ast}
+    case Scope.bind(ast, scope) do
+      {:ok, new_ast, _scope} ->
+        {:ok, new_ast}
+      error ->
+        error
+    end
   end
 
   defp arg(%Ast.Pipeline{}=ast, index) do
@@ -116,6 +119,15 @@ defmodule Bind.BindTest do
     scope = Bind.Scope.from_map(%{"envs" => envs})
     {:ok, ast} = parse_and_bind2("site:monkey_with_vms --region=$envs[0][region] --notify=$envs[0]['env owners'][1]", scope)
     assert "#{ast}" == "site:monkey_with_vms --region=us-east-1 --notify=admin3"
+  end
+
+  test "index out of bounds" do
+    envs = [%{"region" => "us-east-1", "env owners" => ["admin1", "admin3"]}, %{"region" => "us-west-2", "owner" => "admin2"}]
+    scope = Bind.Scope.from_map(%{"envs" => envs})
+    {:error, message} = parse_and_bind2("site:monkey_with_vms --region=$envs[2][region] --notify=$envs[0]['env owners'][1]", scope)
+    assert message == "Index 2 out of bounds in expression '$envs[2].region'."
+    {:error, message} = parse_and_bind2("site:monkey_with_vms --region=$envs[0][region] --notify=$envs[0][envowners][1]", scope)
+    assert message == "Key 'envowners' not found in expression '$envs[0].envowners[1]'."
   end
 
 end

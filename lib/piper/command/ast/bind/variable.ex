@@ -1,6 +1,7 @@
 defimpl Piper.Command.Bindable, for: Piper.Command.Ast.Variable do
 
   alias Piper.Command.Scoped
+  alias Piper.Command.BindError
 
   def bind(var, scope) do
     case Scoped.lookup_variable(scope, var) do
@@ -21,19 +22,37 @@ defimpl Piper.Command.Bindable, for: Piper.Command.Ast.Variable do
             {:ok, value} ->
               Scoped.bind_variable(scope, var, value)
             error ->
-              error
+              handle_error(error, var)
           end
         end
       error ->
-        error
+        handle_error(error, var)
     end
   end
 
   defp eval_ops([], value), do: {:ok, value}
   defp eval_ops([{:index, index}|t], value) do
-    eval_ops(t, Enum.at(value, index, :not_found))
+    case Enum.at(value, index, :out_of_bounds) do
+      :out_of_bounds ->
+        {:out_of_bounds, index}
+      value ->
+        eval_ops(t, value)
+    end
   end
   defp eval_ops([{:key, key}|t], value) do
-    eval_ops(t, Map.get(value, key, :not_found))
+    case Map.get(value, key, :not_found) do
+      :not_found ->
+        {:not_found, key}
+      value ->
+        eval_ops(t, value)
+    end
   end
+
+  defp handle_error({:out_of_bounds, index}, var) do
+    throw BindError.new("#{var}", {:out_of_bounds, index})
+  end
+  defp handle_error({:not_found, key}, var) do
+    throw BindError.new("#{var}", {:missing_key, key})
+  end
+
 end
