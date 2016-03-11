@@ -6,7 +6,12 @@ defmodule Piper.ExpansionTest do
 
   test "infinite expansion triggers error" do
     {:error, message} = Parser.scan_and_parse("night", TestHelpers.expansion_options())
-    assert message == "Alias expansion limit (5) exceeded starting with 'night'."
+    assert message == "Infinite alias expansion loop detected 'mare' -> 'night'."
+  end
+
+  test "wide infinite expansion is detected" do
+    {:error, message} = Parser.scan_and_parse("hello | alpha", TestHelpers.expansion_options())
+    assert message == "Infinite alias expansion loop detected 'gamma' -> 'alpha'."
   end
 
   test "expanding alias with one step" do
@@ -28,7 +33,7 @@ defmodule Piper.ExpansionTest do
 
   test "expanding aliases over expansion limit" do
     {:error, message} = Parser.scan_and_parse("seven", TestHelpers.expansion_options())
-    assert message == "Alias expansion limit (5) exceeded starting with 'seven'."
+    assert message == "Alias expansion limit (5) exceeded starting with alias 'seven'."
   end
 
 end

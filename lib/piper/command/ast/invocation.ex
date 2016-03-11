@@ -38,6 +38,8 @@ defmodule Piper.Command.Ast.Invocation do
       case expansion_status do
         {:error, {:max_depth, offender, max_depth}} ->
           throw SemanticError.new(entity, {:expansion_limit, offender, max_depth})
+        {:error, {:alias_cycle, cycle}} ->
+          throw SemanticError.new(entity, {:alias_cycle, cycle})
         :ok ->
           case options.resolver.(bundle_name, entity_name) do
             {:command, {resolved_bundle, resolved_command, meta}} ->

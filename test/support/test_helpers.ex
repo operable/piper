@@ -59,6 +59,15 @@ defmodule Parser.TestHelpers do
   def expand_commands(_bundle, "seven") do
     {:pipeline, "seven"}
   end
+  def expand_commands(_bundle, "alpha") do
+    {:pipeline, "beta"}
+  end
+  def expand_commands(_bundle, "beta") do
+    {:pipeline, "gamma"}
+  end
+  def expand_commands(_bundle, "gamma") do
+    {:pipeline, "alpha"}
+  end
   def expand_commands(_bundle, cmd) when cmd in ["hello"] do
     {:command, {"greetings", cmd}}
   end

@@ -149,26 +149,26 @@ defmodule Parser.ParserTest do
 
   test "non-string/non-emoji bundle name fails resolution" do
     {:error, message} = Parser.scan_and_parse("hello | bogus", TestHelpers.parser_options())
-    assert message == "(Line: 1, Col: 9) Failed to parse bundle name ':foo' for command 'bogus'. Bundle names must be a string or emoji."
+    assert message == "Failed to parse bundle name ':foo' for command 'bogus'. Bundle names must be a string or emoji."
   end
 
   test "non-string/non-emoji command name fails resolution" do
     {:error, message} = Parser.scan_and_parse("hello | bogus2", TestHelpers.parser_options())
-    assert message == "(Line: 1, Col: 9) Replacing command name 'bogus2' with ':bogus' failed. Command names must be a string or emoji."
+    assert message == "Replacing command name 'bogus2' with ':bogus' failed. Command names must be a string or emoji."
   end
 
   test "unknown commands fail resolution" do
     {:error, message} = Parser.scan_and_parse("fluff", TestHelpers.parser_options())
-    assert message == "(Line: 1, Col: 1) Command 'fluff' not found in any installed bundle."
+    assert message == "Command 'fluff' not found in any installed bundle."
     {:error, message} = Parser.scan_and_parse("hello | goodbye | fluff", TestHelpers.parser_options())
-    assert message == "(Line: 1, Col: 19) Command 'fluff' not found in any installed bundle."
+    assert message == "Command 'fluff' not found in any installed bundle."
   end
 
   test "ambiguous commands fail resolution" do
     {:error, message} = Parser.scan_and_parse("multi", TestHelpers.parser_options())
-    assert message ==  "(Line: 1, Col: 1) Ambiguous command reference detected. Command 'multi' found in bundles 'a', 'b', and 'c'."
+    assert message ==  "Ambiguous command reference detected. Command 'multi' found in bundles 'a', 'b', and 'c'."
     {:error, message} = Parser.scan_and_parse("hello | multi", TestHelpers.parser_options())
-    assert message == "(Line: 1, Col: 9) Ambiguous command reference detected. Command 'multi' found in bundles 'a', 'b', and 'c'."
+    assert message == "Ambiguous command reference detected. Command 'multi' found in bundles 'a', 'b', and 'c'."
   end
 
   test "splicing aliases into parse tree" do

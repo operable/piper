@@ -68,7 +68,7 @@ defmodule Piper.Command.ParseContext do
         updated = {alias, count + 1}
         updated_state = %{state | expansions: List.keyreplace(state.expansions, alias, 0, updated)}
         if over_depth_limit?(updated_state) do
-          max_depth_error(updated_state)
+          analyze_error(state)
         else
           {:ok, updated_state}
         end
@@ -87,6 +87,23 @@ defmodule Piper.Command.ParseContext do
     end
   end
 
+  defp analyze_error(state) do
+    expansions = Enum.reverse(state.expansions)
+    {{min_alias, min}, {max_alias, max}} = Enum.min_max_by(expansions, fn({_, count}) -> count end)
+    cond do
+      min == max ->
+        max_depth_error(state)
+      max - min in 0..1 ->
+        alias_cycle_error([min_alias, max_alias], state)
+      true ->
+        expansions
+        |> Enum.filter(fn({_, count}) -> max - count in -1..1 end)
+        |> Enum.map(fn({alias, _}) -> alias end)
+        |> Enum.unique
+        |> alias_cycle_error(state)
+    end
+  end
+
   defp over_depth_limit?(state) do
     current_depth = Enum.reduce(state.expansions, 0, fn({_, count}, acc) -> acc + count end)
     current_depth > state.max_depth
@@ -95,6 +112,10 @@ defmodule Piper.Command.ParseContext do
   defp max_depth_error(state) do
     [{root_alias, _}|_] = Enum.reverse(state.expansions)
     {{:error, {:max_depth, root_alias, state.max_depth}}, state}
+  end
+
+  defp alias_cycle_error(cycle, state) do
+    {{:error, {:alias_cycle, cycle}}, state}
   end
 
 end

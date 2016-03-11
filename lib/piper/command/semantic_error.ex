@@ -1,36 +1,36 @@
 defmodule Piper.Command.SemanticError do
 
-  defstruct [:col, :line, :text, :reason,
+  defstruct [:text, :reason,
              :meta]
 
 
   def new(near, :not_found) do
-    error = new_with_position(near)
+    error = init(near)
     %{error | reason: :not_found}
   end
   def new(near, {:ambiguous, bundles}) do
-    error = new_with_position(near)
+    error = init(near)
     %{error | reason: :ambiguous, meta: bundles}
   end
   def new(near, {:bad_bundle, bundle}) do
-    error = new_with_position(near)
+    error = init(near)
     %{error | reason: :bad_bundle, meta: bundle}
   end
   def new(near, {:bad_command, command}) do
-    error = new_with_position(near)
+    error = init(near)
     %{error | reason: :bad_command, meta: command}
   end
   def new(near, {:expansion_limit, alias, limit}) do
-    error = new_with_position(near.value)
+    error = init(near)
     %{error | reason: :expansion_limit, meta: {alias, limit}}
   end
-  def format_error(%__MODULE__{col: col, line: line, text: text, reason: reason, meta: meta}) do
-    {:error, position_info(col, line) <> message_for_reason(reason, text, meta)}
+  def new(near, {:alias_cycle, cycle}) do
+    error = init(near)
+    %{error | reason: :alias_cycle, meta: cycle}
   end
 
-  defp position_info(nil, _), do: ""
-  defp position_info(col, line) do
-    "(Line: #{line}, Col: #{col}) "
+  def format_error(%__MODULE__{text: text, reason: reason, meta: meta}) do
+    {:error, message_for_reason(reason, text, meta)}
   end
 
   defp message_for_reason(:not_found, text, _) do
@@ -47,17 +47,20 @@ defmodule Piper.Command.SemanticError do
     "Replacing command name '#{text}' with '#{command}' failed. Command names must be a string or emoji."
   end
   defp message_for_reason(:expansion_limit, _last_alias, {first_alias, limit}) do
-    "Alias expansion limit (#{limit}) exceeded starting with '#{first_alias}'."
+    "Alias expansion limit (#{limit}) exceeded starting with alias '#{first_alias}'."
+  end
+  defp message_for_reason(:alias_cycle, _text, [first, last]) do
+    "Infinite alias expansion loop detected '#{first}' -> '#{last}'."
   end
 
-  defp new_with_position({_, {line, col}, text}) do
-    %__MODULE__{line: line, col: col, text: String.Chars.to_string(text)}
+  defp init({_, _, text}) do
+    %__MODULE__{text: String.Chars.to_string(text)}
   end
-  defp new_with_position(%{line: line, col: col, value: value}) do
-    %__MODULE__{line: line, col: col, text: value}
+  defp init(%{value: value}) do
+    %__MODULE__{text: value}
   end
-  defp new_with_position(near) when is_binary(near) do
-    %__MODULE__{text: near}
+  defp init(text) when is_binary(text) do
+    %__MODULE__{text: text}
   end
 
   defp format_bundles(bundles) do
