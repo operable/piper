@@ -81,6 +81,18 @@ defmodule Bind.BindTest do
     assert "#{ast}" == "ec2:list_vms --region=us-west-2 --user=becky 5"
   end
 
+  test "missing option value variable fails" do
+    result = parse_and_bind("test:test --opt=$var")
+    assert result == {:error, "Key 'var' not found in expression '$var'."}
+  end
+
+  test "missing arg value variable fails" do
+    result = parse_and_bind("test:test $var")
+    assert result == {:error, "Key 'var' not found in expression '$var'."}
+  end
+
+  # go up the chain, too
+
   test "array indexing" do
     scope = Bind.Scope.from_map(%{"region" => ["us-west-1", "us-east-1"]})
     {:ok, ast} = parse_and_bind2("ec2:list_vms --region=$region[1]", scope)

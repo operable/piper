@@ -36,7 +36,12 @@ defimpl Piper.Command.Scoped, for: Piper.Command.Bind.Scope do
   end
 
   def lookup(%Scope{values: values, parent: nil}, name) do
-    {:ok, Map.get(values, name)}
+    case Map.get(values, name) do
+      nil ->
+        {:not_found, name}
+      value ->
+        {:ok, value}
+    end
   end
   def lookup(%Scope{values: values, parent: parent}, name) do
     case Map.get(values, name) do
