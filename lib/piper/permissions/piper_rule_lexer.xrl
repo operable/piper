@@ -7,7 +7,9 @@ INDEXED_ARG                     = arg\[([0-9])+\]
 OPTION                          = option
 AGGREGATE_OPTIONS               = options
 OPERATORS                       = (<|>|=<|>=|==|!=|and|or|not|in)
-NAME                            = [a-zA-Z]+[a-zA-Z0-9_\-]*::?[a-zA-Z]+[a-zA-Z0-9_\-:]*
+NAME                            = [a-zA-Z]+[a-zA-Z0-9_\-]*
+SLACK_EMOJI                     = :[a-zA-Z]+[a-zA-Z0-9_\-]*:
+HIPCHAT_EMOJI                   = \([a-zA-Z]+[a-zA-Z0-9_\-]*\)
 INTEGER                         = ([0-9])+
 FLOAT                           = ([0-9])+\.([0-9])+
 STRING                          = ([a-zA-Z0-9_\-])+
@@ -30,13 +32,15 @@ Rules.
 {OPTION}                        : advance_count(length(TokenChars)), {token, {option, position(), nil}}.
 {AGGREGATE_OPTIONS}             : advance_count(length(TokenChars)), {token, {option, position(), nil}}.
 {OPERATORS}                     : advance_count(length(TokenChars)), {token, build_operator(TokenChars)}.
-{LPAREN}                        : advance_count(length(TokenChars)), {token, {lparen, position(), "("}}.
-{RPAREN}                        : advance_count(length(TokenChars)), {token, {rparen, position(), ")"}}.
 {LBRACKET}                      : advance_count(length(TokenChars)), {token, {lbracket, position(), "["}}.
 {RBRACKET}                      : advance_count(length(TokenChars)), {token, {rbracket, position(), "]"}}.
-%%{COLON}                         : advance_count(length(TokenChars)), {token, {colon, position(), ":"}}.
 {COMMA}                         : advance_count(length(TokenChars)), {token, {comma, position(), ","}}.
 {REGEX}                         : advance_count(length(TokenChars)), {token, {regex, position(), build_regex(TokenChars)}}.
+{SLACK_EMOJI}                   : advance_count(length(TokenChars)), {token, {emoji, position(), TokenChars}}.
+{HIPCHAT_EMOJI}                 : advance_count(length(TokenChars)), {token, {emoji, position(), TokenChars}}.
+{LPAREN}                        : advance_count(length(TokenChars)), {token, {lparen, position(), "("}}.
+{RPAREN}                        : advance_count(length(TokenChars)), {token, {rparen, position(), ")"}}.
+{COLON}                         : advance_count(length(TokenChars)), {token, {colon, position(), ":"}}.
 {NAME}                          : advance_count(length(TokenChars)), {token, {name, position(), TokenChars}}.
 {FLOAT}                         : advance_count(length(TokenChars)), {token, {float, position(), list_to_float(TokenChars)}}.
 {INTEGER}                       : advance_count(length(TokenChars)), {token, {integer, position(), list_to_integer(TokenChars)}}.

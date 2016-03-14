@@ -64,8 +64,8 @@ defmodule Piper.Permissions.LexerTest do
   end
 
   test "tokenizing strings" do
-    matches "this_is_a_test", [string: 'this_is_a_test']
-    matches "testing 123", [string: 'testing', integer: 123]
+    matches "this_is_a_test", [name: 'this_is_a_test']
+    matches "testing 123", [name: 'testing', integer: 123]
     matches "\"this is a test\"", [dqstring: 'this is a test']
     matches "'this is a test'", [sqstring: 'this is a test']
   end
@@ -110,8 +110,9 @@ defmodule Piper.Permissions.LexerTest do
   end
 
   test "tokenizing namespaced names" do
-    matches "foo:bar", [name: 'foo:bar']
-    matches "foo:bar:", [name: 'foo:bar:']
+    matches "foo:bar", [name: 'foo', colon: ':', name: 'bar']
+    matches "foo::bar:", [name: 'foo', colon: ':', emoji: ':bar:']
+    matches "foo:(bar)", [name: 'foo', colon: ':', emoji: '(bar)']
   end
 
 end
