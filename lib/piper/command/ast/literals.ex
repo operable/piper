@@ -50,6 +50,9 @@ defmodule Piper.Command.Ast.String do
   def new({:datum, {line, col}, value}) do
     %__MODULE__{line: line, col: col, value: String.Chars.to_string(value)}
   end
+  def new({:emoji, {line, col}, value}) do
+    %__MODULE__{line: line, col: col, value: String.Chars.to_string(value)}
+  end
   def new(value) when is_binary(value) do
     %__MODULE__{line: 0, col: 0, value: value}
   end

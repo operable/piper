@@ -63,6 +63,18 @@ defmodule Parser.ParserTest do
     should_parse "admin perms --grant --permission=operable:write --to=bob", "admin perms --grant --permission=operable:write --to=bob"
   end
 
+  test "parsing names as args" do
+    should_parse "help operable:permissions"
+    should_parse "operable:permissions --grant -p operable:write -t bob"
+  end
+
+  test "parsing emojis as args" do
+    should_parse "help :pageme:"
+    should_parse "help (pageme)"
+    should_parse "help site::pageme:"
+    should_parse "help site:(pageme)"
+  end
+
   test "parsing boolean args" do
     should_parse "foo:bar true", nil, 1
     should_parse "foo true", "foo true", 1
@@ -92,16 +104,6 @@ defmodule Parser.ParserTest do
     should_not_parse "wubba:$foo"
     should_not_parse "$foo --bar"
   end
-
-  # test "parsing escaped double quoted strings" do
-  #   should_parse "wubba:foo \"123\\\"\" abc", "wubba:foo 123\\\" abc"
-  #   should_parse "foo \"123\\\"\" abc", "foo 123\" abc"
-  # end
-
-  # test "parsing escaped single quoted strings" do
-  #   should_parse "wubba:foo 123 a \\\'b\\\'c", "wubba:foo 123 a \\\'b\\\'c"
-  #   should_parse "foo 123 a\\'b\\'c", "foo 123 a \\'b\\'c"
-  # end
 
   test "parsing :pipe pipelines" do
     should_parse "wubba:foo 1 --bar | wubba:baz", nil, 2

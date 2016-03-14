@@ -78,6 +78,10 @@ arg ->
 arg ->
   var_expr : '$1'.
 arg ->
+  string colon string : merge_strings(['$1', '$2', '$3']).
+arg ->
+  string colon emoji : merge_strings(['$1', '$2', '$3']).
+arg ->
   any : '$1'.
 
 short_option ->
@@ -93,6 +97,11 @@ short_option ->
                                                ?AST("Option"):new([{name, Name},
                                                                    {value, merge_strings(['$4', '$5', '$6'])},
                                                                    {type, short}]).
+short_option ->
+  shortopt string equals string colon emoji : Name = ?AST("String"):new('$2'),
+                                              ?AST("Option"):new([{name, Name},
+                                                                  {value, merge_strings(['$4', '$5', '$6'])},
+                                                                  {type, short}]).
 short_option ->
   shortopt string : Name = ?AST("String"):new('$2'),
                            ?AST("Option"):new([{name, Name}, {type, short}]).
@@ -111,6 +120,11 @@ long_option ->
                                               ?AST("Option"):new([{name, Name},
                                                                   {value, merge_strings(['$4', '$5', '$6'])},
                                                                   {type, long}]).
+long_option ->
+  longopt string equals string colon emoji : Name = ?AST("String"):new('$2'),
+                                             ?AST("Option"):new([{name, Name},
+                                                                 {value, merge_strings(['$4', '$5', '$6'])},
+                                                                 {type, long}]).
 long_option ->
   longopt string : Name = ?AST("String"):new('$2'),
                    ?AST("Option"):new([{name, Name}, {type, long}]).
@@ -147,6 +161,8 @@ any ->
   float : ?AST("Float"):new('$1').
 any ->
   bool : ?AST("Bool"):new('$1').
+any ->
+  emoji : ?AST("String"):new('$1').
 any ->
   string: ?AST("String"):new('$1').
 any ->
