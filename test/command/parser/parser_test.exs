@@ -4,6 +4,7 @@ defmodule Parser.ParserTest do
   # of verifying parse tree results
 
   alias Parser.TestHelpers
+  alias Piper.Command.Ast
   use Parser.ParsingCase
 
   defp count_or_nil(_count, nil), do: nil
@@ -136,6 +137,7 @@ defmodule Parser.ParserTest do
     {:ok, ast} = Parser.scan_and_parse("foo > me | bar *> me ops")
     assert ast.redirect_to != nil
     assert Enum.count(ast.redirect_to.targets) == 2
+    assert Ast.Pipeline.redirect_targets(ast) == ["me", "ops"]
     assert Enum.map(ast.redirect_to.targets, &("#{&1}")) == ["me", "ops"]
   end
 

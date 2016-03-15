@@ -14,6 +14,22 @@ defmodule Piper.Command.Ast.Pipeline do
     Stream.chunk(pipeline, chunk_size)
   end
 
+  def redirect_targets(pipeline, default \\ nil) do
+    case pipeline.redirect_to do
+      nil ->
+        cond do
+          default == nil ->
+            []
+          is_list(default) ->
+            default
+          true ->
+            [default]
+        end
+      redirect ->
+        Enum.map(redirect.targets, &(&1.value))
+    end
+  end
+
 end
 
 defmodule Piper.Command.Ast.PipelineStage do
