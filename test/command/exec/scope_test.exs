@@ -9,7 +9,7 @@ defmodule Exec.ScopeTest do
     quote do
       for {key, value} <- unquote(values) do
         value = case value do
-                  {:error, _}=value ->
+                  {:error, value} ->
                     value
                   value ->
                     {:ok, value}
@@ -21,14 +21,18 @@ defmodule Exec.ScopeTest do
 
   test "key lookup in a single scope" do
     scope = Scope.from_map(%{"foo" => 1, "bar" => "baz"})
-    verify_scope(scope, [{"foo", 1}, {"bar", "baz"}, {"quux", nil}])
+    verify_scope(scope, [{"foo", 1},
+                         {"bar", "baz"},
+                         {"quux", {:error, {:not_found, "quux"}}}])
   end
 
   test "key lookup with two level scope" do
     scope1 = Scope.from_map(%{"foo" => 1})
     scope2 = Scope.from_map(%{"bar" => "baz"})
     {:ok, scope} = Scoped.set_parent(scope1, scope2)
-    verify_scope(scope, [{"foo", 1}, {"bar", "baz"}, {"quux", nil}])
+    verify_scope(scope, [{"foo", 1},
+                         {"bar", "baz"},
+                         {"quux", {:error, {:not_found, "quux"}}}])
   end
 
   test "\"lower\" scopes override higher scopes" do

@@ -129,6 +129,11 @@ defmodule Piper.Permissions.Ast.Option do
     value = String.Chars.to_string(value)
     %__MODULE__{line: line, col: col, name: value}
   end
+  def new({:option, {line, col}, _}, {:name, _, value}) do
+    value = String.Chars.to_string(value)
+    %__MODULE__{line: line, col: col, name: value}
+  end
+
 
   def build(type) when type in [:any, :all] do
     %__MODULE__{name: type}

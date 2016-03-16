@@ -1,4 +1,8 @@
 defmodule Piper.Command.Bind.Scope do
+
+  alias Piper.Command.Bindable
+  alias Piper.Command.BindError
+
   defstruct [values: %{}, bindings: %{}, parent: nil]
 
   def from_map(values) do
@@ -7,6 +11,15 @@ defmodule Piper.Command.Bind.Scope do
 
   def empty_scope() do
     %__MODULE__{}
+  end
+
+  def bind(ast, %__MODULE__{}=scope) do
+    try do
+      {:ok, scope} = Bindable.resolve(ast, scope)
+      Bindable.bind(ast, scope)
+    catch
+      error -> BindError.format_error(error)
+    end
   end
 
 end
@@ -23,7 +36,12 @@ defimpl Piper.Command.Scoped, for: Piper.Command.Bind.Scope do
   end
 
   def lookup(%Scope{values: values, parent: nil}, name) do
-    {:ok, Map.get(values, name)}
+    case Map.get(values, name) do
+      nil ->
+        {:not_found, name}
+      value ->
+        {:ok, value}
+    end
   end
   def lookup(%Scope{values: values, parent: parent}, name) do
     case Map.get(values, name) do

@@ -2,11 +2,11 @@ defmodule Bind.BindTest do
 
   use ExUnit.Case
 
-  alias Parser.TestHelpers
   alias Piper.Command.Parser
-  alias Piper.Command.Bindable
+  alias Piper.Command.ParserOptions
+  alias Piper.Command.Bind.Scope
   alias Piper.Command.Bind
-  alias Piper.Command.Ast
+  alias Piper.Command.Ast, as: Ast
 
   defp link_scopes([]) do
     Bind.Scope.empty_scope()
@@ -33,60 +33,46 @@ defmodule Bind.BindTest do
     scope = Bind.Scope.from_map(vars)
     parse_and_bind2(text, scope)
   end
-  defp parse_and_bind2(text, scope, opts \\ []) do
+  defp parse_and_bind2(text, scope, opts \\ %ParserOptions{}) do
     {:ok, ast} = Parser.scan_and_parse(text, opts)
-    {:ok, scope} = Bindable.resolve(ast, scope)
-    {:ok, new_ast, _scope} = Bindable.bind(ast, scope)
-    {:ok, new_ast}
+    case Scope.bind(ast, scope) do
+      {:ok, new_ast, _scope} ->
+        {:ok, new_ast}
+      error ->
+        error
+    end
   end
 
-  defp arg(%Ast.Invocation{}=ast, index) do
-    Enum.at(ast.args, index)
+  defp arg(%Ast.Pipeline{}=ast, index) do
+    Enum.at(ast.stages.left.args, index)
   end
 
   test "preparing simple command" do
     {:ok, ast} = parse_and_bind("echo 'foo'")
-    assert ast.command == "echo:echo"
+    assert "#{ast.stages.left.name}" == "echo"
     assert arg(ast, 0) == "foo"
-    assert "#{ast}" == "echo:echo foo"
+    assert "#{ast}" == "echo foo"
   end
 
   test "preparing command with options" do
     {:ok, ast} = parse_and_bind("ec2:list_vms --region=us-east-1")
-    assert ast.command == "ec2:list_vms"
-    assert arg(ast, 0).flag == "region"
-    assert arg(ast, 0).value == "us-east-1"
+    assert "#{ast.stages.left.name}" == "ec2:list_vms"
+    assert "#{arg(ast, 0).name}" == "region"
+    assert "#{arg(ast, 0).value}" == "us-east-1"
     assert "#{ast}" == "ec2:list_vms --region=us-east-1"
   end
 
   test "preparing command with variable arg" do
     {:ok, ast} = parse_and_bind("ec2:list_vms --region=$region", %{"region" => "us-west-1"})
-    assert ast.command == "ec2:list_vms"
-    assert arg(ast, 0).flag == "region"
-    assert arg(ast, 0).value == "us-west-1"
+    assert "#{ast.stages.left.name}" == "ec2:list_vms"
+    assert "#{arg(ast, 0).name}" == "region"
+    assert "#{arg(ast, 0).value}" == "us-west-1"
     assert "#{ast}" == "ec2:list_vms --region=us-west-1"
   end
 
   test "preparing command with the same variable multiple times" do
     {:ok, ast} = parse_and_bind("echo $padding $value $padding", %{"padding" => "***", "value" => "cheeseburger"})
-    assert "#{ast}" == "echo:echo *** cheeseburger ***"
-  end
-
-  test "preparing command with variable option and option value" do
-    {:ok, ast} = parse_and_bind("ec2:list_vms --$region_opt=$region", %{"region_opt" => "region",
-                                                                                    "region" => "us-west-2"})
-    assert ast.command == "ec2:list_vms"
-    assert arg(ast, 0).flag == "region"
-    assert arg(ast, 0).value == "us-west-2"
-    assert "#{ast}" == "ec2:list_vms --region=us-west-2"
-  end
-
-  test "preparing command with variable option" do
-    {:ok, ast} = parse_and_bind("ec2:list_vms --$region_opt=us-east-1", %{"region_opt" => "region"})
-    assert ast.command == "ec2:list_vms"
-    assert arg(ast, 0).flag == "region"
-    assert arg(ast, 0).value == "us-east-1"
-    assert "#{ast}" == "ec2:list_vms --region=us-east-1"
+    assert "#{ast}" == "echo *** cheeseburger ***"
   end
 
   test "preparing command with chained scopes" do
@@ -95,6 +81,18 @@ defmodule Bind.BindTest do
     assert "#{ast}" == "ec2:list_vms --region=us-west-2 --user=becky 5"
   end
 
+  test "missing option value variable fails" do
+    result = parse_and_bind("test:test --opt=$var")
+    assert result == {:error, "Key 'var' not found in expression '$var'."}
+  end
+
+  test "missing arg value variable fails" do
+    result = parse_and_bind("test:test $var")
+    assert result == {:error, "Key 'var' not found in expression '$var'."}
+  end
+
+  # go up the chain, too
+
   test "array indexing" do
     scope = Bind.Scope.from_map(%{"region" => ["us-west-1", "us-east-1"]})
     {:ok, ast} = parse_and_bind2("ec2:list_vms --region=$region[1]", scope)
@@ -102,55 +100,46 @@ defmodule Bind.BindTest do
   end
 
   test "map indexing" do
-    scope = Bind.Scope.from_map(%{"region" => %{"west-1" => "us-west-1", "east" => "us-east-1"}})
-    {:ok, ast} = parse_and_bind2("ec2:list_vms --region=$region[\"west-1\"]", scope)
-    assert "#{ast}" == "ec2:list_vms --region=us-west-1"
+    scope = Bind.Scope.from_map(%{"envs" => %{"prod" => "us-east-1", "test" => "us-west-2"}})
+    {:ok, ast} = parse_and_bind2("ec2:list_vms --region=$envs.prod", scope)
+    assert "#{ast}" == "ec2:list_vms --region=us-east-1"
   end
 
-  test "map binding" do
-    scope = Bind.Scope.from_map(%{"region" => %{"west-1" => "us-west-1", "east" => "us-east-1"}})
-    {:ok, ast} = parse_and_bind2("ec2:list_vms $region", scope)
-    {:ok, literal_ast} = parse_and_bind2("ec2:list_vms {{{\"west-1\":\"us-west-1\",\"east\":\"us-east-1\"}}}", scope)
-    {:ok, dogfood_ast} = parse_and_bind2("#{ast}", scope)
-    assert literal_ast == dogfood_ast
+  test "nested access" do
+    envs = [%{"region" => "us-east-1", "owner" => "admin1"}, %{"region" => "us-west-2", "owner" => "admin2"}]
+    scope = Bind.Scope.from_map(%{"envs" => envs})
+    {:ok, ast} = parse_and_bind2("site:monkey_with_vms --region=$envs[0].region --notify=$envs[0].owner", scope)
+    assert "#{ast}" == "site:monkey_with_vms --region=us-east-1 --notify=admin1"
   end
 
-  test "list binding" do
-    scope = Bind.Scope.from_map(%{"regions" => ["us-west-1", "us-west-2", "us-east-1"]})
-    {:ok, ast} = parse_and_bind2("ec2:list_vms $regions", scope)
-    assert "#{ast}" == "ec2:list_vms {{[\"us-west-1\",\"us-west-2\",\"us-east-1\"]}}"
+  test "moar nested access" do
+    envs = [%{"region" => "us-east-1", "owners" => ["admin1", "admin3"]}, %{"region" => "us-west-2", "owners" => ["admin2"]}]
+    scope = Bind.Scope.from_map(%{"envs" => envs})
+    {:ok, ast} = parse_and_bind2("site:monkey_with_vms --region=$envs[0].region --notify=$envs[0].owners[1]", scope)
+    assert "#{ast}" == "site:monkey_with_vms --region=us-east-1 --notify=admin3"
   end
 
-  test "disambiguate command name bound to variable" do
-    scope = Bind.Scope.from_map(%{"command" => "hello"})
-    {:ok, ast} = parse_and_bind2("$command", scope, command_resolver: &TestHelpers.resolve_commands/1)
-    assert "salutations:hello" == "#{ast}"
+  test "nested access with spaces in keys" do
+    envs = [%{"region" => "us-east-1", "env owners" => ["admin1", "admin3"]}, %{"region" => "us-west-2", "owner" => "admin2"}]
+    scope = Bind.Scope.from_map(%{"envs" => envs})
+    {:ok, ast} = parse_and_bind2("site:monkey_with_vms --region=$envs[0].region --notify=$envs[0].'env owners'[1]", scope)
+    assert "#{ast}" == "site:monkey_with_vms --region=us-east-1 --notify=admin3"
   end
 
-  test "disambiguate hard references and variables" do
-    scope = Bind.Scope.from_map(%{"command" => "hello"})
-    {:ok, ast} = parse_and_bind2("goodbye | $command", scope, command_resolver: &TestHelpers.resolve_commands/1)
-    assert "salutations:goodbye | salutations:hello" == "#{ast}"
+  test "old school map access" do
+    envs = [%{"region" => "us-east-1", "env owners" => ["admin1", "admin3"]}, %{"region" => "us-west-2", "owner" => "admin2"}]
+    scope = Bind.Scope.from_map(%{"envs" => envs})
+    {:ok, ast} = parse_and_bind2("site:monkey_with_vms --region=$envs[0][region] --notify=$envs[0]['env owners'][1]", scope)
+    assert "#{ast}" == "site:monkey_with_vms --region=us-east-1 --notify=admin3"
   end
 
-  test "unknown commands fail resolution" do
-    scope = Bind.Scope.from_map(%{"command" => "fluff"})
-    {:ok, ast} = Parser.scan_and_parse("goodbye | $command", command_resolver: &TestHelpers.resolve_commands/1)
-    {:ok, scope} = Bindable.resolve(ast, scope)
-    {:error, "Installed command with name 'fluff' not found."} = Bindable.bind(ast, scope)
-  end
-
-  test "ambiguous command references fail resolution" do
-    scope = Bind.Scope.from_map(%{"command" => "multi"})
-    {:ok, ast} = Parser.scan_and_parse("goodbye | hello | $command", command_resolver: &TestHelpers.resolve_commands/1)
-    {:ok, scope} = Bindable.resolve(ast, scope)
-    {:error, "Command name 'multi' found in multiple bundles: a, b, c."} = Bindable.bind(ast, scope)
-  end
-
-  test "fully qualified command references skip resolution" do
-    scope = Bind.Scope.from_map(%{"command" => "operable:mirror"})
-    {:ok, ast} = parse_and_bind2("goodbye | $command", scope, command_resolver: &TestHelpers.resolve_commands/1)
-    assert "salutations:goodbye | operable:mirror" == "#{ast}"
+  test "index out of bounds" do
+    envs = [%{"region" => "us-east-1", "env owners" => ["admin1", "admin3"]}, %{"region" => "us-west-2", "owner" => "admin2"}]
+    scope = Bind.Scope.from_map(%{"envs" => envs})
+    {:error, message} = parse_and_bind2("site:monkey_with_vms --region=$envs[2][region] --notify=$envs[0]['env owners'][1]", scope)
+    assert message == "Index 2 out of bounds in expression '$envs[2].region'."
+    {:error, message} = parse_and_bind2("site:monkey_with_vms --region=$envs[0][region] --notify=$envs[0][envowners][1]", scope)
+    assert message == "Key 'envowners' not found in expression '$envs[0].envowners[1]'."
   end
 
 end

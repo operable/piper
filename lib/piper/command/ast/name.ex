@@ -1,7 +1,24 @@
 defmodule Piper.Command.Ast.Name do
 
-  use Piper.Util.TokenWrapper
+  alias Piper.Command.Ast
 
-  defwrapper [value: :name, token_type: :name]
+  defstruct [bundle: nil, entity: nil]
+
+  def new(opts) do
+    bundle = parse(opts, :bundle)
+    entity = parse(opts, :entity)
+    %__MODULE__{bundle: bundle, entity: entity}
+  end
+
+  defp parse(opts, key) do
+    case Keyword.get(opts, key) do
+      nil ->
+        nil
+      {:string, _, _}=value ->
+        Ast.String.new(value)
+      {:emoji, _, _}=value ->
+        Ast.Emoji.new(value)
+    end
+  end
 
 end

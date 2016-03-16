@@ -7,7 +7,7 @@ all any arg command have is must option when with
 and or in equiv not_equiv lt gt lte gte
 
 %% Data types
-name boolean float integer dqstring sqstring string regex
+name boolean float integer dqstring sqstring string regex emoji
 
 %% Punctuation
 colon comma lbracket rbracket lparen rparen.
@@ -105,6 +105,9 @@ option_ref ->
   all option : ?AST("Option"):new('$2', all).
 option_ref ->
   option lbracket string rbracket : ?AST("Option"):new('$1', '$3').
+option_ref ->
+  option lbracket name rbracket : ?AST("Option"):new('$1', '$3').
+
 
 arg_ref ->
   any arg : build_arg('$2', any).
@@ -141,7 +144,9 @@ ns_name_list_body ->
   regular_expr : ['$1'].
 
 ns_name ->
-  name : ?AST("String"):new('$1').
+  name colon name : merge_strings(['$1', '$2', '$3']).
+ns_name ->
+  name colon emoji : merge_strings(['$1', '$2', '$3']).
 ns_name ->
   string_expr : '$1'.
 
@@ -175,6 +180,10 @@ string_expr ->
   sqstring colon string_expr : ?AST("String"):new(?AST("String"):new('$1', "'"), '$2', '$3').
 string_expr ->
   string : ?AST("String"):new('$1').
+string_expr ->
+  emoji : ?AST("String"):new('$1').
+string_expr ->
+  name : ?AST("String"):new('$1').
 string_expr ->
   dqstring : ?AST("String"):new('$1').
 string_expr ->
@@ -298,3 +307,7 @@ get_location({_, Position, _}) ->
   Position;
 get_location(Token) ->
   {maps:get(line, Token), maps:get(col, Token)}.
+
+merge_strings([{_, Pos, _}|_]=Tokens) ->
+  Values = [Text || {_, _, Text} <- Tokens],
+  ?AST("String"):new({string, Pos, lists:flatten(Values)}).

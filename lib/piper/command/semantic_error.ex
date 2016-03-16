@@ -1,53 +1,79 @@
 defmodule Piper.Command.SemanticError do
 
-  defstruct [:col, :line, :text, :reason,
+  defstruct [:text, :reason,
              :meta]
 
-  alias Piper.Util.Token
 
-  def new(near, :no_command) do
-    error = new_with_position(near)
-    %{error | reason: :no_command}
+  def new(near, :not_found) do
+    error = init(near)
+    %{error | reason: :not_found}
   end
-  def new(near, {:ambiguous_command, bundles}) do
-    error = new_with_position(near)
-    %{error | reason: :ambiguous_command, meta: bundles}
+  def new(near, {:ambiguous, bundles}) do
+    error = init(near)
+    %{error | reason: :ambiguous, meta: bundles}
   end
-  def new(near, {:ambiguous_alias, entities}) do
-    error = new_with_position(near)
-    %{error | reason: :ambiguous_alias, meta: entities}
+  def new(near, {:bad_bundle, bundle}) do
+    error = init(near)
+    %{error | reason: :bad_bundle, meta: bundle}
   end
-
-  def update_position(error, %Token{line: line, col: col, text: text}) do
-    %{error | line: line, col: col, text: text}
+  def new(near, {:bad_command, command}) do
+    error = init(near)
+    %{error | reason: :bad_command, meta: command}
   end
-
-  def format_error(%__MODULE__{col: col, line: line, text: text, reason: reason, meta: meta}) do
-    {:error, position_info(col, line, text) <> message_for_reason(reason, text, meta)}
+  def new(near, {:expansion_limit, alias, limit}) do
+    error = init(near)
+    %{error | reason: :expansion_limit, meta: {alias, limit}}
   end
-
-  defp position_info(nil, _, _), do: ""
-  defp position_info(col, line, text) do
-    "Error on line #{line}, column #{col}, starting at '#{text}'. "
+  def new(near, {:alias_cycle, cycle}) do
+    error = init(near)
+    %{error | reason: :alias_cycle, meta: cycle}
   end
 
-  defp message_for_reason(:no_command, text, _) do
-    "Installed command with name '#{text}' not found."
-  end
-  defp message_for_reason(:ambiguous_command, text, bundles) do
-    bundles = Enum.join(bundles, ", ")
-    "Command name '#{text}' found in multiple bundles: #{bundles}."
-  end
-  defp message_for_reason(:ambiguous_alias, text, entities) do
-    {command_name, alias_name} = entities
-    "Ambiguous alias for '#{text}'. Command '#{command_name}' is ambiguous with alias '#{alias_name}'."
+  def format_error(%__MODULE__{text: text, reason: reason, meta: meta}) do
+    {:error, message_for_reason(reason, text, meta)}
   end
 
-  defp new_with_position(%Token{col: col, line: line, text: text}) do
-    %__MODULE__{col: col, line: line, text: text}
+  defp message_for_reason(:not_found, text, _) do
+    "Command '#{text}' not found in any installed bundle."
   end
-  defp new_with_position(near) when is_binary(near) do
-    %__MODULE__{text: near}
+  defp message_for_reason(:ambiguous, text, bundles) do
+    "Ambiguous command reference detected. " <>
+    "Command '#{text}' found in bundles #{format_bundles(bundles)}."
+  end
+  defp message_for_reason(:bad_bundle, text, bundle) do
+    "Failed to parse bundle name '#{bundle}' for command '#{text}'. Bundle names must be a string or emoji."
+  end
+  defp message_for_reason(:bad_command, text, command) do
+    "Replacing command name '#{text}' with '#{command}' failed. Command names must be a string or emoji."
+  end
+  defp message_for_reason(:expansion_limit, _last_alias, {first_alias, limit}) do
+    "Alias expansion limit (#{limit}) exceeded starting with alias '#{first_alias}'."
+  end
+  defp message_for_reason(:alias_cycle, _text, [first, last]) do
+    "Infinite alias expansion loop detected '#{first}' -> '#{last}'."
+  end
+
+  defp init({_, _, text}) do
+    %__MODULE__{text: String.Chars.to_string(text)}
+  end
+  defp init(%{value: value}) do
+    %__MODULE__{text: value}
+  end
+  defp init(text) when is_binary(text) do
+    %__MODULE__{text: text}
+  end
+
+  defp format_bundles(bundles) do
+    format_bundles(bundles, "")
+  end
+  defp format_bundles([bundle|rest], accum) when rest == [] do
+    accum <> ", and '#{bundle}'"
+  end
+  defp format_bundles([bundle|rest], "") do
+    format_bundles(rest, "'#{bundle}'")
+  end
+  defp format_bundles([bundle|rest], accum) do
+    format_bundles(rest, accum <> ", '#{bundle}'")
   end
 
 end

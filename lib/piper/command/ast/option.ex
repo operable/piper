@@ -1,15 +1,12 @@
 defmodule Piper.Command.Ast.Option do
 
-  defstruct [:line, :col, :finalized, :flag, :value]
+  defstruct [name: nil, value: nil, opt_type: nil]
 
-  alias Piper.Command.Ast
-  alias Piper.Util.Token
-
-  def new(%Token{line: line, col: col, text: text, type: type}) when type in [:string, :integer] do
-    %__MODULE__{line: line, col: col, flag: text}
-  end
-  def new(%Ast.Variable{}=var) do
-    %__MODULE__{line: var.line, col: var.col, flag: var}
+  def new(opts) do
+    name = Keyword.fetch!(opts, :name)
+    value = Keyword.get(opts, :value)
+    opt_type = Keyword.fetch!(opts, :type)
+    %__MODULE__{name: name, value: value, opt_type: opt_type}
   end
 
   def set_value(%__MODULE__{}=opt, value) do
