@@ -4,7 +4,8 @@ Terminals
 integer float bool string datum emoji variable
 
 % Notation
-shortopt longopt colon equals lbracket rbracket dot pipe iff redir_one redir_multi.
+shortopt longopt colon equals lbracket rbracket dot
+pipe iff redir_one redir_multi.
 
 Nonterminals
 
@@ -52,6 +53,8 @@ redir_targets ->
 redir_targets ->
   redir_target redir_targets : ['$1'] ++ '$2'.
 
+redir_target ->
+  string colon datum : parse_redir_url('$1', '$3').
 redir_target ->
   string : ?AST("String"):new('$1').
 redir_target ->
@@ -206,3 +209,9 @@ token_to_integer({integer, _, Text}) ->
 token_to_string({Type, _, Text}) when Type == string orelse
                                       Type == datum ->
   list_to_binary(Text).
+
+parse_redir_url({string, _, "chat"}, {datum, {Line, Col}, [$/, $/|Redirect]}) ->
+  ?AST("String"):new({datum, {Line, Col + 2}, Redirect});
+parse_redir_url({_, Line, _}, _) ->
+  return_error(Line, "URL redirect targets must begin with chat://").
+

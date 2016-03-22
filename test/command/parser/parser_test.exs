@@ -141,6 +141,27 @@ defmodule Parser.ParserTest do
     assert Enum.map(ast.redirect_to.targets, &("#{&1}")) == ["me", "ops"]
   end
 
+  test "URL-style redirect is parsed" do
+    {:ok, ast} = Parser.scan_and_parse("foo | bar | baz > chat://#room1")
+    assert ast.redirect_to != nil
+    assert Enum.count(ast.redirect_to.targets) == 1
+    assert Ast.Pipeline.redirect_targets(ast) == ["#room1"]
+    assert Enum.map(ast.redirect_to.targets, &("#{&1}")) == ["#room1"]
+  end
+
+  test "URL-style redirects and non-URL redirects are parsed" do
+    {:ok, ast} = Parser.scan_and_parse("foo | bar | baz *> ops chat://#dev")
+    assert ast.redirect_to != nil
+    assert Enum.count(ast.redirect_to.targets) == 2
+    assert Ast.Pipeline.redirect_targets(ast) == ["ops", "#dev"]
+    assert Enum.map(ast.redirect_to.targets, &("#{&1}")) == ["ops", "#dev"]
+  end
+
+  test "URL speling errors are caught :)" do
+    {:error, message} = Piper.Command.Parser.scan_and_parse("foo | bar | baz > chat:/#ops")
+    assert message == "(Line: 1, Col: 19) URL redirect targets must begin with chat://."
+  end
+
   test "resolves ambiguous command names" do
     {:ok, ast} = Parser.scan_and_parse("hello", TestHelpers.parser_options())
     assert "salutations:hello" == "#{ast}"
