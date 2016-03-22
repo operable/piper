@@ -34,6 +34,7 @@ Rules.
 {LBRACKET}                 : advance_count(length(TokenChars)), {token, {lbracket, position(), "["}}.
 {RBRACKET}                 : advance_count(length(TokenChars)), {token, {rbracket, position(), "]"}}.
 {COLON}                    : advance_count(length(TokenChars)), {token, {colon, position(), ":"}}.
+{SLASH}                    : advance_count(length(TokenChars)), {token, {slash, position(), "/"}}.
 {EQUALS}                   : advance_count(length(TokenChars)), {token, {equals, position(), "="}}.
 {DOT}                      : advance_count(length(TokenChars)), {token, {dot, position(), "."}}.
 {SLACK_EMOJI}              : advance_count(length(TokenChars)), {token, {emoji, position(), TokenChars}}.
