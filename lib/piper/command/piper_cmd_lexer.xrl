@@ -9,7 +9,6 @@ RBRACKET                   = \]
 DOUBLE_DASH                = \-\-
 SINGLE_DASH                = \-
 COLON                      = :
-BAD_COLON                  = (:(\s)+)|((\s)+:)
 EQUALS                     = =
 DOT                        = \.
 SLACK_EMOJI                = :[a-zA-Z]+[a-zA-Z0-9_\-]*:
@@ -34,11 +33,13 @@ Rules.
 {REDIR_ONE}                : advance_count(length(TokenChars)), {token, {redir_one, position(), ">"}}.
 {LBRACKET}                 : advance_count(length(TokenChars)), {token, {lbracket, position(), "["}}.
 {RBRACKET}                 : advance_count(length(TokenChars)), {token, {rbracket, position(), "]"}}.
-{BAD_COLON}                : advance_count(length(TokenChars)), {token, {bad_colon, position(), ":"}}.
+{WS}{COLON}                : advance_count(length(TokenChars)), {token, {bad_colon, position(), ":"}}.
+{COLON}{WS}                : advance_count(length(TokenChars)), {token, {bad_colon, position(), ":"}}.
 {COLON}                    : advance_count(length(TokenChars)), {token, {colon, position(), ":"}}.
 {SLASH}                    : advance_count(length(TokenChars)), {token, {slash, position(), "/"}}.
 {EQUALS}                   : advance_count(length(TokenChars)), {token, {equals, position(), "="}}.
 {DOT}                      : advance_count(length(TokenChars)), {token, {dot, position(), "."}}.
+{WS}{SLACK_EMOJI}          : advance_count(length(TokenChars)), {token, {emoji, position(), tl(TokenChars)}}.
 {SLACK_EMOJI}              : advance_count(length(TokenChars)), {token, {emoji, position(), TokenChars}}.
 {HIPCHAT_EMOJI}            : advance_count(length(TokenChars)), {token, {emoji, position(), TokenChars}}.
 {VAR}                      : advance_count(length(TokenChars)), {token, {variable, position(), tl(TokenChars)}}.

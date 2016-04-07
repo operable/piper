@@ -275,4 +275,10 @@ defmodule Parser.ParserTest do
     should_not_parse "foo --opt1=$blah[3.wubba"
   end
 
+  test "malformed command names" do
+    should_not_parse ":foo bar"
+    should_not_parse "foo: bar"
+    should_not_parse "foo :bar"
+    should_not_parse "foo bar:"
+  end
 end
