@@ -4,14 +4,16 @@ Terminals
 integer float bool string datum emoji variable
 
 % Notation
-shortopt longopt colon equals lbracket rbracket dot
+shortopt longopt colon bad_colon equals lbracket rbracket dot
 pipe iff redir_one redir_multi.
 
 Nonterminals
 
 pipeline
 
-pipeline_stages invocation name arg args
+pipeline_stages invocation arg args
+
+name ns_separator
 
 redir redir_targets redir_target
 
@@ -54,16 +56,16 @@ redir_targets ->
   redir_target redir_targets : ['$1'] ++ '$2'.
 
 redir_target ->
-  string colon datum : parse_redir_url('$1', '$3').
+  string ns_separator datum : parse_redir_url('$1', '$3').
 redir_target ->
   string : ?AST("String"):new('$1').
 redir_target ->
   datum : ?AST("String"):new('$1').
 
 name ->
-  string colon string : ?AST("Name"):new([{bundle, '$1'}, {entity, '$3'}]).
+  string ns_separator string : ?AST("Name"):new([{bundle, '$1'}, {entity, '$3'}]).
 name ->
-  string colon emoji : ?AST("Name"):new([{bundle, '$1'}, {entity, '$3'}]).
+  string ns_separator emoji : ?AST("Name"):new([{bundle, '$1'}, {entity, '$3'}]).
 name ->
   string : ?AST("Name"):new([{entity, '$1'}]).
 name ->
@@ -81,9 +83,9 @@ arg ->
 arg ->
   var_expr : '$1'.
 arg ->
-  string colon string : merge_strings(['$1', '$2', '$3']).
+  string ns_separator string : merge_strings(['$1', '$2', '$3']).
 arg ->
-  string colon emoji : merge_strings(['$1', '$2', '$3']).
+  string ns_separator emoji : merge_strings(['$1', '$2', '$3']).
 arg ->
   any : '$1'.
 
@@ -96,12 +98,12 @@ short_option ->
                                     ?AST("Option"):new([{name, Name}, {value, '$4'},
                                                         {type, short}]).
 short_option ->
-  shortopt string equals string colon string : Name = ?AST("String"):new('$2'),
+  shortopt string equals string ns_separator string : Name = ?AST("String"):new('$2'),
                                                ?AST("Option"):new([{name, Name},
                                                                    {value, merge_strings(['$4', '$5', '$6'])},
                                                                    {type, short}]).
 short_option ->
-  shortopt string equals string colon emoji : Name = ?AST("String"):new('$2'),
+  shortopt string equals string ns_separator emoji : Name = ?AST("String"):new('$2'),
                                               ?AST("Option"):new([{name, Name},
                                                                   {value, merge_strings(['$4', '$5', '$6'])},
                                                                   {type, short}]).
@@ -119,12 +121,12 @@ long_option ->
                                    ?AST("Option"):new([{name, Name}, {value, '$4'},
                                                        {type, long}]).
 long_option ->
-  longopt string equals string colon string : Name = ?AST("String"):new('$2'),
+  longopt string equals string ns_separator string : Name = ?AST("String"):new('$2'),
                                               ?AST("Option"):new([{name, Name},
                                                                   {value, merge_strings(['$4', '$5', '$6'])},
                                                                   {type, long}]).
 long_option ->
-  longopt string equals string colon emoji : Name = ?AST("String"):new('$2'),
+  longopt string equals string ns_separator emoji : Name = ?AST("String"):new('$2'),
                                              ?AST("Option"):new([{name, Name},
                                                                  {value, merge_strings(['$4', '$5', '$6'])},
                                                                  {type, long}]).
@@ -171,6 +173,11 @@ any ->
 any ->
   datum: ?AST("String"):new('$1').
 
+ns_separator ->
+  colon : '$1'.
+ns_separator ->
+  bad_colon : return_error(extract_linenum('$1'), "Namespaced qualified names cannot contain spaces").
+
 Erlang code.
 
 -export([scan_and_parse/1]).
@@ -214,3 +221,5 @@ parse_redir_url({string, _, "chat"}, {datum, {Line, Col}, [$/, $/|Redirect]}) ->
   ?AST("String"):new({datum, {Line, Col - 5}, "chat://" ++ Redirect});
 parse_redir_url({_, Line, _}, _) ->
   return_error(Line, "URL redirect targets must begin with chat://").
+extract_linenum({_, {LineNum, _}, _}) ->
+  LineNum.
