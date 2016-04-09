@@ -211,7 +211,6 @@ token_to_string({Type, _, Text}) when Type == string orelse
   list_to_binary(Text).
 
 parse_redir_url({string, _, "chat"}, {datum, {Line, Col}, [$/, $/|Redirect]}) ->
-  ?AST("String"):new({datum, {Line, Col + 2}, Redirect});
+  ?AST("String"):new({datum, {Line, Col - 5}, "chat://" ++ Redirect});
 parse_redir_url({_, Line, _}, _) ->
   return_error(Line, "URL redirect targets must begin with chat://").
-

@@ -145,16 +145,16 @@ defmodule Parser.ParserTest do
     {:ok, ast} = Parser.scan_and_parse("foo | bar | baz > chat://#room1")
     assert ast.redirect_to != nil
     assert Enum.count(ast.redirect_to.targets) == 1
-    assert Ast.Pipeline.redirect_targets(ast) == ["#room1"]
-    assert Enum.map(ast.redirect_to.targets, &("#{&1}")) == ["#room1"]
+    assert Ast.Pipeline.redirect_targets(ast) == ["chat://#room1"]
+    assert Enum.map(ast.redirect_to.targets, &("#{&1}")) == ["chat://#room1"]
   end
 
   test "URL-style redirects and non-URL redirects are parsed" do
     {:ok, ast} = Parser.scan_and_parse("foo | bar | baz *> ops chat://#dev")
     assert ast.redirect_to != nil
     assert Enum.count(ast.redirect_to.targets) == 2
-    assert Ast.Pipeline.redirect_targets(ast) == ["ops", "#dev"]
-    assert Enum.map(ast.redirect_to.targets, &("#{&1}")) == ["ops", "#dev"]
+    assert Ast.Pipeline.redirect_targets(ast) == ["ops", "chat://#dev"]
+    assert Enum.map(ast.redirect_to.targets, &("#{&1}")) == ["ops", "chat://#dev"]
   end
 
   test "URL speling errors are caught :)" do
