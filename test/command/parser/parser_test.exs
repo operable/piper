@@ -267,6 +267,15 @@ defmodule Parser.ParserTest do
     assert "#{ast}" == "foods:milk | foods:cocoa | foods:marshmallows > friend"
   end
 
+  test "invocations have unique ids" do
+    {:ok, ast} = Parser.scan_and_parse("goodbye | hello | goodbye", TestHelpers.parser_options())
+    assert Enum.count(ast) == 3
+    ids = Enum.map(ast, &(&1.id))
+    assert Enum.take_while(ids, &is_nil/1) == []
+    assert Enum.dedup(ids) == ids
+    assert "#{ast}" == "salutations:goodbye | salutations:hello | salutations:goodbye"
+  end
+
   test "nested variable reference" do
     should_parse "foo --opt1=$blah[3].wubba", nil, 1
   end
