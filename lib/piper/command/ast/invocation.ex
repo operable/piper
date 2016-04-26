@@ -4,7 +4,7 @@ defmodule Piper.Command.Ast.Invocation do
   alias Piper.Command.Ast
   alias Piper.Command.Parser
 
-  defstruct [name: nil, args: [], redir: nil, meta: nil]
+  defstruct [id: nil, name: nil, args: [], redir: nil, meta: nil]
 
   def new(%Ast.Name{}=name, opts \\ []) do
     args = Keyword.get(opts, :args, [])
@@ -19,7 +19,7 @@ defmodule Piper.Command.Ast.Invocation do
           %{pipeline.stages | left: updated_left}
         end
       {:command, name, meta} ->
-        %__MODULE__{name: name, args: args, redir: redir, meta: meta}
+        %__MODULE__{id: UUID.uuid4, name: name, args: args, redir: redir, meta: meta}
     end
   end
 

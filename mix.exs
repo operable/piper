@@ -22,7 +22,8 @@ defmodule Piper.Mixfile do
   defp elixirc_paths(_), do: ["lib"]
 
   defp deps do
-    [{:poison, "~> 1.5.2"}]
+    [{:poison, "~> 1.5.2"},
+     {:uuid, "~> 1.1.3"}]
   end
 
 end
