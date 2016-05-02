@@ -18,7 +18,7 @@ TRUE                       = (true|TRUE)
 FALSE                      = (false|FALSE)
 FLOAT                      = (\+[0-9]+\.[0-9]+|\-[0-9]+\.[0-9]+|[0-9]+\.[0-9]+)
 INTEGER                    = (\+[0-9]+|\-[0-9]+|[0-9]+)
-NAME                       = [a-zA-Z]+[a-zA-Z0-9_\-]*
+NAME                       = [a-zA-Z]+[a-zA-Z0-9_\-\.]*
 DQUOTED_STRING             = "(\\\^.|\\.|[^"])*"
 SQUOTED_STRING             = '(\\\^.|\\.|[^'])*'
 DATUM                      = [^\s\[\]\$\-"':\.=\n\r]+[^\s\[\]\$"':\.=\n\r]*
