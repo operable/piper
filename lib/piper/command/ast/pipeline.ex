@@ -17,14 +17,7 @@ defmodule Piper.Command.Ast.Pipeline do
   def redirect_targets(pipeline, default \\ nil) do
     case pipeline.redirect_to do
       nil ->
-        cond do
-          default == nil ->
-            []
-          is_list(default) ->
-            default
-          true ->
-            [default]
-        end
+        List.wrap(default)
       redirect ->
         Enum.map(redirect.targets, &(&1.value))
     end
