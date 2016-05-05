@@ -138,9 +138,20 @@ defmodule Piper.Permissions.ParserTest do
   test "parser and lexer error handling" do
     {:error, "illegal characters \"!r\"."} = Parser.parse("when command is foo:bar mst have foo!read")
     {:error, "(Line: 1, Col: 5) syntax error before: \"comand\"."} = Parser.parse("when comand is foo:bar but have foo:read")
+    {:error, "(Line: 1, Col: 24) syntax error before: \"foo\"."} = Parser.parse("when command is foo:bar foo:read")
     {:error,
-     "(Line: 1, Col: 34) References to permissions must start with a command bundle name or \"site\"."} =
+     "(Line: 1, Col: 34) References to permissions must be the literal \"allow\" or start with a command bundle name or \"site\"."} =
       Parser.parse("when command is foo:bar must have foo")
+  end
+
+  test "rules allow the keyword 'allow' in permission expressions" do
+    matches "when command is s3:bucket allow", []
+  end
+
+  test "when 'allow' is used it must be the only phrase in the permission expression" do
+    {:error, "(Line: 1, Col: 34) syntax error before: \"allow\"."} = Parser.parse("when command is foo:bar must have allow")
+    {:error, "(Line: 1, Col: 46) syntax error before: \"allow\"."} = Parser.parse("when command is foo:bar must have foo:read or allow")
+    {:error, "(Line: 1, Col: 30) syntax error before: \"and\"."} = Parser.parse("when command is foo:bar allow and allow")
   end
 
 end

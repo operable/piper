@@ -1,6 +1,6 @@
 Definitions.
 
-RESERVED                        = (when|with|must|have|command|true|false|any|all|is)
+RESERVED                        = (when|with|must|have|command|true|false|any|all|is|allow)
 BARE_ARG                        = arg
 AGGREGATE_ARGS                  = args
 INDEXED_ARG                     = arg\[([0-9])+\]

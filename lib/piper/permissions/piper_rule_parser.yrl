@@ -1,7 +1,7 @@
 Terminals
 
 %% Keywords
-all any arg command have is must option when with
+all any arg command have is must option when with allow
 
 %% Operators
 and or in equiv not_equiv lt gt lte gte
@@ -41,6 +41,8 @@ command_selector ->
   when command command_criteria with input_criterion : Lhs = update('$3', [{left, ?AST("Var"):new(<<"command">>)}]),
                                                        ?AST("BinaryExpr"):new('$4', [{left, Lhs},
                                                                                      {right, '$5'}]).
+permission_selector ->
+  allow : ?AST("ConditionalExpr"):new('$1').
 permission_selector ->
   must have permission_criterion : '$3'.
 
@@ -235,7 +237,7 @@ verify_permission_name(String) ->
     true ->
       String;
     false ->
-      return_error(get_location(String), "References to permissions must start with a command bundle name or \"site\"")
+      return_error(get_location(String), "References to permissions must be the literal \"allow\" or start with a command bundle name or \"site\"")
   end.
 
 verify_name(String) ->

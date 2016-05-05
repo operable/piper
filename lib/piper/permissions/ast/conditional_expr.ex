@@ -5,12 +5,16 @@ defmodule Piper.Permissions.Ast.ConditionalExpr do
   defstruct ['$ast$': "cond_expr", line: nil, col: nil, op: nil, left: nil, right: nil,
              parens: false]
 
-  def new({type, {line, col}, _}, opts \\ []) when type in [:and, :or] do
+  def new({type, {line, col}, _}, opts) when type in [:and, :or] do
     lhs = Keyword.get(opts, :left)
     rhs = Keyword.get(opts, :right)
     parens = Keyword.get(opts, :parens, false)
     %__MODULE__{line: line, col: col, op: type, left: lhs,
                 right: rhs, parens: parens}
+  end
+
+  def new({:allow, {line, col}, _}) do
+    %__MODULE__{line: line, col: col, op: :allow}
   end
 
   def update(expr, opts \\ []) do

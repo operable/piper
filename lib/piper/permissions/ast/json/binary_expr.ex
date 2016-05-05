@@ -5,6 +5,11 @@ defimpl Piper.Permissions.Json, for: [Piper.Permissions.Ast.BinaryExpr,
 
   def from_json!(svalue, %{"line" => line,
                            "col" => col,
+                           "op" => "allow"}) do
+    %{svalue | line: line, col: col, op: :allow}
+  end
+  def from_json!(svalue, %{"line" => line,
+                           "col" => col,
                            "left" => left,
                            "right" => right,
                            "parens" => parens,
