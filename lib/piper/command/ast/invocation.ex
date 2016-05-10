@@ -1,13 +1,16 @@
 defmodule Piper.Command.Ast.Invocation do
 
+  alias Piper.Command.ParseContext
   alias Piper.Command.SemanticError
   alias Piper.Command.Ast
   alias Piper.Command.Parser
+  alias :piper_arg_parser, as: ArgParser
 
   defstruct [id: nil, name: nil, args: [], redir: nil, meta: nil]
 
-  def new(%Ast.Name{}=name, opts \\ []) do
-    args = Keyword.get(opts, :args, [])
+  def new({:string, _, _}=name, opts \\ []) do
+    name = Ast.Name.new(name)
+    args = Keyword.get(opts, :args, []) |> parse_args! |> consolidate_args
     redir = Keyword.get(opts, :redir)
     case resolve_name!(name) do
       {:pipeline, pipeline} ->
@@ -21,6 +24,44 @@ defmodule Piper.Command.Ast.Invocation do
       {:command, name, meta} ->
         %__MODULE__{id: UUID.uuid4, name: name, args: args, redir: redir, meta: meta}
     end
+  end
+
+  defp parse_args!([]), do: []
+  defp parse_args!(args) do
+    Enum.flat_map(args, &parse_arg!/1)
+  end
+
+  defp parse_arg!(%Ast.String{}=str) do
+    context = Process.get(:piper_cp_context)
+    current_pos = ParseContext.position(context)
+    ParseContext.set_position(context, {str.line, str.col})
+    try do
+      case ArgParser.parse_arg("#{str}") do
+        {:ok, opts} ->
+          opts
+        error ->
+          IO.inspect error
+          throw %SemanticError{text: str.value, reason: :bad_argument}
+      end
+    after
+      ParseContext.set_position(context, current_pos)
+    end
+  end
+  defp parse_arg!(arg), do: [arg]
+
+  defp consolidate_args([]), do: []
+  defp consolidate_args([_]=args), do: args
+  defp consolidate_args(args), do: consolidate_args(args, [])
+
+  defp consolidate_args([], accum) do
+    Enum.reverse(accum)
+  end
+  defp consolidate_args([%Ast.Option{needs_value: true}=option, value|t], accum) do
+    option = Ast.Option.set_value(option, value)
+    consolidate_args(t, [option|accum])
+  end
+  defp consolidate_args([h|t], accum) do
+    consolidate_args(t, [h|accum])
   end
 
   defp resolve_name!(%Ast.Name{bundle: bundle, entity: entity}=name) do
@@ -68,8 +109,8 @@ defmodule Piper.Command.Ast.Invocation do
 
   defp tokenize(name_part, entity, bundle? \\ true) do
     case :piper_cmd_lexer.tokenize(name_part) do
-      {:ok, [{type, _, value}]} ->
-        {type, {entity.line, entity.col}, value}
+      {:ok, [token]} ->
+        token
       {:ok, _} ->
         if bundle? do
           throw SemanticError.new(entity, {:bad_bundle, name_part})

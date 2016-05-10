@@ -53,8 +53,8 @@ defmodule Parser.ParserTest do
     should_parse "wubba:foo --bar=1 -f"
     should_parse "foo --bar=1 -f", "foo --bar=1 -f"
 
-    should_parse "ec2:list-vm --tags=\"a,b,c\" 10", "ec2:list-vm --tags=a,b,c 10"
-    should_parse "ec2 --tags=\"a,b,c\" 10", "ec2 --tags=a,b,c 10"
+    should_parse "ec2:list-vm --tags=\"a,b,c\" 10", "ec2:list-vm --tags=\"a,b,c\" 10"
+    should_parse "ec2 --tags=\"a,b,c\" 10", "ec2 --tags=\"a,b,c\" 10"
 
     should_parse "foo --bar=testing/testy", "foo --bar=testing/testy"
   end
@@ -92,13 +92,13 @@ defmodule Parser.ParserTest do
   end
 
   test "parsing double quoted string arguments" do
-    should_parse "wubba:foo \"123 abc\"", "wubba:foo 123 abc", 1
-    should_parse "foo \"123 abc\"", "foo 123 abc", 1
+    should_parse "wubba:foo \"123 abc\"", "wubba:foo \"123 abc\"", 1
+    should_parse "foo \"123 abc\"", "foo \"123 abc\"", 1
   end
 
   test "parsing single quoted string arguments" do
-    should_parse "wubba:foo '123 abc'", "wubba:foo 123 abc", 1
-    should_parse "foo '123 abc'", "foo 123 abc", 1
+    should_parse "wubba:foo '123 abc'", "wubba:foo '123 abc'", 1
+    should_parse "foo '123 abc'", "foo '123 abc'", 1
   end
 
   test "using variables for command names should fail" do

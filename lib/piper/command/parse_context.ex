@@ -31,6 +31,10 @@ defmodule Piper.Command.ParseContext do
     Agent.update(agent, &(do_advance_count(&1, count)))
   end
 
+  def set_position(agent, position) do
+    Agent.update(agent, &(do_set_position(&1, position)))
+  end
+
   def position(agent) do
     Agent.get(agent, fn(state) -> {state.linenum, state.current_token} end)
   end
@@ -49,6 +53,10 @@ defmodule Piper.Command.ParseContext do
 
   defp do_start_line(state, linenum) do
     %{state | linenum: linenum, current_token: 1, next_token: 0}
+  end
+
+  defp do_set_position(state, {linenum, col}) do
+    %{state | linenum: linenum, current_token: col, next_token: col}
   end
 
   defp do_advance_count(state, count) do

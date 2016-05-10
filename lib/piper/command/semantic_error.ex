@@ -52,6 +52,9 @@ defmodule Piper.Command.SemanticError do
   defp message_for_reason(:alias_cycle, _text, [first, last]) do
     "Infinite alias expansion loop detected '#{first}' -> '#{last}'."
   end
+  defp message_for_reason(:bad_argument, text, _) do
+    "Bad argument '#{text}'"
+  end
 
   defp init({_, _, text}) do
     %__MODULE__{text: String.Chars.to_string(text)}

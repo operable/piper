@@ -10,6 +10,9 @@ end
 
 defimpl String.Chars, for: [Piper.Command.Ast.String] do
 
+  def to_string(%Piper.Command.Ast.String{enclosed_by: eb, value: value}) when eb != nil do
+    "#{eb}#{value}#{eb}"
+  end
   def to_string(str) do
     str.value
   end

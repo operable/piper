@@ -1,3 +1,5 @@
+alias Piper.Command.Ast.Util
+
 defmodule Piper.Command.Ast.Pipeline do
 
   alias Piper.Command.Ast
@@ -31,10 +33,12 @@ defmodule Piper.Command.Ast.PipelineStage do
 
   defstruct [line: nil, col: nil, left: nil, right: nil, type: nil]
 
-  def new({type, {line, col}, _}, %Ast.PipelineStage{right: nil}=left, %Ast.PipelineStage{}=right) do
+  def new({type, meta, _}, %Ast.PipelineStage{right: nil}=left, %Ast.PipelineStage{}=right) do
+    {line, col} = Util.position(meta)
     %{left | type: type, line: line, col: col, right: right}
   end
-  def new({type, {line, col}, _}, left, right) when type in [:pipe, :iff] do
+  def new({type, meta, _}, left, right) when type in [:pipe, :iff] do
+    {line, col} = Util.position(meta)
     %__MODULE__{line: line, col: col, left: left, right: right, type: type}
   end
 
