@@ -92,11 +92,16 @@ defmodule Piper.Permissions.Parser do
   end
 
   def rule_to_json!(%Ast.Rule{}=rule) do
-    Poison.encode!(rule)
+    # Yes, this is a filthy hack until we can convert all the
+    # protocols and implementations that assume we want a JSON string
+    # instead of a map
+    rule |> Poison.encode! |> Poison.decode!
   end
 
   def json_to_rule!(json) when is_binary(json) do
-    json = Poison.decode!(json)
+    json |> Poison.decode! |> json_to_rule!
+  end
+  def json_to_rule!(json) when is_map(json) do
     Piper.Permissions.Json.from_json!(json, json)
   end
 
