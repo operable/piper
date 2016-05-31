@@ -16,6 +16,7 @@ HIPCHAT_EMOJI              = \([a-zA-Z]+[a-zA-Z0-9_\-]*\)
 VAR                        = \$[a-zA-Z]+[a-zA-Z0-9_]*
 TRUE                       = (true|TRUE)
 FALSE                      = (false|FALSE)
+VERSION                    = [0-9]+\.[0-9]+\.[0-9]+
 FLOAT                      = (\+[0-9]+\.[0-9]+|\-[0-9]+\.[0-9]+|[0-9]+\.[0-9]+)
 INTEGER                    = (\+[0-9]+|\-[0-9]+|[0-9]+)
 NAME                       = [a-zA-Z]+[a-zA-Z0-9_\-\.]*
@@ -45,6 +46,7 @@ Rules.
 {VAR}                      : advance_count(length(TokenChars)), {token, {variable, position(), tl(TokenChars)}}.
 {TRUE}                     : advance_count(length(TokenChars)), {token, {bool, position(), "true"}}.
 {FALSE}                    : advance_count(length(TokenChars)), {token, {bool, position(), "false"}}.
+{VERSION}                  : advance_count(length(TokenChars)), {token, {string, position(), TokenChars}}.
 {FLOAT}                    : advance_count(length(TokenChars)), {token, {float, position(), TokenChars}}.
 {INTEGER}                  : advance_count(length(TokenChars)), {token, {integer, position(), TokenChars}}.
 {DOUBLE_DASH}              : advance_count(length(TokenChars)), {token, {longopt, position(), "--"}}.
