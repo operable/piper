@@ -280,6 +280,11 @@ defmodule Parser.ParserTest do
     should_parse "foo --opt1=$blah[3].wubba", nil, 1
   end
 
+  test "versions are strings" do
+    {:ok, ast} = Parser.scan_and_parse("bundle enable 1.2.3")
+    assert "#{ast}" == "bundle enable 1.2.3"
+  end
+
   test "malformed nested variable references fails to parse" do
     should_not_parse "foo --opt1=$blah[3.wubba"
   end

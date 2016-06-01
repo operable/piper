@@ -34,6 +34,10 @@ defmodule Parser.LexerTest do
                                                         text(["123", "1072.05", "0.05"])]
   end
 
+  test "lexing versions and floats" do
+    assert matches Lexer.tokenize("3.14 1.2.3 0.55 0.0.1", 5), [types([:float, :string, :float, :string])]
+  end
+
   test "lexing strings that start with numbers" do
     assert matches Lexer.tokenize("0fcaec64-0792-4826-8637-9a50593a7c03", 5), [types([:datum]),
                                                                             text(["0fcaec64-0792-4826-8637-9a50593a7c03"])]
@@ -252,6 +256,10 @@ defmodule Parser.LexerTest do
 
   test "unterminated string causes error" do
     {:error, {:unexpected_input, 10, _}} = Lexer.tokenize("ec2-find \"test-db", 5)
+  end
+
+  test "version numbers are lexed" do
+    assert matches Lexer.tokenize("123.0.1", 5), [types([:string])]
   end
 
 end
