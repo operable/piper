@@ -31,4 +31,22 @@ defmodule Piper.Permissions.Ast.Rule do
   end
   def find_command_name(_), do: nil
 
+  def permissions_used(rule = %__MODULE__{}) do
+    permissions_used(rule.permission_selector, []) |> Enum.uniq |> Enum.sort
+  end
+
+  def permissions_used(%Ast.PermissionExpr{perms: %Ast.List{values: values}}, accum) do
+    Enum.reduce(values, accum, &([&1.value|&2]))
+  end
+  def permissions_used(%Ast.PermissionExpr{perms: %Ast.String{value: name}}, accum) do
+    [name|accum]
+  end
+  def permissions_used(%{left: left, right: right}, accum) do
+    accum = permissions_used(left, accum)
+    permissions_used(right, accum)
+  end
+  def permissions_used(_, accum) do
+    accum
+  end
+
 end
