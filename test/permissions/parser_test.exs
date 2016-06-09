@@ -14,6 +14,7 @@ defmodule Piper.Permissions.ParserTest do
     assert "#{ast}" == text
     assert "#{json_ast}" == text
     assert Enum.sort(perms) == parsed_perms
+    assert Enum.sort(perms) == Rule.permissions_used(json_ast)
   end
 
   defp matches_normalized(text, perms, score \\ 0) do
