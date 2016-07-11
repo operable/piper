@@ -99,7 +99,7 @@ defmodule Piper.Command.ParseContext do
         expansions
         |> Enum.filter(fn({_, count}) -> max - count in -1..1 end)
         |> Enum.map(fn({alias, _}) -> alias end)
-        |> Enum.unique
+        |> Enum.uniq
         |> alias_cycle_error(state)
     end
   end
