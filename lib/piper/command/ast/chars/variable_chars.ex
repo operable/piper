@@ -11,7 +11,7 @@ defimpl String.Chars, for: Piper.Command.Ast.Variable do
       text <> ops_to_text(ops)
     end
   end
-  def to_string(%Variable{name: name, value: value}) when is_map(value) or is_list(value) do
+  def to_string(%Variable{name: name, value: value}) when is_map(value) do
     raise BadValueError, name: "$#{name}", value: value
   end
   def to_string(%Variable{value: value}) do
