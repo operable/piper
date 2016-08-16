@@ -1,5 +1,6 @@
 defimpl String.Chars, for: Piper.Command.Ast.Variable do
 
+  alias Piper.Command.Ast.BadValueError
   alias Piper.Command.Ast.Variable
 
   def to_string(%Variable{name: name, value: nil, ops: ops}) do
@@ -9,6 +10,9 @@ defimpl String.Chars, for: Piper.Command.Ast.Variable do
     else
       text <> ops_to_text(ops)
     end
+  end
+  def to_string(%Variable{name: name, value: value}) when is_map(value) or is_list(value) do
+    raise BadValueError, name: "$#{name}", value: value
   end
   def to_string(%Variable{value: value}) do
     "#{value}"
