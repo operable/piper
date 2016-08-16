@@ -7,6 +7,7 @@ defmodule Bind.BindTest do
   alias Piper.Command.Bind.Scope
   alias Piper.Command.Bind
   alias Piper.Command.Ast, as: Ast
+  alias Piper.Command.Ast.BadValueError
 
   defp link_scopes([]) do
     Bind.Scope.empty_scope()
@@ -92,6 +93,12 @@ defmodule Bind.BindTest do
   end
 
   # go up the chain, too
+
+  test "binding a map to a variable fails" do
+    scope = Bind.Scope.from_map(%{"foo" => %{"bar" => 123}})
+    {:ok, ast} = parse_and_bind2("my:cmd --test=$foo", scope)
+    assert_raise BadValueError, fn() -> "#{ast}" end
+  end
 
   test "array indexing" do
     scope = Bind.Scope.from_map(%{"region" => ["us-west-1", "us-east-1"]})
