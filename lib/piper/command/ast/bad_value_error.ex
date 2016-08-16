@@ -9,7 +9,7 @@ defmodule Piper.Command.Ast.BadValueError do
                    _ ->
                      "#{inspect value, pretty: true}"
                  end
-    "#{text_value} bound to $#{name} instead of expected scalar value."
+    "#{text_value} bound to #{name} instead of expected scalar value."
   end
 
 end
