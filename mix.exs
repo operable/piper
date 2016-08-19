@@ -4,7 +4,7 @@ defmodule Piper.Mixfile do
   def project do
     [app: :piper,
      version: "0.13.0",
-     elixir: "~> 1.2",
+     elixir: "~> 1.3.1",
      erlc_paths: ["lib/piper/permissions", "lib/piper/command"],
      erlc_options: [:debug_info, :warnings_as_errors],
      leex_options: [:warnings_as_errors],

@@ -11,9 +11,7 @@ defmodule Parser.ParserTest do
   defp count_or_nil(count, _), do: count
 
   defmacrop should_parse(text, ast_text \\ nil, stage_count \\ nil) do
-    if ast_text == nil do
-      ast_text = text
-    end
+    ast_text = ast_text || text
     expect_parse(text, ast_text, true, stage_count)
   end
 
@@ -22,10 +20,7 @@ defmodule Parser.ParserTest do
   end
 
   defp expect_parse(text, ast_text, expect, stage_count) do
-    if ast_text == nil do
-      ast_text = text
-    end
-
+    ast_text = ast_text || text
     quote bind_quoted: [text: text, ast_text: ast_text, expect: expect, stage_count: stage_count] do
       expected_ast = Parser.scan_and_parse(text)
       actual_ast = ast_string(ast_text)
