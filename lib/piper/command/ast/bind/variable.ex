@@ -1,7 +1,7 @@
-defimpl Piper.Command.Bindable, for: Piper.Command.Ast.Variable do
+defimpl Piper.Common.Bindable, for: Piper.Command.Ast.Variable do
 
-  alias Piper.Command.Scoped
-  alias Piper.Command.BindError
+  alias Piper.Common.Scope.Scoped
+  alias Piper.Common.BindError
 
   def bind(var, scope) do
     case Scoped.lookup_variable(scope, var) do

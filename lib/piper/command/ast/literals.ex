@@ -2,9 +2,11 @@ defmodule Piper.Command.Ast.Integer do
 
   defstruct [line: nil, col: nil, value: nil]
 
-
   def new({:integer, {line, col}, value}) do
     %__MODULE__{line: line, col: col, value: String.to_integer(String.Chars.to_string(value))}
+  end
+  def new({:integer, _, value}) do
+    new({:integer, {0, 0}, value})
   end
 
 end
@@ -16,6 +18,9 @@ defmodule Piper.Command.Ast.Float do
   def new({:float, {line, col}, value}) do
     %__MODULE__{line: line, col: col, value: String.to_float(String.Chars.to_string(value))}
   end
+  def new({:float, _, value}) do
+    new({:float, {0, 0}, value})
+  end
 
 end
 
@@ -25,6 +30,9 @@ defmodule Piper.Command.Ast.Bool do
 
   def new({:bool, {line, col}, value}) do
     %__MODULE__{line: line, col: col, value: convert(value)}
+  end
+  def new({:bool, _, value}) do
+    new({:bool, {0, 0}, value})
   end
 
   def new(line, col, value) do

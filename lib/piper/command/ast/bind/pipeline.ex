@@ -1,6 +1,6 @@
-defimpl Piper.Command.Bindable, for: Piper.Command.Ast.Pipeline do
+defimpl Piper.Common.Bindable, for: Piper.Command.Ast.Pipeline do
 
-  alias Piper.Command.Bindable
+  alias Piper.Common.Bindable
 
   def resolve(pipeline, scope) do
     Bindable.resolve(pipeline.stages, scope)
@@ -17,9 +17,9 @@ defimpl Piper.Command.Bindable, for: Piper.Command.Ast.Pipeline do
 
 end
 
-defimpl Piper.Command.Bindable, for: Piper.Command.Ast.PipelineStage do
+defimpl Piper.Common.Bindable, for: Piper.Command.Ast.PipelineStage do
 
-  alias Piper.Command.Bindable
+  alias Piper.Common.Bindable
 
   def resolve(stage, scope) do
     case Bindable.resolve(stage.left, scope) do

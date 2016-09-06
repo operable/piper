@@ -1,7 +1,7 @@
-defmodule Piper.Command.Bind.Scope do
+defmodule Piper.Common.Scope do
 
-  alias Piper.Command.Bindable
-  alias Piper.Command.BindError
+  alias Piper.Common.Bindable
+  alias Piper.Common.BindError
 
   defstruct [values: %{}, bindings: %{}, parent: nil]
 
@@ -24,9 +24,9 @@ defmodule Piper.Command.Bind.Scope do
 
 end
 
-defimpl Piper.Command.Scoped, for: Piper.Command.Bind.Scope do
+defimpl Piper.Common.Scope.Scoped, for: Piper.Common.Scope do
 
-  alias Piper.Command.Bind.Scope
+  alias Piper.Common.Scope
 
   def set_parent(%Scope{parent: nil}=scope, parent) do
     {:ok, %{scope | parent: parent}}
@@ -46,7 +46,7 @@ defimpl Piper.Command.Scoped, for: Piper.Command.Bind.Scope do
   def lookup(%Scope{values: values, parent: parent}, name) do
     case Map.get(values, name) do
       nil ->
-        Piper.Command.Scoped.lookup(parent, name)
+        Piper.Common.Scope.Scoped.lookup(parent, name)
       value ->
         {:ok, value}
     end
@@ -54,10 +54,19 @@ defimpl Piper.Command.Scoped, for: Piper.Command.Bind.Scope do
 
   def set(%Scope{values: values}=scope, name, value) do
     case lookup(scope, name) do
-      {:error, :not_found} ->
+      {:not_found, _} ->
         {:ok, %{scope | values: Map.put(values, name, value)}}
       {:ok, _} ->
         {:error, :already_stored}
+    end
+  end
+
+  def update(%Scope{values: values}=scope, name, value) do
+    case lookup(scope, name) do
+      {:ok, _} ->
+        {:ok, %{scope | values: Map.put(values, name, value)}}
+      error ->
+        error
     end
   end
 

@@ -3,5 +3,6 @@
 /deps
 erl_crash.dump
 *.ez
-lib/piper/permissions/*.erl
 lib/piper/command/*.erl
+lib/piper/permissions/*.erl
+src/*.erl

@@ -2,8 +2,8 @@ defmodule Exec.ScopeTest do
 
   use ExUnit.Case
 
-  alias Piper.Command.Scoped
-  alias Piper.Command.Bind.Scope
+  alias Piper.Common.Scope.Scoped
+  alias Piper.Common.Scope
 
   defmacrop verify_scope(scope, values) do
     quote do
