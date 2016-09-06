@@ -1,4 +1,4 @@
-defmodule Piper.Command.BindError do
+defmodule Piper.Common.BindError do
 
   defstruct [:text, :reason,
              :meta]

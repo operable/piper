@@ -1,4 +1,4 @@
-defimpl Piper.Command.Bindable, for: [Piper.Command.Ast.Integer,
+defimpl Piper.Common.Bindable, for: [Piper.Command.Ast.Integer,
                                       Piper.Command.Ast.Float,
                                       Piper.Command.Ast.Bool,
                                       Piper.Command.Ast.String] do

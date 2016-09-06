@@ -5,13 +5,11 @@ defmodule Piper.Mixfile do
     [app: :piper,
      version: "0.14.0",
      elixir: "~> 1.3.1",
-     erlc_paths: ["lib/piper/permissions", "lib/piper/command"],
      erlc_options: [:debug_info, :warnings_as_errors],
      leex_options: [:warnings_as_errors],
      elixirc_paths: elixirc_paths(Mix.env),
-     build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps]
+     deps: deps] ++ compile_protocols(Mix.env)
   end
 
   def application do
@@ -25,5 +23,8 @@ defmodule Piper.Mixfile do
     [{:poison, "~> 2.0"},
      {:uuid, "~> 1.1.3"}]
   end
+
+  defp compile_protocols(:prod), do: [build_embedded: true]
+  defp compile_protocols(_), do: []
 
 end

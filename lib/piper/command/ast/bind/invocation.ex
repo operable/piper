@@ -1,6 +1,6 @@
-defimpl Piper.Command.Bindable, for: Piper.Command.Ast.Invocation do
+defimpl Piper.Common.Bindable, for: Piper.Command.Ast.Invocation do
 
-  alias Piper.Command.Bindable
+  alias Piper.Common.Bindable
 
   def resolve(invocation, scope) do
     Enum.reduce_while(invocation.args, {:ok, scope}, &resolve_arg/2)
