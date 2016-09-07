@@ -9,6 +9,9 @@ defprotocol Piper.Common.Scope.Scoped do
   @spec set(Piper.Common.Scope.Scoped, String.t, term()) :: {:ok, Piper.Common.Scope.Scoped} | {:error, :already_stored}
   def set(scope, name, value)
 
+  @spec erase(Piper.Common.Scope.Scoped, String.t) :: Piper.Common.Scope.Scoped
+  def erase(scope, name)
+
   @spec update(Piper.Common.Scope.Scoped, String.t, term()) :: {:ok, Piper.Common.Scope.Scoped} | {:error, :not_found}
   def update(scope, name, value)
 

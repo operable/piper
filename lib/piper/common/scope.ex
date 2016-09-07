@@ -61,6 +61,10 @@ defimpl Piper.Common.Scope.Scoped, for: Piper.Common.Scope do
     end
   end
 
+  def erase(%Scope{values: values}=scope, name) do
+    %{scope | values: Map.delete(values, name)}
+  end
+
   def update(%Scope{values: values}=scope, name, value) do
     case lookup(scope, name) do
       {:ok, _} ->
