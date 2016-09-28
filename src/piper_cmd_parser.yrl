@@ -146,9 +146,9 @@ var_ops ->
 var_ops ->
   lbracket datum rbracket : [{key, token_to_string('$2')}].
 var_ops ->
-  dot string : [{key, token_to_string('$2')}].
+  dot string : make_keys('$2').
 var_ops ->
-  dot datum : [{key, token_to_string('$2')}].
+  dot datum : make_keys('$2').
 var_ops ->
   lbracket integer rbracket var_ops : [{index, token_to_integer('$2')}] ++ '$4'.
 var_ops ->
@@ -223,3 +223,10 @@ parse_redir_url({_, Line, _}, _) ->
   return_error(Line, "URL redirect targets must begin with chat://").
 extract_linenum({_, {LineNum, _}, _}) ->
   LineNum.
+
+%% We need to split keys out manually when dotted map notation is used.
+%% This is because datum entities are greedy and will consume all but the first
+%% dot.
+make_keys({_, _, Value}) ->
+  Keys = string:tokens(Value, "."),
+  [{key, list_to_binary(Key)} || Key <- Keys].

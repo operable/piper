@@ -127,6 +127,15 @@ defmodule Bind.BindTest do
     assert "#{ast}" == "site:monkey_with_vms --region=us-east-1 --notify=admin3"
   end
 
+  test "even moar nested access" do
+    env = %{"author" => %{"user" => %{"handle" => "buffy"}}}
+    scope = Scope.from_map(env)
+    {:ok, ast} = parse_and_bind2("echo $author[user][handle]", scope)
+    assert "#{ast}" == "echo buffy"
+    {:ok, ast} = parse_and_bind2("echo $author.user.handle", scope)
+    assert "#{ast}" == "echo buffy"
+  end
+
   test "nested access with spaces in keys" do
     envs = [%{"region" => "us-east-1", "env owners" => ["admin1", "admin3"]}, %{"region" => "us-west-2", "owner" => "admin2"}]
     scope = Scope.from_map(%{"envs" => envs})
