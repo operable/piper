@@ -84,6 +84,7 @@ defmodule Parser.ParserTest do
   test "parsing args" do
     should_parse "wubba:foo 123 abc", nil, 1
     should_parse "foo 123 abc", "foo 123 abc", 1
+    should_parse "foo bar/baz.quux", "foo bar/baz.quux", 1
   end
 
   test "parsing double quoted string arguments" do

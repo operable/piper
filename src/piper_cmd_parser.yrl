@@ -87,6 +87,10 @@ arg ->
 arg ->
   string ns_separator emoji : merge_strings(['$1', '$2', '$3']).
 arg ->
+  datum dot datum : merge_strings(['$1', '$2', '$3']).
+arg ->
+  datum dot string : merge_strings(['$1', '$2', '$3']).
+arg ->
   any : '$1'.
 
 short_option ->
