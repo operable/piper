@@ -28,34 +28,34 @@ NEWLINE                    = (\n|\r\n)
 
 Rules.
 
-{PIPE}                     : advance_count(length(TokenChars)), {token, {pipe, position(), "|"}}.
-{IFF}                      : advance_count(length(TokenChars)), {token, {iff, position(), "&&"}}.
-{REDIR_MULTI}              : advance_count(length(TokenChars)), {token, {redir_multi, position(), "*>"}}.
-{REDIR_ONE}                : advance_count(length(TokenChars)), {token, {redir_one, position(), ">"}}.
-{LBRACKET}                 : advance_count(length(TokenChars)), {token, {lbracket, position(), "["}}.
-{RBRACKET}                 : advance_count(length(TokenChars)), {token, {rbracket, position(), "]"}}.
-{WS}{COLON}                : advance_count(length(TokenChars)), {token, {bad_colon, position(), ":"}}.
-{COLON}{WS}                : advance_count(length(TokenChars)), {token, {bad_colon, position(), ":"}}.
-{COLON}                    : advance_count(length(TokenChars)), {token, {colon, position(), ":"}}.
-{SLASH}                    : advance_count(length(TokenChars)), {token, {slash, position(), "/"}}.
-{EQUALS}                   : advance_count(length(TokenChars)), {token, {equals, position(), "="}}.
-{DOT}                      : advance_count(length(TokenChars)), {token, {dot, position(), "."}}.
-{WS}{SLACK_EMOJI}          : advance_count(length(TokenChars)), {token, {emoji, position(), tl(TokenChars)}}.
-{SLACK_EMOJI}              : advance_count(length(TokenChars)), {token, {emoji, position(), TokenChars}}.
-{HIPCHAT_EMOJI}            : advance_count(length(TokenChars)), {token, {emoji, position(), TokenChars}}.
-{VAR}                      : advance_count(length(TokenChars)), {token, {variable, position(), tl(TokenChars)}}.
-{TRUE}                     : advance_count(length(TokenChars)), {token, {bool, position(), "true"}}.
-{FALSE}                    : advance_count(length(TokenChars)), {token, {bool, position(), "false"}}.
-{VERSION}                  : advance_count(length(TokenChars)), {token, {string, position(), TokenChars}}.
-{FLOAT}                    : advance_count(length(TokenChars)), {token, {float, position(), TokenChars}}.
-{INTEGER}                  : advance_count(length(TokenChars)), {token, {integer, position(), TokenChars}}.
-{DOUBLE_DASH}              : advance_count(length(TokenChars)), {token, {longopt, position(), "--"}}.
-{SINGLE_DASH}              : advance_count(length(TokenChars)), {token, {shortopt, position(), "-"}}.
-{NAME}                     : advance_count(length(TokenChars)), {token, {string, position(), TokenChars}}.
-{DQUOTED_STRING}           : advance_count(length(TokenChars)), {token, {string, position(), clean_dquotes(TokenChars)}}.
-{SQUOTED_STRING}           : advance_count(length(TokenChars)), {token, {string, position(), clean_squotes(TokenChars)}}.
-{DATUM}                    : advance_count(length(TokenChars)), {token, {datum, position(), TokenChars}}.
-{WS}                       : advance_count(length(TokenChars)), skip_token.
+{PIPE}                     : {token, {pipe, advance_count(length(TokenChars)), "|"}}.
+{IFF}                      : {token, {iff, advance_count(length(TokenChars)), "&&"}}.
+{REDIR_MULTI}              : {token, {redir_multi, advance_count(length(TokenChars)), "*>"}}.
+{REDIR_ONE}                : {token, {redir_one, advance_count(length(TokenChars)), ">"}}.
+{LBRACKET}                 : {token, {lbracket, advance_count(length(TokenChars)), "["}}.
+{RBRACKET}                 : {token, {rbracket, advance_count(length(TokenChars)), "]"}}.
+{WS}{COLON}                : {token, {bad_colon, advance_count(length(TokenChars)), ":"}}.
+{COLON}{WS}                : {token, {bad_colon, advance_count(length(TokenChars)), ":"}}.
+{COLON}                    : {token, {colon, advance_count(length(TokenChars)), ":"}}.
+{SLASH}                    : {token, {slash, advance_count(length(TokenChars)), "/"}}.
+{EQUALS}                   : {token, {equals, advance_count(length(TokenChars)), "="}}.
+{DOT}                      : {token, {dot, advance_count(length(TokenChars)), "."}}.
+{WS}{SLACK_EMOJI}          : {token, {emoji, advance_count(length(TokenChars)), tl(TokenChars)}}.
+{SLACK_EMOJI}              : {token, {emoji, advance_count(length(TokenChars)), TokenChars}}.
+{HIPCHAT_EMOJI}            : {token, {emoji, advance_count(length(TokenChars)), TokenChars}}.
+{VAR}                      : {token, {variable, advance_count(length(TokenChars)), tl(TokenChars)}}.
+{TRUE}                     : {token, {bool, advance_count(length(TokenChars)), "true"}}.
+{FALSE}                    : {token, {bool, advance_count(length(TokenChars)), "false"}}.
+{VERSION}                  : {token, {string, advance_count(length(TokenChars)), TokenChars}}.
+{FLOAT}                    : {token, {float, advance_count(length(TokenChars)), TokenChars}}.
+{INTEGER}                  : {token, {integer, advance_count(length(TokenChars)), TokenChars}}.
+{DOUBLE_DASH}              : {token, {longopt, advance_count(length(TokenChars)), "--"}}.
+{SINGLE_DASH}              : {token, {shortopt, advance_count(length(TokenChars)), "-"}}.
+{NAME}                     : {token, {string, advance_count(length(TokenChars)), TokenChars}}.
+{DQUOTED_STRING}           : {token, {string, advance_count(length(TokenChars)), clean_dquotes(TokenChars)}}.
+{SQUOTED_STRING}           : {token, {string, advance_count(length(TokenChars)), clean_squotes(TokenChars)}}.
+{DATUM}                    : {token, {datum, advance_count(length(TokenChars)), TokenChars}}.
+{WS}                       : skip_token.
 {NEWLINE}+                 : advance_line(TokenLine), skip_token.
 
 Erlang code.
@@ -93,10 +93,6 @@ tokenize(Text) when is_list(Text) ->
 init(MaxDepth) ->
   {ok, Context} = 'Elixir.Piper.Command.ParseContext':start_link(MaxDepth),
   erlang:put(piper_cp_context, Context).
-
-position() ->
-  Context = erlang:get(piper_cp_context),
-  'Elixir.Piper.Command.ParseContext':position(Context).
 
 advance_line(TokenLine) ->
   Context = erlang:get(piper_cp_context),

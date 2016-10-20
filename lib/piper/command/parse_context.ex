@@ -8,7 +8,7 @@ defmodule Piper.Command.ParseContext do
   alias Piper.Command.ParserOptions
 
   defstruct expansions: [], max_depth: nil, linenum: 1,
-            current_token: 1, next_token: 1, parse_options: nil
+            current_token: 1, parse_options: nil
 
 
   def start_link(max_depth) when is_integer(max_depth) do
@@ -28,11 +28,15 @@ defmodule Piper.Command.ParseContext do
   end
 
   def advance_count(agent, count) do
-    Agent.update(agent, &(do_advance_count(&1, count)))
+    Agent.get_and_update(agent, &(do_advance_count(&1, count)))
   end
 
   def position(agent) do
     Agent.get(agent, fn(state) -> {state.linenum, state.current_token} end)
+  end
+
+  def set_position(agent, {linenum, current_token}) do
+    Agent.update(agent, fn(state) -> %{state | linenum: linenum, current_token: current_token} end)
   end
 
   def get_options(agent) do
@@ -48,11 +52,12 @@ defmodule Piper.Command.ParseContext do
   end
 
   defp do_start_line(state, linenum) do
-    %{state | linenum: linenum, current_token: 1, next_token: 0}
+    %{state | linenum: linenum, current_token: 1}
   end
 
   defp do_advance_count(state, count) do
-    %{state | current_token: state.next_token, next_token: state.next_token + count}
+      updated = state.current_token + count
+      {{state.linenum, state.current_token}, %{state | current_token: updated}}
   end
 
   defp do_start_alias(state, alias) do

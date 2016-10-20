@@ -1,11 +1,11 @@
-defmodule Parser.ParserTest do
+defmodule Parser.LegacyParserTest do
 
   # These tests use AST nodes' String.Chars impl as an indirect way
   # of verifying parse tree results
 
   alias Parser.TestHelpers
   alias Piper.Command.Ast
-  use Parser.ParsingCase
+  use Parser.ParsingCase, legacy: true
 
   defp count_or_nil(_count, nil), do: nil
   defp count_or_nil(count, _), do: count
@@ -48,12 +48,10 @@ defmodule Parser.ParserTest do
     should_parse "wubba:foo --bar=1 -f"
     should_parse "foo --bar=1 -f", "foo --bar=1 -f"
 
-    should_parse "ec2:list-vm --tags=\"a,b,c\" 10", "ec2:list-vm --tags=\"a,b,c\" 10"
-    should_parse "ec2 --tags=\"a,b,c\" 10", "ec2 --tags=\"a,b,c\" 10"
+    should_parse "ec2:list-vm --tags=\"a,b,c\" 10", "ec2:list-vm --tags=a,b,c 10"
+    should_parse "ec2 --tags=\"a,b,c\" 10", "ec2 --tags=a,b,c 10"
 
     should_parse "foo --bar=testing/testy", "foo --bar=testing/testy"
-    should_not_parse "foo --bar="
-    should_not_parse "foo -b="
   end
 
   test "parsing options referring to names" do
@@ -90,13 +88,13 @@ defmodule Parser.ParserTest do
   end
 
   test "parsing double quoted string arguments" do
-    should_parse "wubba:foo \"123 abc\"", "wubba:foo \"123 abc\"", 1
-    should_parse "foo \"123 abc\"", "foo \"123 abc\"", 1
+    should_parse "wubba:foo \"123 abc\"", "wubba:foo 123 abc", 1
+    should_parse "foo \"123 abc\"", "foo 123 abc", 1
   end
 
   test "parsing single quoted string arguments" do
-    should_parse "wubba:foo '123 abc'", "wubba:foo '123 abc'", 1
-    should_parse "foo '123 abc'", "foo '123 abc'", 1
+    should_parse "wubba:foo '123 abc'", "wubba:foo 123 abc", 1
+    should_parse "foo '123 abc'", "foo 123 abc", 1
   end
 
   test "using variables for command names should fail" do
@@ -157,7 +155,6 @@ defmodule Parser.ParserTest do
 
   test "URL speling errors are caught :)" do
     {:error, message} = Piper.Command.Parser.scan_and_parse("foo | bar | baz > chat:/#ops")
-    # Stacked parser errors omit location information
     assert message == "URL redirect targets must begin with chat://."
   end
 
@@ -291,33 +288,7 @@ defmodule Parser.ParserTest do
   test "malformed command names" do
     should_not_parse ":foo bar"
     should_not_parse "foo: bar"
-    # Passes stacked parsers
-    # should_not_parse "foo :bar"
-    # should_not_parse "foo bar:"
+    should_not_parse "foo :bar"
+    should_not_parse "foo bar:"
   end
-
-  test "parsing path-like values works" do
-    should_parse "cfn deploy --params=/foo/bar/baz"
-    should_parse "cfn:params /my_bucket/test/params.json"
-  end
-
-  test "parsing quoted JSON works" do
-    should_parse "seed \"{\\\"value\\\": \\\"abc\\\"}\""
-    should_not_parse "seed \"{\\\"value\\\": \\\"abc\"}\""
-    should_not_parse "seed \"{\\\"value\\\": \\\"abc\\\"}"
-    should_parse "seed '{\"value\": \"def\"}'"
-    should_parse "seed '{\\'value\\': \\'ghi\\'}'"
-  end
-
-  test "pipelines with quoted JSON works" do
-    should_parse "seed \"{\\\"value\\\": \\\"abc\\\"}\" | echo $value"
-    should_parse "seed \"{\\\"value\\\": \\\"abc\\\"}\" | echo $value > me"
-    should_parse "seed \"{\\\"value\\\": \\\"abc\\\"}\" | echo $value *> me ops"
-    should_parse "seed '{\\'value\\': \\'abc\\'}' | echo $value"
-    should_parse "seed '{\\'value\\': \\'abc\\'}' | echo $value > me"
-    should_parse "seed '{\\'value\\': \\'abc\\'}' | echo $value *> me ops"
-    should_not_parse "seed \"{\\\"value\\\": \\\"abc\"}\" | echo $value *> me ops"
-    should_not_parse "seed '{\\'value\\': \\'abc\\'} | echo $value *> me ops"
-  end
-
 end

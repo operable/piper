@@ -2,9 +2,15 @@ defmodule Parser.ParsingCase do
 
   require Logger
 
-  defmacro __using__(_) do
+  defmacro __using__(opts \\ []) do
+    use_legacy = Keyword.get(opts, :legacy, false)
+    lexer_name = if use_legacy do
+      :piper_cmd_lexer
+    else
+      :piper_cmd2_lexer
+    end
     quote do
-      alias :piper_cmd_lexer, as: Lexer
+      alias unquote(lexer_name), as: Lexer
       alias Piper.Command.Parser
       alias Piper.Command.ParserOptions
       use ExUnit.Case
@@ -13,6 +19,11 @@ defmodule Parser.ParsingCase do
                                          text: 1,
                                          ast_string: 1,
                                          matches: 2]
+
+      defp parse_text(text) do
+        opts = %ParserOptions{use_legacy_parser: unquote(use_legacy)}
+        Parser.scan_and_parse(text, opts)
+      end
     end
   end
 

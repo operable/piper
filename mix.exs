@@ -5,8 +5,9 @@ defmodule Piper.Mixfile do
     [app: :piper,
      version: "0.16.0",
      elixir: "~> 1.3.1",
-     erlc_options: [:debug_info, :warnings_as_errors],
-     leex_options: [:warnings_as_errors],
+     erlc_options: [:debug_info] ++ warnings_as_errors(:erl),
+     leex_options: warnings_as_errors(:erl),
+     elixirc_options: warnings_as_errors(:ex),
      elixirc_paths: elixirc_paths(Mix.env),
      start_permanent: Mix.env == :prod,
      deps: deps] ++ compile_protocols(Mix.env)
@@ -26,5 +27,24 @@ defmodule Piper.Mixfile do
 
   defp compile_protocols(:prod), do: [build_embedded: true]
   defp compile_protocols(_), do: []
+
+  defp warnings_as_errors(type) do
+    case System.get_env("ALLOW_WARNINGS") do
+      nil ->
+        case type do
+          :ex ->
+            [{:warnings_as_errors, true}]
+          :erl ->
+            [:warnings_as_errors]
+        end
+      _ ->
+        case type do
+          :ex ->
+            [{:warnings_as_errors, false}]
+          :erl ->
+            []
+        end
+    end
+  end
 
 end

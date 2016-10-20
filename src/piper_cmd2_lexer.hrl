@@ -1,0 +1,3 @@
+-define(lexer_util, piper_cmd2_lexer_util).
+-define(advance_count(C), ?lexer_util:advance_count(length(C))).
+-define(advance_line(L), ?lexer_util:advance_line(L)).

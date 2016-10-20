@@ -2,20 +2,24 @@ defmodule Parser.TestHelpers do
 
   alias Piper.Command.ParserOptions
 
-  def parser_options() do
-    %ParserOptions{resolver: &resolve_commands/2}
+  def parser_options(use_legacy \\ false) do
+    %ParserOptions{resolver: &resolve_commands/2,
+                   use_legacy_parser: use_legacy}
   end
 
-  def expansion_options() do
-    %ParserOptions{resolver: &expand_commands/2}
+  def expansion_options(use_legacy \\ false) do
+    %ParserOptions{resolver: &expand_commands/2,
+                   use_legacy_parser: use_legacy}
   end
 
-  def gnarly_options() do
-    %ParserOptions{resolver: &gnarly_expansions/2}
+  def gnarly_options(use_legacy \\ false) do
+    %ParserOptions{resolver: &gnarly_expansions/2,
+                   use_legacy_parser: use_legacy}
   end
 
-  def redirect_options() do
-    %ParserOptions{resolver: &redirect_expansions/2}
+  def redirect_options(use_legacy \\ false) do
+    %ParserOptions{resolver: &redirect_expansions/2,
+                   use_legacy_parser: use_legacy}
   end
 
 

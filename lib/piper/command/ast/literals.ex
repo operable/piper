@@ -50,7 +50,7 @@ end
 
 defmodule Piper.Command.Ast.String do
 
-  defstruct [line: nil, col: nil, value: nil]
+  defstruct [line: nil, col: nil, value: nil, quote_type: nil]
 
   def new({:string, {line, col}, value}) do
     %__MODULE__{line: line, col: col, value: String.Chars.to_string(value)}
@@ -65,6 +65,9 @@ defmodule Piper.Command.Ast.String do
     %__MODULE__{line: 0, col: 0, value: value}
   end
 
+  def new({:string, {line, col}, value}, quote_type) when quote_type in [:squote, :dquote] do
+    %__MODULE__{line: line, col: col, value: String.Chars.to_string(value), quote_type: quote_type}
+  end
   def new({line, col}, value) do
     %__MODULE__{line: line, col: col, value: value}
   end
