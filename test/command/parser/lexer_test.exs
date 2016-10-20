@@ -1,5 +1,5 @@
 defmodule Parser.LexerTest do
-  use Parser.ParsingCase
+  use Parser.ParsingCase, legacy: true
 
   test "lexing whitespace returns empty token list" do
     assert {:ok, []} == Lexer.tokenize(" ", 5)

@@ -10,8 +10,16 @@ end
 
 defimpl String.Chars, for: [Piper.Command.Ast.String] do
 
-  def to_string(str) do
-    str.value
+  alias Piper.Command.Ast
+
+  def to_string(%Ast.String{quote_type: :squote, value: value}) do
+    "'#{value}'"
+  end
+  def to_string(%Ast.String{quote_type: :dquote, value: value}) do
+    "\"#{value}\""
+  end
+  def to_string(%Ast.String{quote_type: nil, value: value}) do
+    value
   end
 
 end

@@ -30,8 +30,8 @@ defmodule Piper.Permissions.ParserTest do
 
   # Generates randomized amount of white space
   defp ws() do
-    :random.seed(:os.timestamp())
-    String.duplicate(" ", :random.uniform(7) + 1)
+    :rand.seed(:exs1024, :os.timestamp())
+    String.duplicate(" ", :rand.uniform(7) + 1)
   end
 
   # Normalize more than 1 space character to 1.

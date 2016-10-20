@@ -5,4 +5,5 @@ erl_crash.dump
 *.ez
 lib/piper/command/*.erl
 lib/piper/permissions/*.erl
-src/*.erl
+src/piper*lexer.erl
+src/piper*parser.erl

@@ -1,11 +1,11 @@
-defmodule Bind.BindTest do
+defmodule Bind.LegacyBindTest do
 
   use ExUnit.Case
 
   alias Piper.Common.Scope
   alias Piper.Command.Ast, as: Ast
 
-  use Piper.Test.BindHelpers
+  use Piper.Test.BindHelpers, legacy: true
 
   defp arg(%Ast.Pipeline{}=ast, index) do
     Enum.at(ast.stages.left.args, index)

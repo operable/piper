@@ -13,9 +13,10 @@ defmodule Piper.Command.ParserOptions do
 
   @type t :: %__MODULE__{
                resolver: command_resolver,
+               use_legacy_parser: boolean,
                expansion_limit: pos_integer}
 
-  defstruct [resolver: nil,
+  defstruct [resolver: nil, use_legacy_parser: false,
              expansion_limit: 5]
 
   def defaults() do
@@ -38,13 +39,10 @@ defmodule Piper.Command.Parser do
   def scan_and_parse(text, %ParserOptions{}=opts) do
     {:ok, context} = ParseContext.start_link(opts)
     Process.put(:piper_cp_context, context)
-    try do
-      :piper_cmd_parser.scan_and_parse(text)
-    catch
-      error -> SemanticError.format_error(error)
-    after
-      Process.delete(:piper_cp_context)
-      ParseContext.stop(context)
+    if opts.use_legacy_parser do
+      old_parse(text, context)
+    else
+      new_parse(text, context)
     end
   end
 
@@ -65,6 +63,36 @@ defmodule Piper.Command.Parser do
   def finish_alias(alias) do
     context = Process.get(:piper_cp_context)
     ParseContext.finish_alias(context, alias)
+  end
+
+  # Uses new stacked parsers
+  defp new_parse(text, context) do
+    try do
+      case :piper_cmd2_parser.parse_pipeline(text) do
+        {:ok, ast} ->
+          {:ok, ast}
+        %SemanticError{}=error ->
+          SemanticError.format_error(error)
+        {:error, reason} when is_binary(reason) ->
+          {:error, reason}
+      end
+    catch
+      error -> SemanticError.format_error(error)
+    after
+      Process.delete(:piper_cp_context)
+      ParseContext.stop(context)
+    end
+  end
+
+  defp old_parse(text, context) do
+    try do
+      :piper_cmd_parser.scan_and_parse(text)
+    catch
+      error -> SemanticError.format_error(error)
+    after
+      Process.delete(:piper_cp_context)
+      ParseContext.stop(context)
+    end
   end
 
 end

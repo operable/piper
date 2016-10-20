@@ -29,6 +29,11 @@ defmodule Piper.Command.SemanticError do
     %{error | reason: :alias_cycle, meta: cycle}
   end
 
+  def new({:syntax, message}) do
+    error = init(message)
+    %{error | reason: :syntax}
+  end
+
   def format_error(%__MODULE__{text: text, reason: reason, meta: meta}) do
     {:error, message_for_reason(reason, text, meta)}
   end
@@ -51,6 +56,9 @@ defmodule Piper.Command.SemanticError do
   end
   defp message_for_reason(:alias_cycle, _text, [first, last]) do
     "Infinite alias expansion loop detected '#{first}' -> '#{last}'."
+  end
+  defp message_for_reason(:syntax, text, _) do
+    text
   end
 
   defp init({_, _, text}) do
