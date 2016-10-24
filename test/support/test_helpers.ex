@@ -22,6 +22,32 @@ defmodule Parser.TestHelpers do
                    use_legacy_parser: use_legacy}
   end
 
+  def hyphenated_command_options(use_legacy \\ false) do
+    %ParserOptions{resolver: &resolve_hyphenated_commands/2,
+                   use_legacy_parser: use_legacy}
+  end
+
+  def long_command_options(use_legacy \\ false) do
+    %ParserOptions{resolver: &resolve_long_commands/2,
+                   use_legacy_parser: use_legacy}
+  end
+
+  def resolve_hyphenated_commands(bundle, cmd) do
+    if String.contains?(cmd, "-") do
+      {:command, {bundle, cmd}}
+    else
+      :not_found
+    end
+  end
+
+  def resolve_long_commands(_bundle, cmd) do
+    case String.split(cmd, "-") do
+      ["stack", "purge", "delete"] ->
+        {:command, {"cfn", cmd}}
+      _ ->
+        :not_found
+    end
+  end
 
   def resolve_commands(_bundle, cmd) when cmd in ["hello", "goodbye"] do
     {:command, {"salutations", cmd}}

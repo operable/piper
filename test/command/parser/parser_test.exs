@@ -320,4 +320,30 @@ defmodule Parser.ParserTest do
     should_not_parse "seed '{\\'value\\': \\'abc\\'} | echo $value *> me ops"
   end
 
+  test "resolving hyphenated command names works" do
+    {:ok, ast} = Parser.scan_and_parse("cfn:stacks ls", TestHelpers.hyphenated_command_options())
+    assert "#{ast}" == "cfn:stacks-ls"
+    {:ok, ast} = Parser.scan_and_parse("cfn:stacks ls foo*", TestHelpers.hyphenated_command_options())
+    assert "#{ast}" == "cfn:stacks-ls foo*"
+  end
+
+  test "resolving hyphenated command names fails when first arg is non-string" do
+    {:error, reason} = Parser.scan_and_parse("cfn:newstack 1", TestHelpers.hyphenated_command_options())
+    assert reason == "Command 'newstack' not found in any installed bundle."
+    {:error, reason} = Parser.scan_and_parse("cfn:stack --region=us-east-2 ls", TestHelpers.hyphenated_command_options())
+    assert reason == "Command 'stack' not found in any installed bundle."
+  end
+
+  test "resolving long command names works" do
+    {:ok, ast} = Parser.scan_and_parse("cfn:stack purge delete --region=us-west-1", TestHelpers.long_command_options())
+    assert "#{ast}" == "cfn:stack-purge-delete --region=us-west-1"
+    {:error, reason} = Parser.scan_and_parse("cfn:stack ls purge", TestHelpers.long_command_options())
+    assert "#{reason}" == "Command 'stack' not found in any installed bundle."
+  end
+
+  test "resolving long commmand names w/o bundle works" do
+    {:ok, ast} = Parser.scan_and_parse("stack purge delete --region=us-west-1", TestHelpers.long_command_options())
+    assert "#{ast}" == "cfn:stack-purge-delete --region=us-west-1"
+  end
+
 end
