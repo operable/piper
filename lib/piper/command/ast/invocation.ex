@@ -9,8 +9,8 @@ defmodule Piper.Command.Ast.Invocation do
   def new(%Ast.Name{}=name, opts \\ []) do
     args = Keyword.get(opts, :args, [])
     redir = Keyword.get(opts, :redir)
-    case resolve_name!(name) do
-      {:pipeline, pipeline} ->
+    case resolve_name!(name, args) do
+      {{:pipeline, pipeline}, args} ->
         left = pipeline.stages.left
         updated_left = %{left | args: left.args ++ args}
         if redir != nil do
@@ -18,26 +18,23 @@ defmodule Piper.Command.Ast.Invocation do
         else
           %{pipeline.stages | left: updated_left}
         end
-      {:command, name, meta} ->
+      {{:command, name, meta}, args} ->
         %__MODULE__{id: UUID.uuid4, name: name, args: args, redir: redir, meta: meta}
     end
   end
 
-  defp resolve_name!(%Ast.Name{bundle: bundle, entity: entity}=name) do
+  defp resolve_name!(%Ast.Name{bundle: bundle, entity: entity}=name, args) do
     options = Parser.get_options()
     if options != nil and options.resolver != nil do
-      call_resolver!(options, bundle, entity)
+      call_resolver!(options, bundle, entity, args)
     else
-      {:command, name, nil}
+      {{:command, name, nil}, args}
     end
   end
 
-  defp call_resolver!(options, bundle, entity) do
-    bundle_name = if bundle != nil do
-      bundle.value
-    else
-      nil
-    end
+  defp call_resolver!(options, bundle, entity, args, referenced_entity \\ nil) do
+    referenced_entity = referenced_entity(referenced_entity, entity)
+    bundle_name = bundle_name(bundle)
     entity_name = entity.value
     expansion_status = Parser.start_alias(entity_name)
     try do
@@ -49,16 +46,21 @@ defmodule Piper.Command.Ast.Invocation do
         :ok ->
           case options.resolver.(bundle_name, entity_name) do
             {:command, {resolved_bundle, resolved_command, meta}} ->
-              {:command, build_replacement_name(resolved_bundle, resolved_command, entity), meta}
+              {{:command, build_replacement_name(resolved_bundle, resolved_command, entity), meta}, args}
             {:command, {resolved_bundle, resolved_command}} ->
-              {:command, build_replacement_name(resolved_bundle, resolved_command, entity), nil}
+              {{:command, build_replacement_name(resolved_bundle, resolved_command, entity), nil}, args}
             {:pipeline, text} when is_binary(text) ->
               {:ok, pipeline} = Parser.expand(entity_name, text)
-              {:pipeline, pipeline}
+              {{:pipeline, pipeline}, args}
             {:ambiguous, bundles} ->
-              throw SemanticError.new(entity, {:ambiguous, bundles})
+              throw SemanticError.new(referenced_entity, {:ambiguous, bundles})
             :not_found ->
-              throw SemanticError.new(entity, :not_found)
+              case args do
+                [%Ast.String{value: value}|t] ->
+                  call_resolver!(options, bundle, %{entity | value: Enum.join([entity.value, value], "-")}, t, referenced_entity)
+                _ ->
+                  throw SemanticError.new(referenced_entity, :not_found)
+              end
           end
       end
     after
@@ -92,5 +94,11 @@ defmodule Piper.Command.Ast.Invocation do
       %{stage | right: propagate_redir(stage.right, redir)}
     end
   end
+
+  defp referenced_entity(nil, entity), do: entity
+  defp referenced_entity(ref_entity, _), do: ref_entity
+
+  defp bundle_name(nil), do: nil
+  defp bundle_name(bundle), do: bundle.value
 
 end
