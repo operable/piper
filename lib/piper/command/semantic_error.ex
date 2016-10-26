@@ -4,29 +4,13 @@ defmodule Piper.Command.SemanticError do
              :meta]
 
 
-  def new(near, :not_found) do
+  def new(near, {reason, meta}) do
     error = init(near)
-    %{error | reason: :not_found}
+    %{error | reason: reason, meta: meta}
   end
-  def new(near, {:ambiguous, bundles}) do
+  def new(near, reason) do
     error = init(near)
-    %{error | reason: :ambiguous, meta: bundles}
-  end
-  def new(near, {:bad_bundle, bundle}) do
-    error = init(near)
-    %{error | reason: :bad_bundle, meta: bundle}
-  end
-  def new(near, {:bad_command, command}) do
-    error = init(near)
-    %{error | reason: :bad_command, meta: command}
-  end
-  def new(near, {:expansion_limit, alias, limit}) do
-    error = init(near)
-    %{error | reason: :expansion_limit, meta: {alias, limit}}
-  end
-  def new(near, {:alias_cycle, cycle}) do
-    error = init(near)
-    %{error | reason: :alias_cycle, meta: cycle}
+    %{error | reason: reason}
   end
 
   def new({:syntax, message}) do
