@@ -26,11 +26,10 @@ defmodule Piper.Command.SemanticError do
     "Command '#{text}' not found in any installed bundle."
   end
   defp message_for_reason(:not_in_bundle, text, bundle) do
-    "Command '#{text}' not be found in '#{bundle}'. See 'help #{bundle}' for information on the bundle."
+    "Bundle '#{bundle}' doesn't contain a command named '#{text}'."
   end
   defp message_for_reason(:not_enabled, _, bundle) do
-    "Bundle '#{bundle}' is not enabled. " <>
-    "See 'help operable:bundle' for information on enabling bundles."
+    "Bundle '#{bundle}' is disabled. Please enable it and try running the command again."
   end
   defp message_for_reason(:ambiguous, text, bundles) do
     "Ambiguous command reference detected. " <>
