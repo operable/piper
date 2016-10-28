@@ -22,7 +22,7 @@ defmodule Piper.Mixfile do
 
   defp deps do
     [{:poison, "~> 2.0"},
-     {:uuid, "~> 1.1.3"}]
+     {:uuid, "~> 1.1.5"}]
   end
 
   defp compile_protocols(:prod), do: [build_embedded: true]
