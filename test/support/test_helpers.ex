@@ -70,6 +70,9 @@ defmodule Parser.TestHelpers do
   def resolve_commands(_bundle, "not_enabled") do
     {:error, {:not_enabled, "bundle1"}}
   end
+  def resolve_commands(_bundle, "not_in_bundle") do
+    {:error, {:not_in_bundle, "bundle1"}}
+  end
   def resolve_commands(_bundle, _name) do
     {:error, :not_found}
   end

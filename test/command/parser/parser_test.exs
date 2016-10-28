@@ -200,6 +200,11 @@ defmodule Parser.ParserTest do
     assert message == "Bundle 'bundle1' is not enabled. See 'help operable:bundle' for information on enabling bundles."
   end
 
+  test "commands not in the requested bundle fail resolution" do
+    {:error, message} = Parser.scan_and_parse("not_in_bundle", TestHelpers.parser_options())
+    assert message == "Command 'not_in_bundle' not be found in 'bundle1'. See 'help bundle1' for information on the bundle."
+  end
+
   test "splicing aliases into parse tree" do
     {:ok, ast} = Parser.scan_and_parse("pipe1", TestHelpers.parser_options())
     assert "#{ast}" == "salutations:hello"
