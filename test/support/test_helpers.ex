@@ -52,6 +52,9 @@ defmodule Parser.TestHelpers do
   def resolve_commands(_bundle, cmd) when cmd in ["hello", "goodbye"] do
     {:command, {"salutations", cmd}}
   end
+  def resolve_commands(_bundle, "multi") do
+    {:error, {:ambiguous, ["a","b","c"]}}
+  end
   def resolve_commands(_bundle, "bogus") do
     {:command, {":foo", "bogus"}}
   end
@@ -64,8 +67,8 @@ defmodule Parser.TestHelpers do
   def resolve_commands(_bundle, "pipe1") do
     {:pipeline, "hello"}
   end
-  def resolve_commands(_bundle, "multi") do
-    {:error, {:ambiguous, ["a","b","c"]}}
+  def resolve_commands(_bundle, "not_enabled") do
+    {:error, {:not_enabled, "bundle1"}}
   end
   def resolve_commands(_bundle, _name) do
     {:error, :not_found}
