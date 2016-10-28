@@ -195,6 +195,16 @@ defmodule Parser.ParserTest do
     assert message == "Ambiguous command reference detected. Command 'multi' found in bundles 'a', 'b', and 'c'."
   end
 
+  test "disabled commands fail resolution" do
+    {:error, message} = Parser.scan_and_parse("not_enabled", TestHelpers.parser_options())
+    assert message == "Bundle 'bundle1' is disabled. Please enable it and try running the command again."
+  end
+
+  test "commands not in the requested bundle fail resolution" do
+    {:error, message} = Parser.scan_and_parse("not_in_bundle", TestHelpers.parser_options())
+    assert message == "Bundle 'bundle1' doesn't contain a command named 'not_in_bundle'."
+  end
+
   test "splicing aliases into parse tree" do
     {:ok, ast} = Parser.scan_and_parse("pipe1", TestHelpers.parser_options())
     assert "#{ast}" == "salutations:hello"

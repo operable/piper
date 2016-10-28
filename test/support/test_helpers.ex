@@ -36,7 +36,7 @@ defmodule Parser.TestHelpers do
     if String.contains?(cmd, "-") do
       {:command, {bundle, cmd}}
     else
-      :not_found
+      {:error, :not_found}
     end
   end
 
@@ -45,7 +45,7 @@ defmodule Parser.TestHelpers do
       ["stack", "purge", "delete"] ->
         {:command, {"cfn", cmd}}
       _ ->
-        :not_found
+        {:error, :not_found}
     end
   end
 
@@ -53,7 +53,7 @@ defmodule Parser.TestHelpers do
     {:command, {"salutations", cmd}}
   end
   def resolve_commands(_bundle, "multi") do
-    {:ambiguous, ["a","b","c"]}
+    {:error, {:ambiguous, ["a","b","c"]}}
   end
   def resolve_commands(_bundle, "bogus") do
     {:command, {":foo", "bogus"}}
@@ -67,8 +67,14 @@ defmodule Parser.TestHelpers do
   def resolve_commands(_bundle, "pipe1") do
     {:pipeline, "hello"}
   end
+  def resolve_commands(_bundle, "not_enabled") do
+    {:error, {:not_enabled, "bundle1"}}
+  end
+  def resolve_commands(_bundle, "not_in_bundle") do
+    {:error, {:not_in_bundle, "bundle1"}}
+  end
   def resolve_commands(_bundle, _name) do
-    :not_found
+    {:error, :not_found}
   end
 
   def expand_commands(_bundle, "night") do

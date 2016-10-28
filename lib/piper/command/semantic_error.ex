@@ -4,29 +4,13 @@ defmodule Piper.Command.SemanticError do
              :meta]
 
 
-  def new(near, :not_found) do
+  def new(near, {reason, meta}) do
     error = init(near)
-    %{error | reason: :not_found}
+    %{error | reason: reason, meta: meta}
   end
-  def new(near, {:ambiguous, bundles}) do
+  def new(near, reason) do
     error = init(near)
-    %{error | reason: :ambiguous, meta: bundles}
-  end
-  def new(near, {:bad_bundle, bundle}) do
-    error = init(near)
-    %{error | reason: :bad_bundle, meta: bundle}
-  end
-  def new(near, {:bad_command, command}) do
-    error = init(near)
-    %{error | reason: :bad_command, meta: command}
-  end
-  def new(near, {:expansion_limit, alias, limit}) do
-    error = init(near)
-    %{error | reason: :expansion_limit, meta: {alias, limit}}
-  end
-  def new(near, {:alias_cycle, cycle}) do
-    error = init(near)
-    %{error | reason: :alias_cycle, meta: cycle}
+    %{error | reason: reason}
   end
 
   def new({:syntax, message}) do
@@ -40,6 +24,12 @@ defmodule Piper.Command.SemanticError do
 
   defp message_for_reason(:not_found, text, _) do
     "Command '#{text}' not found in any installed bundle."
+  end
+  defp message_for_reason(:not_in_bundle, text, bundle) do
+    "Bundle '#{bundle}' doesn't contain a command named '#{text}'."
+  end
+  defp message_for_reason(:not_enabled, _, bundle) do
+    "Bundle '#{bundle}' is disabled. Please enable it and try running the command again."
   end
   defp message_for_reason(:ambiguous, text, bundles) do
     "Ambiguous command reference detected. " <>

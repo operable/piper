@@ -40,7 +40,7 @@ defmodule Piper.Command.Ast.Invocation do
     try do
       case expansion_status do
         {:error, {:max_depth, offender, max_depth}} ->
-          throw SemanticError.new(entity, {:expansion_limit, offender, max_depth})
+          throw SemanticError.new(entity, {:expansion_limit, {offender, max_depth}})
         {:error, {:alias_cycle, cycle}} ->
           throw SemanticError.new(entity, {:alias_cycle, cycle})
         :ok ->
@@ -52,14 +52,14 @@ defmodule Piper.Command.Ast.Invocation do
             {:pipeline, text} when is_binary(text) ->
               {:ok, pipeline} = Parser.expand(entity_name, text)
               {{:pipeline, pipeline}, args}
-            {:ambiguous, bundles} ->
+            {:error, {:ambiguous, bundles}} ->
               throw SemanticError.new(referenced_entity, {:ambiguous, bundles})
-            :not_found ->
+            {:error, error} ->
               case args do
                 [%Ast.String{value: value}|t] ->
                   call_resolver!(options, bundle, %{entity | value: Enum.join([entity.value, value], "-")}, t, referenced_entity)
                 _ ->
-                  throw SemanticError.new(referenced_entity, :not_found)
+                  throw SemanticError.new(referenced_entity, error)
               end
           end
       end
