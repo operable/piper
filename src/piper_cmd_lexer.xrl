@@ -63,18 +63,23 @@ Erlang code.
 -export([tokenize/1,
          tokenize/2]).
 
-tokenize(Text, MaxDepth) when is_binary(Text) ->
-  tokenize(binary_to_list(Text), MaxDepth);
-tokenize(Text, MaxDepth) when is_list(Text) ->
-  init(MaxDepth),
-  case string(Text) of
-    {ok, Tokens, _} ->
-      {ok, Tokens};
-    {error, {_, _, {illegal, Bad}}, _} ->
-      Pos = string:str(Text, Bad),
-      {error, {unexpected_input, Pos, Bad}};
-    Error ->
-      Error
+%% Should only be called by test code
+%% Have to use this Mix env inspection hack since Mix doesn't compile Erlang code
+%% with TEST defined as per usual Erlang practice.
+tokenize(Text, MaxDepth) ->
+  case 'Elixir.Mix':env() of
+    test ->
+      Opts = 'Elixir.Piper.Command.ParserOptions':defaults(),
+      Opts1 = maps:put(use_legacy_parser, true, Opts),
+      Opts2 = maps:put(expansion_limit, MaxDepth, Opts1),
+      {ok, Context} = 'Elixir.Piper.Command.ParseContext':start_link(Opts2),
+      try tokenize(Text) of
+        Result -> Result
+      after
+        'Elixir.Piper.Command.ParseContext':stop(Context)
+      end;
+    EnvName ->
+      throw({bad_mix_env, EnvName})
   end.
 
 tokenize(Text) when is_binary(Text) ->
@@ -90,16 +95,12 @@ tokenize(Text) when is_list(Text) ->
       Error
   end.
 
-init(MaxDepth) ->
-  {ok, Context} = 'Elixir.Piper.Command.ParseContext':start_link(MaxDepth),
-  erlang:put(piper_cp_context, Context).
-
 advance_line(TokenLine) ->
-  Context = erlang:get(piper_cp_context),
+  Context = 'Elixir.Piper.Command.ParseContext':current(),
   'Elixir.Piper.Command.ParseContext':start_line(Context, TokenLine).
 
 advance_count(Count) ->
-  Context = erlang:get(piper_cp_context),
+  Context = 'Elixir.Piper.Command.ParseContext':current(),
   'Elixir.Piper.Command.ParseContext':advance_count(Context, Count).
 
 clean_dquotes(String) ->
