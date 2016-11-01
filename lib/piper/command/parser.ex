@@ -28,7 +28,7 @@ end
 defmodule Piper.Command.Parser do
 
   @moduledoc """
-  Elixir interface to :piper_cmd_parser.
+  Elixir interface to YECC-based parsers (:piper_cmd_parser, :piper_cmd2_parser)
   """
 
   alias Piper.Command.SemanticError
@@ -38,7 +38,6 @@ defmodule Piper.Command.Parser do
   def scan_and_parse(text), do: scan_and_parse(text, ParserOptions.defaults())
   def scan_and_parse(text, %ParserOptions{}=opts) do
     {:ok, context} = ParseContext.start_link(opts)
-    Process.put(:piper_cp_context, context)
     if opts.use_legacy_parser do
       old_parse(text, context)
     else
@@ -51,18 +50,34 @@ defmodule Piper.Command.Parser do
   end
 
   def get_options() do
-    context = Process.get(:piper_cp_context)
+    context = ParseContext.current()
     ParseContext.get_options(context)
   end
 
   def start_alias(alias) do
-    context = Process.get(:piper_cp_context)
+    context = ParseContext.current()
     ParseContext.start_alias(context, alias)
   end
 
   def finish_alias(alias) do
-    context = Process.get(:piper_cp_context)
+    context = ParseContext.current()
     ParseContext.finish_alias(context, alias)
+  end
+
+  def valid_name?(text) do
+    cond do
+      # Plain text
+      Regex.match?(~r/^[a-zA-Z_\-0-9]+$/, text) ->
+        true
+      # Slack-style emoji
+      Regex.match?(~r/^:[a-zA-Z_\-0-9]+:$/, text) ->
+        true
+      # HipChat-style emoji
+      Regex.match?(~r/^\([a-zA-Z_\-0-9]+\)$/, text) ->
+        true
+      true ->
+        false
+    end
   end
 
   # Uses new stacked parsers
