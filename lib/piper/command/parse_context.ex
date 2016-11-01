@@ -12,14 +12,22 @@ defmodule Piper.Command.ParseContext do
 
 
   def start_link(max_depth) when is_integer(max_depth) do
-    Agent.start_link(fn() -> %__MODULE__{max_depth: max_depth} end)
+    start_link(%ParserOptions{expansion_limit: max_depth, use_legacy_parser: true})
   end
   def start_link(%ParserOptions{}=options) do
-    Agent.start_link(fn() -> %__MODULE__{max_depth: options.expansion_limit,
-                                         parse_options: options} end)
+    unless current() == nil do
+      raise RuntimeError, message: "ParseContext already exists. Please call ParseContext.stop/1 first."
+    end
+    {:ok, pid} = Agent.start_link(fn() -> %__MODULE__{max_depth: options.expansion_limit,
+                                                      parse_options: options} end)
+    Process.put(:piper_cp_context, pid)
+    {:ok, pid}
   end
 
+  def current(), do: Process.get(:piper_cp_context)
+
   def stop(agent) do
+    Process.delete(:piper_cp_context)
     Agent.stop(agent)
   end
 
