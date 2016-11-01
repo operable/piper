@@ -327,6 +327,16 @@ defmodule Parser.ParserTest do
     assert "#{ast}" == "cfn:stacks-ls foo*"
   end
 
+  test "resolving hyphenated commands uses longest match" do
+    opts = TestHelpers.longest_hyphenated_command_options()
+    {:ok, ast} = Parser.scan_and_parse("stacks ls dev", opts)
+    assert "#{ast}" == "cfn:stacks-ls dev"
+    {:ok, ast} = Parser.scan_and_parse("stacks ls prod foo", opts)
+    assert "#{ast}" == "cfn:stacks-ls-prod foo"
+    {:error, reason} = Parser.scan_and_parse("ls prod blah*", opts)
+    assert "#{reason}" == "Ambiguous command reference detected. Command 'ls-prod' found in bundles 'ec2', and 'cfn'."
+  end
+
   test "resolving hyphenated command names fails when first arg is non-string" do
     {:error, reason} = Parser.scan_and_parse("cfn:newstack 1", TestHelpers.hyphenated_command_options())
     assert reason == "Command 'newstack' not found in any installed bundle."

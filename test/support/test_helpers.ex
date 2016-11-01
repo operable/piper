@@ -27,6 +27,12 @@ defmodule Parser.TestHelpers do
                    use_legacy_parser: use_legacy}
   end
 
+  def longest_hyphenated_command_options(use_legacy \\ false) do
+    %ParserOptions{resolver: &resolve_longest_hyphenated_commands/2,
+                   use_legacy_parser: use_legacy}
+  end
+
+
   def long_command_options(use_legacy \\ false) do
     %ParserOptions{resolver: &resolve_long_commands/2,
                    use_legacy_parser: use_legacy}
@@ -37,6 +43,19 @@ defmodule Parser.TestHelpers do
       {:command, {bundle, cmd}}
     else
       :not_found
+    end
+  end
+
+  def resolve_longest_hyphenated_commands(_bundle, cmd) do
+    cond do
+      cmd == "stacks-ls-prod" ->
+        {:command, {"cfn", cmd}}
+      cmd == "stacks-ls" ->
+        {:command, {"cfn", cmd}}
+      cmd == "ls-prod" ->
+        {:ambiguous, ["ec2", "cfn"]}
+      true ->
+        :not_found
     end
   end
 
