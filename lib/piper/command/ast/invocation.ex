@@ -25,15 +25,29 @@ defmodule Piper.Command.Ast.Invocation do
 
   defp resolve_name!(%Ast.Name{bundle: bundle, entity: entity}=name, args) do
     options = Parser.get_options()
-    if options != nil and options.resolver != nil do
-      call_resolver!(options, bundle, entity, args)
-    else
+    if options == nil or options.resolver == nil do
       {{:command, name, nil}, args}
+    else
+      possibles = possible_command_names(entity, args)
+      case Enum.find_value(possibles, &(resolve_command!(options, bundle, &1))) do
+        nil ->
+          throw SemanticError.new(entity, :not_found)
+        result ->
+          result
+      end
     end
   end
 
-  defp call_resolver!(options, bundle, entity, args, referenced_entity \\ nil) do
-    referenced_entity = referenced_entity(referenced_entity, entity)
+  defp resolve_command!(options, bundle, {name, args}) do
+    case call_resolver!(options, bundle, name, args) do
+      :not_found ->
+        nil
+      result ->
+        result
+    end
+  end
+
+  defp call_resolver!(options, bundle, entity, args) do
     bundle_name = bundle_name(bundle)
     entity_name = entity.value
     expansion_status = Parser.start_alias(entity_name)
@@ -53,14 +67,13 @@ defmodule Piper.Command.Ast.Invocation do
               {:ok, pipeline} = Parser.expand(entity_name, text)
               {{:pipeline, pipeline}, args}
             {:error, {:ambiguous, bundles}} ->
-              throw SemanticError.new(referenced_entity, {:ambiguous, bundles})
+              throw SemanticError.new(entity, {:ambiguous, bundles})
+            {:error, :not_found} ->
+              :not_found
+            {:error, {:not_in_bundle, _}} ->
+              :not_found
             {:error, error} ->
-              case args do
-                [%Ast.String{value: value}|t] ->
-                  call_resolver!(options, bundle, %{entity | value: Enum.join([entity.value, value], "-")}, t, referenced_entity)
-                _ ->
-                  throw SemanticError.new(referenced_entity, error)
-              end
+              throw SemanticError.new(entity, error)
           end
       end
     after
@@ -68,22 +81,21 @@ defmodule Piper.Command.Ast.Invocation do
     end
   end
 
-  defp tokenize(name_part, entity, bundle? \\ true) do
-    case :piper_cmd_lexer.tokenize(name_part) do
-      {:ok, [{type, _, value}]} ->
-        {type, {entity.line, entity.col}, value}
-      {:ok, _} ->
-        if bundle? do
-          throw SemanticError.new(entity, {:bad_bundle, name_part})
-        else
-          throw SemanticError.new(entity, {:bad_command, name_part})
-        end
+  defp validate(name_part, entity, bundle? \\ true) do
+    if Parser.valid_name?(name_part) do
+      {:string, {entity.line, entity.col}, name_part}
+    else
+      if bundle? do
+        throw SemanticError.new(entity, {:bad_bundle, name_part})
+      else
+        throw SemanticError.new(entity, {:bad_command, name_part})
+      end
     end
   end
 
   defp build_replacement_name(resolved_bundle, resolved_command, entity) do
-    bundle_token = tokenize(resolved_bundle, entity)
-    command_token = tokenize(resolved_command, entity, false)
+    bundle_token = validate(resolved_bundle, entity)
+    command_token = validate(resolved_command, entity, false)
     Ast.Name.new([bundle: bundle_token, entity: command_token])
   end
 
@@ -95,10 +107,21 @@ defmodule Piper.Command.Ast.Invocation do
     end
   end
 
-  defp referenced_entity(nil, entity), do: entity
-  defp referenced_entity(ref_entity, _), do: ref_entity
-
   defp bundle_name(nil), do: nil
   defp bundle_name(bundle), do: bundle.value
+
+  defp possible_command_names(name, args, acc \\ [])
+  defp possible_command_names(name, [%Ast.String{value: value}|t]=args, acc) do
+    acc = [{name, args}|acc]
+    if Regex.match?(~r/^[a-zA-Z0-9_-]+$/, value) do
+      name = %{name | value: Enum.join([name.value, value], "-")}
+      possible_command_names(name, t, acc)
+    else
+      acc
+    end
+  end
+  defp possible_command_names(name, args, acc) do
+    [{name, args}|acc]
+  end
 
 end
