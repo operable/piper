@@ -56,7 +56,7 @@ Erlang code.
 -include("piper_cmd2_parser.hrl").
 
 text_to_string({text, Position, Value}) ->
-  {string, Position, Value}.
+  {string, Position, list_to_binary(Value)}.
 
 option_name({Type, {LineNum, Col}, Name}) when Type == long_option;
                                                Type == short_option ->

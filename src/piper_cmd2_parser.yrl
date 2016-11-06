@@ -101,7 +101,7 @@ strip_quotes({_, Position, [$'|_]=Text}) ->
   {string, Position, re:replace(Text, "^'|'$", "", [{return, list}, global])}.
 
 text_to_string({text, Position, Value}) ->
-  {string, Position, Value}.
+  {string, Position, list_to_binary(Value)}.
 
 validate_redirect_target({_, _, [$c,$h,$a,$t,$:,$/,$/|_]}=Target) ->
   Target;

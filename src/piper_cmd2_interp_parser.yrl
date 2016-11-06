@@ -25,4 +25,4 @@ Erlang code.
 -include("piper_cmd2_parser.hrl").
 
 text_to_string({text, Position, Value}) ->
-  {string, Position, Value}.
+  {string, Position, list_to_binary(Value)}.
