@@ -23,4 +23,4 @@ Erlang code.
 -include("piper_cmd2_lexer.hrl").
 
 possible_varexpr({_, _, Value}) ->
-  re:run(Value, "^\\$", [{capture, none}]) == match.
+  re:run(Value, "^\\$", [{capture, none}, unicode]) == match.

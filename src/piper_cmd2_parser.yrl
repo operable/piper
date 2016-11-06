@@ -66,7 +66,7 @@ Erlang code.
 -export([parse_pipeline/1]).
 
 parse_pipeline(Text) when is_binary(Text) ->
-  parse_pipeline(binary_to_list(Text));
+  parse_pipeline(elixir_string_to_list(Text));
 parse_pipeline(Text) ->
   case piper_cmd2_lexer:scan(Text) of
     {ok, Tokens, _} ->
@@ -84,7 +84,7 @@ parse_pipeline(Text) ->
   end.
 
 format_reason({error, {_, _, Reason}}) when is_list(Reason) ->
-  {error, iolist_to_binary(Reason)};
+  {error, list_to_elixir_string(Reason)};
 format_reason({error, {_, _, Reason}}) ->
   format_reason(Reason);
 format_reason(Reason) when is_map(Reason) ->
@@ -96,9 +96,9 @@ format_reason(Reason) when is_map(Reason) ->
   end.
 
 strip_quotes({_, Position, [$"|_]=Text}) ->
-  {string, Position, re:replace(Text, "^\"|\"$", "", [{return, list}, global])};
+  {string, Position, re:replace(Text, "^\"|\"$", "", [{return, list}, global, unicode])};
 strip_quotes({_, Position, [$'|_]=Text}) ->
-  {string, Position, re:replace(Text, "^'|'$", "", [{return, list}, global])}.
+  {string, Position, re:replace(Text, "^'|'$", "", [{return, list}, global, unicode])}.
 
 text_to_string({text, Position, Value}) ->
   {string, Position, Value}.
@@ -140,3 +140,11 @@ ensure_quote_type_set(Value, QuoteType) ->
     {ok, _} ->
       maps:put(quote_type, QuoteType, Value)
   end.
+
+elixir_string_to_list(Text) when is_binary(Text) ->
+  'Elixir.String':to_charlist(Text).
+
+list_to_elixir_string(Text) when is_list(Text) ->
+  %% Ensure we're dealing with a flat list first
+  Text1 = lists:flatten(Text),
+  'Elixir.String.Chars':to_string(Text1).
