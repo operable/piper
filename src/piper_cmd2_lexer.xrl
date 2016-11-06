@@ -46,9 +46,9 @@ apply_fixups(Tokens) -> apply_fixups(Tokens, []).
 apply_fixups([], Accum) -> lists:reverse(Accum);
 apply_fixups([{text, T1Pos, T1Text}=T1, {Quoted, _, QuotedValue}=QT, {text, _, T2Text}=T2|T], Accum) when Quoted == squoted_text;
                                                                                                           Quoted == dquoted_text ->
-  case re:run(T1Text, "\\[$", [{capture, none}]) of
+  case re:run(T1Text, "\\[$", [{capture, none}, unicode]) of
     match ->
-      case re:run(T2Text, "^\\]", [{capture, none}]) of
+      case re:run(T2Text, "^\\]", [{capture, none}, unicode]) of
         match ->
           Updated = {text, T1Pos, T1Text ++ QuotedValue ++ T2Text},
           apply_fixups([Updated|T], Accum);
@@ -56,7 +56,7 @@ apply_fixups([{text, T1Pos, T1Text}=T1, {Quoted, _, QuotedValue}=QT, {text, _, T
           apply_fixups([QT, T2|T], [T1|Accum])
       end;
     nomatch ->
-      case re:run(T1Text, "\\.$", [{capture, none}]) of
+      case re:run(T1Text, "\\.$", [{capture, none}, unicode]) of
         match ->
           Updated = {text, T1Pos, T1Text ++ QuotedValue},
           apply_fixups([Updated, T2|T], Accum);
@@ -67,7 +67,7 @@ apply_fixups([{text, T1Pos, T1Text}=T1, {Quoted, _, QuotedValue}=QT, {text, _, T
 apply_fixups([{text, T1Pos, T1Text}=T1, {TextType, _, T2Text}=T2|T], Accum) when TextType == text;
                                                                                  TextType == squoted_text;
                                                                                  TextType == dquoted_text ->
-  case re:run(T2Text, "(^\\.|^\\[)", [{capture, none}]) of
+  case re:run(T2Text, "(^\\.|^\\[)", [{capture, none}, unicode]) of
     match ->
       Updated = {text, T1Pos, T1Text ++ T2Text},
       apply_fixups([Updated|T], Accum);

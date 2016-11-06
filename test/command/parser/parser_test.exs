@@ -1,5 +1,7 @@
 defmodule Parser.ParserTest do
 
+  @unicode_text "\u1E23\u00EBll\u1E4F"
+
   # These tests use AST nodes' String.Chars impl as an indirect way
   # of verifying parse tree results
 
@@ -296,6 +298,43 @@ defmodule Parser.ParserTest do
 
   test "malformed nested variable references fails to parse" do
     should_not_parse "foo --opt1=$blah[3.wubba"
+  end
+
+  test "unicode args aren't mangled" do
+    {:ok, ast} = Parser.scan_and_parse("echo #{@unicode_text}")
+    args = ast.stages.left.args
+    assert Enum.count(args) == 1
+    first_arg = Enum.at(args, 0)
+    assert first_arg.__struct__ == Piper.Command.Ast.String
+    assert first_arg.value == "#{@unicode_text}"
+    assert "#{ast}" == "echo #{@unicode_text}"
+  end
+
+  test "mixed ascii and unicode args aren't mangled" do
+    {:ok, ast} = Parser.scan_and_parse("echo #{@unicode_text} there!")
+    assert "#{ast}" == "echo #{@unicode_text} there!"
+    {:ok, ast} = Parser.scan_and_parse("echo To you I say #{@unicode_text} 1 time")
+    args = ast.stages.left.args
+    assert Enum.count(args) == 7
+    assert "#{ast}" == "echo To you I say #{@unicode_text} 1 time"
+  end
+
+  test "unicode option values aren't mangled" do
+    {:ok, ast} = Parser.scan_and_parse("echo --message=\"#{@unicode_text}\"")
+    invocation = ast.stages.left
+    assert Enum.count(invocation.args) == 1
+    opt = Enum.at(invocation.args, 0)
+    assert opt.__struct__ == Piper.Command.Ast.Option
+    assert opt.value.value == "#{@unicode_text}"
+    assert "#{ast}" == "echo --message=\"#{@unicode_text}\""
+  end
+
+  test "unicode command names aren't mangled" do
+    {:error, "illegal characters \"\u1E23\""} = Parser.scan_and_parse("#{@unicode_text} 123")
+  end
+
+  test "unicode bundle names aren't mangled" do
+    {:error, "illegal characters \"\u1E23\""} = Parser.scan_and_parse("#{@unicode_text}:say_it 123")
   end
 
   test "malformed command names" do
