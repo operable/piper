@@ -92,7 +92,8 @@ defmodule Piper.Command.Parser do
           {:error, reason}
       end
     catch
-      error -> SemanticError.format_error(error)
+      error ->
+        SemanticError.format_error(error)
     after
       Process.delete(:piper_cp_context)
       ParseContext.stop(context)
