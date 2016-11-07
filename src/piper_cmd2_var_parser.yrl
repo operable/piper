@@ -46,15 +46,15 @@ index_value({integer, _, Value}) ->
   list_to_integer(Value).
 
 key_value({text, _, [$'|_]=Value}) ->
-  re:replace(Value, "^'|'$", "", [{return, binary}, global]);
+  re:replace(Value, "^'|'$", "", [{return, binary}, global, unicode]);
 key_value({text, _, [$"|_]=Value}) ->
-  re:replace(Value, "^\"|\"$", "", [{return, binary}, global]);
+  re:replace(Value, "^\"|\"$", "", [{return, binary}, global, unicode]);
 key_value({text, _, Value}) ->
-  list_to_binary(Value).
+  ?parser_util:list_to_elixir_string(Value).
 
 make_variable(Var) ->
   make_variable(Var, []).
 
 make_variable({variable, Position, Name}, Ops) ->
-  Var1 = {variable, Position, re:replace(Name, "^\\$", "", [{return, list}, global])},
+  Var1 = {variable, Position, re:replace(Name, "^\\$", "", [{return, list}, global, unicode])},
   ?new_ast(variable, [Var1, Ops]).
