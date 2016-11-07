@@ -2,7 +2,9 @@
 
 -export([parse_token/3,
          parse_token/4,
-         new_ast/2]).
+         new_ast/2,
+         elixir_string_to_list/1,
+         list_to_elixir_string/1]).
 
 parse_token(Token, Name, Handler) ->
   parse_token(Token, Name, Name, Handler).
@@ -28,6 +30,15 @@ parse_token({_, {Line, _} = Position, Value}, Lexer, Parser, Handler) ->
   after
     'Elixir.Piper.Command.ParseContext':set_position(Context, Old)
   end.
+
+elixir_string_to_list(Text) when is_binary(Text) ->
+  'Elixir.String':to_charlist(Text).
+
+list_to_elixir_string(Text) when is_list(Text) ->
+  %% Ensure we're dealing with a flat list first
+  Text1 = lists:flatten(Text),
+  'Elixir.String.Chars':to_string(Text1).
+
 
 new_ast(Name, Args) ->
   apply(ast_node_for_name(Name), new, Args).
