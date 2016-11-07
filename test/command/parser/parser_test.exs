@@ -405,4 +405,46 @@ defmodule Parser.ParserTest do
     assert "#{ast}" == "cfn:stack-purge-delete --region=us-west-1"
   end
 
+  test "quoted strings containing var refs are parsed" do
+    {:ok, ast} = Parser.scan_and_parse("alias create \"echo $body[0]\"")
+    stage = ast.stages.left
+    assert stage.name.entity.value == "alias"
+    assert stage.name.bundle == nil
+    [first_arg, second_arg] = stage.args
+    assert first_arg.__struct__ == Piper.Command.Ast.String
+    assert "#{first_arg}" == "create"
+    assert second_arg.__struct__ == Piper.Command.Ast.String
+    assert "#{second_arg}" == "\"echo $body[0]\""
+  end
+
+  test "interpolated variable is parsed" do
+    {:ok, ast} = Parser.scan_and_parse("echo \"echo ${body[0]}\"")
+    stage = ast.stages.left
+    assert stage.name.entity.value == "echo"
+    [arg] = stage.args
+    assert arg.__struct__ == Piper.Command.Ast.InterpolatedString
+    [first_expr, second_expr] = arg.exprs
+    assert first_expr.__struct__ == Piper.Command.Ast.String
+    assert "#{first_expr}" == "echo "
+    assert second_expr.__struct__ == Piper.Command.Ast.Variable
+    assert Enum.count(second_expr.ops) == 1
+    assert "#{second_expr}" == "$body[0]"
+    assert "#{ast}" == "echo \"echo ${body[0]}\""
+  end
+
+  test "interpolated variable w/name deref is parsed" do
+    {:ok, ast} = Parser.scan_and_parse("echo \"echo The current region is ${region.name}\"")
+    stage = ast.stages.left
+    assert stage.name.entity.value == "echo"
+    [arg] = stage.args
+    assert arg.__struct__ == Piper.Command.Ast.InterpolatedString
+    [first_expr, second_expr] = arg.exprs
+    assert first_expr.__struct__ == Piper.Command.Ast.String
+    assert "#{first_expr}" == "echo The current region is "
+    assert second_expr.__struct__ == Piper.Command.Ast.Variable
+    assert Enum.count(second_expr.ops) == 1
+    assert "#{second_expr}" == "$region.name"
+    assert "#{ast}" == "echo \"echo The current region is ${region.name}\""
+  end
+
 end
