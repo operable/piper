@@ -25,6 +25,9 @@ defmodule Piper.Command.SemanticError do
   defp message_for_reason(:not_found, text, _) do
     "Command '#{text}' not found in any installed bundle."
   end
+  defp message_for_reason(:bundle_not_found, _, bundle) do
+    "Bundle '#{bundle}' was not found. Please check the name and try again."
+  end
   defp message_for_reason(:not_in_bundle, text, bundle) do
     "Bundle '#{bundle}' doesn't contain a command named '#{text}'."
   end
