@@ -36,4 +36,20 @@ defmodule Piper.ExpansionTest do
     assert message == "Alias expansion limit (5) exceeded starting with alias 'seven'."
   end
 
+  test "expanding aliases containing variables" do
+    {:ok, ast} = Parser.scan_and_parse("prod-buckets | s3:file-info $key", TestHelpers.expansion_options())
+    assert "#{ast}" == "s3:list-buckets --region=us-east-1 corp-prod-* | s3:bucket-info $name | s3:file-info $key"
+  end
+
+  test "expanding two aliases" do
+    {:ok, ast} = Parser.scan_and_parse("prod-buckets | prod-buckets", TestHelpers.expansion_options())
+    assert "#{ast}" == "s3:list-buckets --region=us-east-1 corp-prod-* | s3:bucket-info $name | " <>
+      "s3:list-buckets --region=us-east-1 corp-prod-* | s3:bucket-info $name"
+  end
+
+  test "commands and aliases" do
+    {:ok, ast} = Parser.scan_and_parse("s3:pick-region | prod-buckets | raw", TestHelpers.expansion_options())
+    assert "#{ast}" == "s3:pick-region | s3:list-buckets --region=us-east-1 corp-prod-* | s3:bucket-info $name | operable:raw"
+  end
+
 end

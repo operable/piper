@@ -1,7 +1,5 @@
 defmodule Piper.Command.Ast.Pipeline do
 
-  require Piper.Command.Ast.PipelineStage
-
   alias Piper.Command.Ast
 
   defstruct [stages: nil, redirect_to: nil]
