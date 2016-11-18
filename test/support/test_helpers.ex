@@ -135,6 +135,15 @@ defmodule Parser.TestHelpers do
   def expand_commands(_bundle, cmd) when cmd in ["hello"] do
     {:command, {"greetings", cmd}}
   end
+  def expand_commands(_bundle, "raw") do
+    {:command, {"operable", "raw"}}
+  end
+  def expand_commands(_bundle, "prod-buckets") do
+    {:pipeline, "s3:list-buckets --region=us-east-1 corp-prod-* | s3:bucket-info $name"}
+  end
+  def expand_commands("s3", command) do
+    {:command, {"s3", command}}
+  end
 
   def gnarly_expansions(_bundle, color) when color in ["red", "yellow"] do
     {:command, {"colors", color}}
