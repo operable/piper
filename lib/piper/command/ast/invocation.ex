@@ -64,8 +64,12 @@ defmodule Piper.Command.Ast.Invocation do
             {:command, {resolved_bundle, resolved_command}} ->
               {{:command, build_replacement_name(resolved_bundle, resolved_command, entity), nil}, args}
             {:pipeline, text} when is_binary(text) ->
-              {:ok, pipeline} = Parser.expand(entity_name, text)
-              {{:pipeline, pipeline}, args}
+              case Parser.expand(entity_name, text) do
+                {:ok, pipeline} ->
+                  {{:pipeline, pipeline}, args}
+                %SemanticError{}=error ->
+                  throw error
+              end
             {:error, {:ambiguous, bundles}} ->
               throw SemanticError.new(entity, {:ambiguous, bundles})
             {:error, :not_found} ->
