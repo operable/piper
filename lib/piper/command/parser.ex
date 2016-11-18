@@ -46,7 +46,13 @@ defmodule Piper.Command.Parser do
   end
 
   def expand(_alias, text) do
-    :piper_cmd_parser.scan_and_parse(text)
+    context = ParseContext.current()
+    opts = ParseContext.get_options(context)
+    if opts.use_legacy_parser do
+      :piper_cmd_parser.scan_and_parse(text)
+    else
+      :piper_cmd2_parser.parse_pipeline(text)
+    end
   end
 
   def get_options() do
