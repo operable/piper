@@ -3,7 +3,7 @@ defmodule Piper.Mixfile do
 
   def project do
     [app: :piper,
-     version: "0.16.1",
+     version: "0.16.2",
      elixir: "~> 1.3.1",
      erlc_options: [:debug_info] ++ warnings_as_errors(:erl),
      leex_options: warnings_as_errors(:erl),
