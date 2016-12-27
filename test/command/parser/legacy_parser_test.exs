@@ -155,7 +155,7 @@ defmodule Parser.LegacyParserTest do
 
   test "URL speling errors are caught :)" do
     {:error, message} = Piper.Command.Parser.scan_and_parse("foo | bar | baz > chat:/#ops")
-    assert message == "URL redirect targets must begin with chat://."
+    assert message == "Invalid redirect URL 'chat:/#ops'"
   end
 
   test "resolves ambiguous command names" do

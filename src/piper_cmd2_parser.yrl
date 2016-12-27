@@ -103,11 +103,18 @@ strip_quotes({_, Position, [$'|_]=Text}) ->
 text_to_string({text, Position, Value}) ->
   {string, Position, Value}.
 
-validate_redirect_target({_, _, [$c,$h,$a,$t,$:,$/,$/|_]}=Target) ->
-  Target;
-validate_redirect_target({_, {Line, Col}, [$c,$h,$a,$t,$:|_]}) ->
-  return_error({Line, Col}, "URL redirect targets must begin with chat://.");
-validate_redirect_target(Target) -> Target.
+validate_redirect_target({_, {Line, Col}, Target}=Token) ->
+  case re:run(Target, "^[a-z0-9_-]+://.*$") of
+    {match, _} ->
+      Token;
+    nomatch ->
+      case string:str(Target, ":/") of
+        0 ->
+          Token;
+        _ ->
+          return_error({Line, Col}, io_lib:format("Invalid redirect URL '~s'", [Target]))
+      end
+  end.
 
 validate_args(Args) ->
   validate_args(Args, []).
