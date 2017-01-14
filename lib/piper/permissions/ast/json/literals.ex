@@ -32,8 +32,9 @@ defimpl Piper.Permissions.Json, for: [Piper.Permissions.Ast.String,
 
   def from_json!(%Ast.Option{}=svalue, %{"line" => line,
                                          "col" => col,
-                                         "name" => name}) do
-    %{svalue | line: line, col: col, name: parse_index(name)}
+                                         "name" => name,
+                                         "match" => match}) do
+    %{svalue | line: line, col: col, name: parse_index(name), match: parse_index(match)}
 
   end
 

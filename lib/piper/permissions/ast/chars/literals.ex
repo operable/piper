@@ -42,13 +42,13 @@ defimpl String.Chars, for: [Piper.Permissions.Ast.String,
   def to_string(%Ast.Arg{index: index}) do
     "arg[#{index}]"
   end
-  def to_string(%Ast.Option{name: :any}) do
-    "any option"
-  end
-  def to_string(%Ast.Option{name: :all}) do
-    "all option"
-  end
-  def to_string(%Ast.Option{name: name}) do
+  def to_string(%Ast.Option{name: name, match: nil}) do
     "option[#{name}]"
+  end
+  def to_string(%Ast.Option{name: nil, match: match}) when match in [:any, :all] do
+    "#{match} option"
+  end
+  def to_string(%Ast.Option{name: name, match: match}) when match in [:any, :all] do
+    "#{match} option[#{name}]"
   end
 end

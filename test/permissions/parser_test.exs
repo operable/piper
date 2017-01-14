@@ -71,12 +71,12 @@ defmodule Piper.Permissions.ParserTest do
 
   test "rules using 'any' input selectors parse" do
     matches "when command is s3:bucket with any arg in [delete, erase] must have site:admin", ["site:admin"], 3
-    matches "when command is s3:bucket with any option in [cp, delete] must have site:ops", ["site:ops"], 3
+    matches "when command is s3:bucket with any option in [cp, delete] must have site:ops", ["site:ops"], 1
   end
 
   test "rules using conditional 'any' input selectors parse" do
     matches "when command is s3:bucket with (any arg in [delete, erase]) or any option in [prod, immediate] must have site:management",
-      ["site:management"], 6
+      ["site:management"], 4
   end
 
   test "rules using 'any' permission selectors parse" do
@@ -96,6 +96,10 @@ defmodule Piper.Permissions.ParserTest do
 
   test "rules using conditional 'all' permission selectors parse" do
     matches "when command is s3:bucket must have all in [s3:read, site:ops] or all in [site:ops, site:leads]", ["site:ops", "site:leads", "s3:read"]
+  end
+
+  test "rules using conditional 'all' option selector parse" do
+    matches "when command is operable:admin with all option[env] in ['production', 'staging'] must have site:ops", ["site:ops"], 1
   end
 
   test "namespaced values for args or options parse" do

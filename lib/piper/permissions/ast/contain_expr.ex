@@ -12,7 +12,7 @@ defmodule Piper.Permissions.Ast.ContainExpr do
   end
   def new({:in, {line, col}, _}, %Ast.Option{}=lhs, %Ast.List{}=rhs) do
     %__MODULE__{line: line, col: col, left: lhs, right: rhs,
-                lhs_agg: aggregate_type(lhs.name)}
+                lhs_agg: aggregate_type(lhs.match)}
   end
 
   defp aggregate_type(type) when type in [:any, :all] do
