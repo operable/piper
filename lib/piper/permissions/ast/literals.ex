@@ -120,20 +120,19 @@ defmodule Piper.Permissions.Ast.Option do
 
   @derive [Poison.Encoder]
 
-  defstruct [{:'$ast$', "option"}, :line, :col, :name]
+  defstruct [{:'$ast$', "option"}, :line, :col, :name, :match]
 
-  def new({:option, {line, col}, _}, type) when type in [:any, :all] do
-    %__MODULE__{line: line, col: col, name: type}
-  end
-  def new({:option, {line, col}, _}, {:string, _, value}) do
+  def new({:option, {line, col}, _}, {key, _, value}, nil) when key in [:string, :name] do
     value = String.Chars.to_string(value)
     %__MODULE__{line: line, col: col, name: value}
   end
-  def new({:option, {line, col}, _}, {:name, _, value}) do
-    value = String.Chars.to_string(value)
-    %__MODULE__{line: line, col: col, name: value}
+  def new({:option, {line, col}, _}, nil, match) when match in [:any, :all] do
+    %__MODULE__{line: line, col: col, match: match}
   end
-
+  def new({:option, {line, col}, _}, {key, _, value}, match) when key in [:string, :name] do
+    value = String.Chars.to_string(value)
+    %__MODULE__{line: line, col: col, name: value, match: match}
+  end
 
   def build(type) when type in [:any, :all] do
     %__MODULE__{name: type}

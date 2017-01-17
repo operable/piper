@@ -102,14 +102,17 @@ arg_or_option ->
   option_ref : track('$1').
 
 option_ref ->
-  any option : ?AST("Option"):new('$2', any).
+  any option lbracket string rbracket : ?AST("Option"):new('$2', '$4', any).
 option_ref ->
-  all option : ?AST("Option"):new('$2', all).
+  all option lbracket name rbracket : ?AST("Option"):new('$2', '$4', all).
 option_ref ->
-  option lbracket string rbracket : ?AST("Option"):new('$1', '$3').
+  any option : ?AST("Option"):new('$2', nil, any).
 option_ref ->
-  option lbracket name rbracket : ?AST("Option"):new('$1', '$3').
-
+  all option : ?AST("Option"):new('$2', nil, all).
+option_ref ->
+  option lbracket string rbracket : ?AST("Option"):new('$1', '$3', nil).
+option_ref ->
+  option lbracket name rbracket : ?AST("Option"):new('$1', '$3', nil).
 
 arg_ref ->
   any arg : build_arg('$2', any).
