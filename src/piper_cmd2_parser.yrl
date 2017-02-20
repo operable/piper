@@ -42,9 +42,17 @@ redirect ->
   redir_one targets : ?new_ast(redirect, ['$1', '$2']).
 
 targets ->
-  text : [?new_ast(string, [text_to_string(validate_redirect_target('$1'))])].
+  text : [var_or_string('$1')].
 targets ->
-  text targets : [?new_ast(string, [text_to_string(validate_redirect_target('$1'))])] ++ '$2'.
+  squoted_text : [I || I <- [?parse_token(strip_quotes('$1'), interp, fun(Target) -> Target end)]].
+targets ->
+  dquoted_text : [I || I <- [?parse_token(strip_quotes('$1'), interp, fun(Target) -> Target end)]].
+targets ->
+  text targets : [var_or_string('$1')] ++ '$2'.
+targets ->
+  squoted_text targets : [I || I <- [?parse_token(strip_quotes('$1'), interp, fun(Target) -> Target end)]] ++ '$2'.
+targets ->
+  dquoted_text targets : [I || I <- [?parse_token(strip_quotes('$1'), interp, fun(Target) -> Target end)]] ++ '$2'.
 
 args ->
   text : [?parse_token('$1', arg, fun(Arg) -> Arg end)].
@@ -141,3 +149,11 @@ ensure_quote_type_set(Value, QuoteType) ->
       maps:put(quote_type, QuoteType, Value)
   end.
 
+var_or_string(Token) ->
+    try ?parse_token(Token, var, fun(Var) -> Var end) of
+        Var ->
+            Var
+    catch
+        _Reason ->
+            ?new_ast(string, [text_to_string(validate_redirect_target(Token))])
+    end.

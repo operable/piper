@@ -63,4 +63,14 @@ defmodule Piper.Command.Ast.PipelineStage do
     %{stage | right: concatenate(right, new_stage, type)}
   end
 
+  def redirect_targets(%__MODULE__{right: right}) when right != nil,
+    do: nil
+  def redirect_targets(%__MODULE__{left: left}) do
+    if left.redir != nil do
+      Enum.map(left.redir.targets, &("#{&1}"))
+    else
+      nil
+    end
+  end
+
 end
