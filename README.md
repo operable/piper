@@ -1,7 +1,5 @@
 # Piper
 
-[![Build status](https://badge.buildkite.com/74522f9355301b7e15be69feb5f4f13472d5ccf63801e6c5c5.svg?branch=master)](https://buildkite.com/operable/piper)
-
 Piper contains parsers for [Cog's](https://github.com/operable/cog) access control rule and ChatOps command languages. Piper has minimal
 dependencies and can be used wherever parsing either of these languages would be useful.
 
