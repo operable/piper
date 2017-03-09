@@ -1,5 +1,8 @@
 # Piper
 
+[![Build Status](https://travis-ci.org/operable/piper.svg?branch=master)](https://travis-ci.org/operable/piper)
+[![Coverage Status](https://coveralls.io/repos/github/operable/piper/badge.svg?branch=master)](https://coveralls.io/github/operable/piper?branch=master)
+
 Piper contains parsers for [Cog's](https://github.com/operable/cog) access control rule and ChatOps command languages. Piper has minimal
 dependencies and can be used wherever parsing either of these languages would be useful.
 
