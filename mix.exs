@@ -10,6 +10,10 @@ defmodule Piper.Mixfile do
      elixirc_options: warnings_as_errors(:ex),
      elixirc_paths: elixirc_paths(Mix.env),
      start_permanent: Mix.env == :prod,
+     test_coverage: [tool: ExCoveralls],
+     preferred_cli_env: ["coveralls": :test,
+                         "coveralls.html": :test,
+                         "coveralls.travis": :test],
      deps: deps] ++ compile_protocols(Mix.env)
   end
 
@@ -22,7 +26,8 @@ defmodule Piper.Mixfile do
 
   defp deps do
     [{:poison, "~> 2.0"},
-     {:uuid, "~> 1.1.5"}]
+     {:uuid, "~> 1.1.5"},
+     {:excoveralls, "~> 0.6", only: :test}]
   end
 
   defp compile_protocols(:prod), do: [build_embedded: true]
