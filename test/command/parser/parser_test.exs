@@ -337,6 +337,12 @@ defmodule Parser.ParserTest do
     {:error, "illegal characters \"\u1E23\""} = Parser.scan_and_parse("#{@unicode_text}:say_it 123")
   end
 
+  test "capitalized names should work" do
+    should_parse "Foo:bar"
+    should_parse "Foo:Bar"
+    should_parse "foo:Bar"
+  end
+
   test "malformed command names" do
     should_not_parse ":foo bar"
     should_not_parse "foo: bar"

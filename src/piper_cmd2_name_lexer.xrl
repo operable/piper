@@ -1,6 +1,6 @@
 Definitions.
 
-NAME                        = [a-z][a-zA-Z0-9_\-]*
+NAME                        = [a-zA-Z][a-zA-Z0-9_\-]*
 HIPCHAT_EMOJI               = \([a-zA-Z0-9_\-\+]+\)
 SLACK_EMOJI                 = :[a-zA-Z0-9_\-\+]+:
 COLON                       = :
