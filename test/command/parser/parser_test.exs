@@ -204,7 +204,7 @@ defmodule Parser.ParserTest do
 
   test "commands not in the requested bundle fail resolution" do
     {:error, message} = Parser.scan_and_parse("not_in_bundle", TestHelpers.parser_options())
-    assert message == "Command 'not_in_bundle' not found in any installed bundle."
+    assert message == "Bundle 'bundle1' doesn't contain a command named 'not_in_bundle'."
   end
 
   test "splicing aliases into parse tree" do

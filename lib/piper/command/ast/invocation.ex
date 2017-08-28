@@ -74,8 +74,8 @@ defmodule Piper.Command.Ast.Invocation do
               throw SemanticError.new(entity, {:ambiguous, bundles})
             {:error, :not_found} ->
               :not_found
-            {:error, {:not_in_bundle, _}} ->
-              :not_found
+            {:error, {:not_in_bundle, name}} ->
+              throw SemanticError.new(entity, {:not_in_bundle, name})
             {:error, error} ->
               throw SemanticError.new(entity, error)
           end
