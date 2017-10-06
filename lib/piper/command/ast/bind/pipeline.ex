@@ -8,8 +8,8 @@ defimpl Piper.Common.Bindable, for: Piper.Command.Ast.Pipeline do
 
   def bind(pipeline, scope) do
     case Bindable.bind(pipeline.stages, scope) do
-      {:ok, updated_stages, scope} ->
-        {:ok, %{pipeline | stages: updated_stages}, scope}
+      {:ok, updated, scope} ->
+        {:ok, %{pipeline | stages: updated}, scope}
       error ->
         error
     end
