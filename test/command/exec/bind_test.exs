@@ -124,4 +124,38 @@ defmodule Bind.BindTest do
     assert message == "Key 'envowners' not found in expression '$envs[0].envowners[1]'."
   end
 
+  test "bound variable redirects" do
+    scope = Scope.from_map(%{"room" => "#ops", "region" => "us-west-2"})
+    {:ok, ast} = parse_and_bind2("site:monkey_with_vms --region=$region *> $room #foo", scope)
+    assert "#{ast}" == "site:monkey_with_vms --region=us-west-2 *> #ops #foo"
+  end
+
+  test "interpolated string redirects" do
+    scope = Scope.from_map(%{"rooms" => ["ops", "general"], "region" => "us-west-2"})
+    {:ok, ast} = parse_and_bind2("site:monkey_with_vms --region=$region > '#${rooms[0]}'", scope)
+    assert "#{ast}" == "site:monkey_with_vms --region=us-west-2 > #ops"
+    {:ok, ast} = parse_and_bind2("site:monkey_with_vms --region=$region *> '#${rooms[1]}' '#${rooms[0]}'", scope)
+    assert "#{ast}" == "site:monkey_with_vms --region=us-west-2 *> #general #ops"
+  end
+
+  test "badly formatted url redirects return an error" do
+    scope = Scope.from_map(%{"rooms" => ["ops", "general", "chat:badly"]})
+    {:error, reason} = parse_and_bind2("echo foo > $rooms[2]", scope)
+    assert reason == "URL redirect targets must begin with 'chat://'. Found 'chat:badly'."
+    {:error, reason} = parse_and_bind2("echo foo > 'chat:${rooms[0]}'", scope)
+    assert reason == "URL redirect targets must begin with 'chat://'. Found 'chat:ops'."
+    {:ok, ast} = parse_and_bind2("echo foo > 'chat://${rooms[1]}'", scope)
+    assert "#{ast}" == "echo foo > chat://general"
+  end
+
+  test "bound redirects are accesible from ast node" do
+    scope = Scope.from_map(%{"rooms" => ["#ops", "ops"]})
+    {:ok, ast} = parse_and_bind2("echo foo > $rooms[0]", scope)
+    redirect = Ast.Pipeline.redirect(ast)
+    assert redirect != nil
+    assert Ast.Pipeline.raw_redirect_targets(ast) == ["#ops"]
+    {:ok, ast} = parse_and_bind2("echo foo > \"#${rooms[1]}\" $rooms[0]", scope)
+    assert Ast.Pipeline.raw_redirect_targets(ast) == ["#ops", "#ops"]
+  end
+
 end

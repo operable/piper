@@ -133,28 +133,42 @@ defmodule Parser.ParserTest do
     should_parse "foo:bar --baz *> dm ops", nil, 1
   end
 
-  test "Final redirects are stored on pipeline" do
+  test "Output redirect (single, variable)" do
+    should_parse "foo:bar --baz > $room", nil, 1
+  end
+
+  test "Output redirect (single, mixed)" do
+    should_parse "foo:bar --baz > #general $room", nil, 1
+  end
+
+  test "Output redirect (multi, variables)" do
+    should_parse "foo:bar --baz *> $room $user", nil, 1
+  end
+
+  test "Output redirect (multi, mixed)" do
+    should_parse "foo:bar --baz *> $room #general $users[1]", nil, 1
+  end
+
+  test "Pipeline redirects are stored on last stage" do
     {:ok, ast} = Parser.scan_and_parse("foo > me | bar *> me ops")
-    assert ast.redirect_to != nil
-    assert Enum.count(ast.redirect_to.targets) == 2
-    assert Ast.Pipeline.redirect_targets(ast) == ["me", "ops"]
-    assert Enum.map(ast.redirect_to.targets, &("#{&1}")) == ["me", "ops"]
+    redirect = Ast.Pipeline.redirect(ast)
+    assert redirect != nil
+    assert Enum.count(redirect.targets) == 2
+    assert Enum.map(redirect.targets, &("#{&1}")) == ["me", "ops"]
   end
 
   test "URL-style redirect is parsed" do
     {:ok, ast} = Parser.scan_and_parse("foo | bar | baz > chat://#room1")
-    assert ast.redirect_to != nil
-    assert Enum.count(ast.redirect_to.targets) == 1
-    assert Ast.Pipeline.redirect_targets(ast) == ["chat://#room1"]
-    assert Enum.map(ast.redirect_to.targets, &("#{&1}")) == ["chat://#room1"]
+    redirect = Ast.Pipeline.redirect(ast)
+    assert Enum.count(redirect.targets) == 1
+    assert Enum.map(redirect.targets, &("#{&1}")) == ["chat://#room1"]
   end
 
   test "URL-style redirects and non-URL redirects are parsed" do
     {:ok, ast} = Parser.scan_and_parse("foo | bar | baz *> ops chat://#dev")
-    assert ast.redirect_to != nil
-    assert Enum.count(ast.redirect_to.targets) == 2
-    assert Ast.Pipeline.redirect_targets(ast) == ["ops", "chat://#dev"]
-    assert Enum.map(ast.redirect_to.targets, &("#{&1}")) == ["ops", "chat://#dev"]
+    redirect = Ast.Pipeline.redirect(ast)
+    assert Enum.count(redirect.targets) == 2
+    assert Enum.map(redirect.targets, &("#{&1}")) == ["ops", "chat://#dev"]
   end
 
   test "URL speling errors are caught :)" do
@@ -335,6 +349,12 @@ defmodule Parser.ParserTest do
 
   test "unicode bundle names aren't mangled" do
     {:error, "illegal characters \"\u1E23\""} = Parser.scan_and_parse("#{@unicode_text}:say_it 123")
+  end
+
+  test "capitalized names should work" do
+    should_parse "Foo:bar"
+    should_parse "Foo:Bar"
+    should_parse "foo:Bar"
   end
 
   test "malformed command names" do
